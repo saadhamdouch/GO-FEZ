@@ -6,7 +6,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const db = require("./Config/db.js"); // Importer l'instance Singleton de la base de données
-
+const { UserRouter } = require("./routes/UserRoute.js"); // Importer les routes utilisateur
 
 const app = express();
 const { header } = require("express-validator");
@@ -54,6 +54,9 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
+
+// Routes
+app.use('/api/users', UserRouter);
 
 // Fonction pour démarrer le serveur
 function startServer() {
