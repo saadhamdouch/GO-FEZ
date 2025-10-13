@@ -157,7 +157,4 @@ const POI = sequelize.define('POI', {
     ]
 });
 
-
-
-
 module.exports = { POI };

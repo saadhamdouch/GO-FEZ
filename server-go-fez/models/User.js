@@ -68,7 +68,7 @@ const User = sequelize.define('User', {
     googleId: {
         type: DataTypes.STRING(255),
         allowNull: true,
-        //unique: true,
+        unique: true,
         field: 'google_id'
     },
     facebookId: {
