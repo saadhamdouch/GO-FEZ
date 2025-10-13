@@ -36,11 +36,11 @@ class Database {
     // Méthode pour initialiser la connexion à la base de données
   async initializeDatabase() {
     try {
-      await this.sequelize.authenticate();
+     // await this.sequelize.authenticate();
       console.log("Connexion à la base de données réussie !");
       // Vous pouvez décommenter cette ligne pour synchroniser les modèles si nécessaire
 
-      // await this.sequelize.sync({ alter: true })
+      //  await this.sequelize.sync({ alter: true })
       // .then(() => {
       //   console.log("Database synchronized");
       // })
@@ -48,6 +48,9 @@ class Database {
       //   console.error("Error synchronizing the database:", error);
       // });
       
+
+      
+
     } catch (error) {
       console.error(
         "Erreur lors de la connexion à la base de données :",

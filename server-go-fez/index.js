@@ -6,6 +6,14 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const db = require("./Config/db.js"); // Importer l'instance Singleton de la base de données
+const models = require("./models/index.js"); 
+
+const { UserRouter } = require("./routes/UserRoute.js"); // Importer les routes utilisateur
+const CityRoute = require("./routes/CityRoute.js");
+const ThemeRoute = require("./routes/ThemeRoute.js");
+const CircuitRoutes = require("./routes/CircuitRoutes.js");
+const categoryRoutes = require("./routes/categoryRoutes.js");
+
 
 
 const app = express();
@@ -54,6 +62,13 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
+
+// Routes
+app.use('/api/users', UserRouter);
+app.use('/api/city', CityRoute);
+app.use('/api/themes/', ThemeRoute);
+app.use('/api/circuits', require('./routes/CircuitRoutes'));
+app.use('/api/categorys', require('./routes/categoryRoutes'));
 
 // Fonction pour démarrer le serveur
 function startServer() {
