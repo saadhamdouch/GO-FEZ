@@ -13,9 +13,6 @@ const CityRoute = require("./routes/CityRoute.js");
 const ThemeRoute = require("./routes/ThemeRoute.js");
 const CircuitRoutes = require("./routes/CircuitRoutes.js");
 const categoryRoutes = require("./routes/categoryRoutes.js");
-
-
-
 const app = express();
 const { header } = require("express-validator");
 const rateLimit = require('express-rate-limit');
