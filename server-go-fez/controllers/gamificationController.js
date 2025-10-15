@@ -22,8 +22,6 @@ async function createGamificationRule(req, res) {
 			descriptionFr,
 		} = req.body;
 
-		console.log(req.body);
-
 		[(null, undefined)].forEach((el) => {
 			if (
 				[
@@ -76,5 +74,81 @@ async function createGamificationRule(req, res) {
 		});
 	}
 }
+/**
+ * Update an existing gamification rule.
+ * Expects: id in req.body, and any of points, descriptionAr, descriptionFr, description, isActive, activity in req.body to update.
+ */
+async function updateGamificationRule(req, res) {
+	try {
+		const {
+			id,
+			points,
+			activity,
+			isActive,
+			description,
+			descriptionAr,
+			descriptionFr,
+		} = req.body;
 
-module.exports = { createGamificationRule };
+		if (!id) {
+			return res.status(400).json({
+				status: "failure",
+				data: "id is required to update gamification rule",
+			});
+		}
+
+		const updateFields = {};
+		if (points !== undefined) updateFields.points = points;
+		if (activity !== undefined) {
+			const validActivities = [
+				"COMPLETE_REGISTRATION",
+				"COMPLETE_CIRCUIT",
+				"COMPLETE_PREMIUM_CIRCUIT",
+				"SHARE_WITH_FRIEND",
+				"LEAVE_REVIEW",
+				"VISIT_POI",
+			];
+			if (!validActivities.includes(activity)) {
+				return res.status(400).json({
+					status: "failure",
+					data: "invalid value for field activity",
+				});
+			}
+			updateFields.activity = activity;
+		}
+		if (isActive !== undefined) updateFields.isActive = isActive;
+		if (description !== undefined)
+			updateFields.description = xss(description);
+		if (descriptionAr !== undefined)
+			updateFields.descriptionAr = xss(descriptionAr);
+		if (descriptionFr !== undefined)
+			updateFields.descriptionFr = xss(descriptionFr);
+
+		const [updatedRowsCount, updatedRows] = await GamificationRule.update(
+			updateFields,
+			{
+				where: { id },
+				returning: true,
+			}
+		);
+
+		if (updatedRowsCount === 0) {
+			return res.status(404).json({
+				status: "failure",
+				data: "gamification rule not found",
+			});
+		}
+
+		console.log(updatedRows[0]);
+
+		res.status(200).json({ status: "success", data: updatedRows[0] });
+	} catch (error) {
+		console.error("server error in gamification rule update:", error);
+		res.status(500).json({
+			status: "server_failure",
+			message: "Server Error",
+		});
+	}
+}
+
+module.exports = { createGamificationRule, updateGamificationRule };

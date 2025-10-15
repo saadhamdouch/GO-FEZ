@@ -7,4 +7,9 @@ GamificationRouter.post(
 	GamificationController.createGamificationRule
 );
 
+GamificationRouter.patch(
+	"/update",
+	GamificationController.updateGamificationRule
+);
+
 module.exports = { GamificationRouter };
