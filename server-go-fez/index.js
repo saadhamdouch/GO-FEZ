@@ -14,6 +14,7 @@ const ThemeRoute = require("./routes/ThemeRoute.js");
 const CircuitRoutes = require("./routes/CircuitRoutes.js");
 const categoryRoutes = require("./routes/categoryRoutes.js");
 const { POIRouter } = require("./routes/POIRoute.js"); // Importer les routes POI
+const { ConfigRouter } = require("./routes/ConfigRoute.js");
 
 const app = express();
 const { header } = require("express-validator");
@@ -25,11 +26,12 @@ const PORT = process.env.PORT || 8080;
 // Middlewares globaux
 app.use(express.json());
 
+console.log(process.env.CLIENT_URL);
 app.use(
 	cors({
 		origin: process.env.CLIENT_URL,
 		credentials: true,
-		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
 		allowedHeaders: [
 			"Content-Type",
 			"Authorization",
@@ -41,18 +43,6 @@ app.use(
 		optionsSuccessStatus: 204,
 	})
 );
-
-app.use((req, res, next) => {
-	const allowedOrigin = process.env.CLIENT_URL;
-	const requestOrigin = req.headers.origin;
-
-	if (!requestOrigin || requestOrigin !== allowedOrigin) {
-		return res.status(403).json({
-			error: "Access denied. Unauthorized origin.",
-		});
-	}
-	next();
-});
 
 app.use(helmet()); // Ajouter des en-têtes de sécurité
 
@@ -75,6 +65,7 @@ app.use("/api/themes/", ThemeRoute);
 app.use("/api/circuits", require("./routes/CircuitRoutes"));
 app.use("/api/categorys", require("./routes/categoryRoutes"));
 app.use("/api/pois", POIRouter);
+app.use("/api/config", ConfigRouter);
 
 // Fonction pour démarrer le serveur
 function startServer() {
