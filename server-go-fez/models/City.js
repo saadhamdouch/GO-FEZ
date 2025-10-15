@@ -38,9 +38,18 @@ const City = sequelize.define('City', {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
     },
+        image: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        comment: 'Image du thème (URL ou nom de fichier)',
+    },
     isActive: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
+    },
+       isDeleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
     },
 }, {
     tableName: 'Cities',

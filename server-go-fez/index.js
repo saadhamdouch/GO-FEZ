@@ -81,4 +81,9 @@ db.initializeDatabase()
     process.exit(1); // Arrêter l'application en cas d'échec critique
   });
 
-// db.dropIndex();
+//  db.dropAllIndexes()
+
+//  db.dropFacebookIdIndex()
+//  db.dropGoogleIdIndex()
+//  db.dropPhoneIndex()
+//  db.dropPrimaryIdentifierIndex()

@@ -1,68 +1,99 @@
-const { createCitySchema, updateCitySchema } = require('../validations/CityValidation');
-const { City } = require('../models/City');
+const { City } = require('../models');
+const xss = require('xss');
 
-class CityController {
+//  Créer une ville
+exports.createCity = async (req, res) => {
+    try {
+        const { name, nameAr, nameEn, country, radius, isActive } = req.body;
 
-    static async createCity(req, res) {
-        try {
-            const { error, value } = createCitySchema.validate(req.body);
-            if (error) {
-                return res.status(400).json({ message: 'Erreur de validation des données.', details: error.details });
-            }
-
-            const existingCity = await City.findOne({ where: { nameEn: value.nameEn } });
-            if (existingCity) {
-                return res.status(409).json({ message: 'Cette ville est déjà enregistrée sous le nom anglais.' });
-            }
-
-            const newCity = await City.create(value);
-            return res.status(201).json(newCity);
-
-        } catch (error) {
-            console.error(error);
-            return res.status(500).json({ message: 'Erreur de serveur lors de la création de la ville.', error: error.message });
+        if (!name || !nameAr || !nameEn || !country || !radius) {
+            return res.status(400).json({ status: 'fail', message: 'Champs requis manquants' });
         }
-    }
-     static async getAllCities(req, res) {
-         try {
-            
-             const cities = await City.findAll({
-                 attributes: ['id', 'name', 'nameAr', 'image', 'nameEn', 'country', 'isActive', 'radius'],
-                 where: { isActive: true }, 
-                 order: [['name', 'ASC']],
-             });
-             return res.status(200).json(cities);
-         } catch (error) {
-             console.error(error);
-             return res.status(500).json({ message: 'Erreur de serveur lors de la récupération des villes.' });
-         }
-     }
 
-    
+        const sanitizedData = {
+            name: xss(name),
+            nameAr: xss(nameAr),
+            nameEn: xss(nameEn),
+            country: xss(country),
+            radius: radius ? Number(radius) : null,
+            isActive: isActive === 'true' || isActive === true,
+            isDeleted: false
+        };
 
-    static async updateCity(req, res) {
-        try {
-            const { error, value } = updateCitySchema.validate(req.body);
-            if (error) {
-                return res.status(400).json({ message: 'Erreur de validation des données.', details: error.details });
-            }
+        // TODO: Insertion de l'image depuis req.file vers Cloudinary
+        const urlImage = "https://example.com";
+        sanitizedData.image = urlImage;
 
-            const [updatedRowsCount] = await City.update(value, {
-                where: { id: req.params.id },
-            });
-
-            if (updatedRowsCount === 0) {
-                return res.status(404).json({ message: 'Aucune ville trouvée pour mettre à jour.' });
-            }
-
-            const updatedCity = await City.findByPk(req.params.id);
-            return res.status(200).json(updatedCity);
-
-        } catch (error) {
-            console.error(error);
-            return res.status(500).json({ message: 'Erreur de serveur lors de la mise à jour de la ville.' });
+        const existingCity = await City.findOne({ where: { name: sanitizedData.name, isDeleted: false } });
+        if (existingCity) {
+            return res.status(409).json({ status: 'fail', message: 'Cette ville existe déjà sous ce nom anglais.' });
         }
-    }
-}
 
-module.exports = CityController;
+        const city = await City.create(sanitizedData);
+        res.status(201).json({ status: 'success', data: city });
+    } catch (error) {
+        console.error('Erreur création ville :', error);
+        res.status(500).json({ status: 'error', message: 'Erreur serveur interne'});
+    }
+};
+
+//  Récupérer toutes les villes
+exports.getAllCities = async (req, res) => {
+    try {
+        const cities = await City.findAll({
+            where: { isDeleted: false },
+            order: [['name', 'ASC']]
+        });
+        res.status(200).json({ status: 'success', data: cities });
+    } catch (error) {
+        console.error('Erreur récupération villes :', error);
+        res.status(500).json({ status: 'error', message: 'Erreur serveur interne'});
+    }
+};
+
+//  Mettre à jour une ville
+exports.updateCity = async (req, res) => {
+    try {
+        const city = await City.findByPk(req.params.id);
+        if (!city || city.isDeleted) {
+            return res.status(404).json({ status: 'fail', message: 'Ville introuvable' });
+        }
+
+        const sanitizedData = {};
+        if (req.body.name) sanitizedData.name = xss(req.body.name);
+        if (req.body.nameAr) sanitizedData.nameAr = xss(req.body.nameAr);
+        if (req.body.nameEn) sanitizedData.nameEn = xss(req.body.nameEn);
+        if (req.body.country) sanitizedData.country = xss(req.body.country);
+        if (req.body.radius) sanitizedData.radius = Number(req.body.radius);
+        if (req.body.isActive !== undefined)
+            sanitizedData.isActive = req.body.isActive === 'true' || req.body.isActive === true;
+
+        if (req.file) {
+            // TODO: si une image existe déjà, la supprimer de Cloudinary avant de mettre la nouvelle
+            const urlImage = "https://example.com";
+            sanitizedData.image = urlImage;
+        }
+
+        await city.update(sanitizedData);
+        res.status(200).json({ status: 'success', data: city });
+    } catch (error) {
+        console.error('Erreur mise à jour ville :', error);
+        res.status(500).json({ status: 'error', message: 'Erreur serveur interne'});
+    }
+};
+
+//  Suppression logique d’une ville
+exports.deleteCity = async (req, res) => {
+    try {
+        const city = await City.findByPk(req.params.id);
+        if (!city || city.isDeleted) {
+            return res.status(404).json({ status: 'fail', message: 'Ville introuvable' });
+        }
+
+        await city.update({ isDeleted: true });
+        res.status(200).json({ status: 'success', message: 'Ville supprimée avec succès' });
+    } catch (error) {
+        console.error('Erreur suppression ville :', error);
+        res.status(500).json({ status: 'error', message: 'Erreur serveur interne' });
+    }
+};

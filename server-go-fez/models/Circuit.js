@@ -28,7 +28,7 @@ const Circuit = sequelize.define('Circuit', {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    themeId: {
+  themeId: {
       type: DataTypes.UUID,
       allowNull: true, // car la relation est gérée via la table pivot themeCircuit
     },
@@ -45,14 +45,14 @@ const Circuit = sequelize.define('Circuit', {
       allowNull: false,
     },
     startPoint: {
-      type: DataTypes.JSON,
+      type: DataTypes.INTEGER,
       allowNull: true,
-      comment: 'Point de départ avec localisation',
+      comment: 'Point de départ (id dans la table des POIs)',
     },
     endPoint: {
-      type: DataTypes.JSON,
+      type: DataTypes.INTEGER,
       allowNull: true,
-      comment: 'Point d’arrivée avec localisation',
+      comment: 'Point d\'arrivée (id dans la table des POIs)',
     },
     isActive: {
       type: DataTypes.BOOLEAN,
@@ -74,6 +74,10 @@ const Circuit = sequelize.define('Circuit', {
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },
+       isDeleted: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
     createdAt: {
       type: DataTypes.DATE,
       field: 'created_at',

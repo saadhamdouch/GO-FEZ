@@ -24,6 +24,10 @@ const Category = sequelize.define('Category', {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
+     isDeleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
    createdAt: {
         type: DataTypes.DATE,
         field: 'created_at',
