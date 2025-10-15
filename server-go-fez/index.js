@@ -7,6 +7,7 @@ dotenv.config();
 
 const db = require("./Config/db.js"); // Importer l'instance Singleton de la base de données
 const { UserRouter } = require("./routes/UserRoute.js"); // Importer les routes utilisateur
+const { POIRouter } = require("./routes/POIRoute.js"); // Importer les routes POI
 
 const app = express();
 const { header } = require("express-validator");
@@ -57,6 +58,7 @@ app.use(limiter);
 
 // Routes
 app.use('/api/users', UserRouter);
+app.use('/api/pois', POIRouter);
 
 // Fonction pour démarrer le serveur
 function startServer() {

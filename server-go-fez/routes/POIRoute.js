@@ -1,0 +1,169 @@
+const express = require('express');
+const { body } = require('express-validator');
+const { 
+    handleValidationErrors,
+    createPOI,
+    findAllPOIs,
+    findOnePOI,
+    updatePOI,
+    deletePOI
+} = require('../controllers/POIController.js');
+const { 
+    uploadImage, 
+    uploadAudio, 
+    uploadVideo, 
+    uploadVirtualTour 
+} = require('../Config/cloudinary.js');
+
+const POIRouter = express.Router();
+
+// Routes d'upload Cloudinary
+POIRouter.post('/upload/image', uploadImage.single('image'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'Aucun fichier image fourni'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Image uploadée avec succès',
+            imageUrl: req.file.path,
+            publicId: req.file.filename
+        });
+    } catch (error) {
+        console.error('Erreur lors de l\'upload de l\'image:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur lors de l\'upload de l\'image'
+        });
+    }
+});
+
+POIRouter.post('/upload/audio', uploadAudio.single('audio'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'Aucun fichier audio fourni'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Audio uploadé avec succès',
+            audioUrl: req.file.path,
+            publicId: req.file.filename
+        });
+    } catch (error) {
+        console.error('Erreur lors de l\'upload de l\'audio:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur lors de l\'upload de l\'audio'
+        });
+    }
+});
+
+POIRouter.post('/upload/video', uploadVideo.single('video'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'Aucun fichier vidéo fourni'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Vidéo uploadée avec succès',
+            videoUrl: req.file.path,
+            publicId: req.file.filename
+        });
+    } catch (error) {
+        console.error('Erreur lors de l\'upload de la vidéo:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur lors de l\'upload de la vidéo'
+        });
+    }
+});
+
+POIRouter.post('/upload/virtual-tour', uploadVirtualTour.single('virtualTour'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'Aucun fichier de visite virtuelle fourni'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Visite virtuelle uploadée avec succès',
+            virtualTourUrl: req.file.path,
+            publicId: req.file.filename
+        });
+    } catch (error) {
+        console.error('Erreur lors de l\'upload de la visite virtuelle:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur lors de l\'upload de la visite virtuelle'
+        });
+    }
+});
+
+// Routes principales des POI
+POIRouter.get('/', findAllPOIs);
+
+POIRouter.post('/create', [
+    body('coordinates')
+        .isObject()
+        .withMessage('Les coordonnées doivent être un objet'),
+    body('category')
+        .isInt({ min: 1 })
+        .withMessage('La catégorie doit être un nombre entier positif'),
+    body('cityId')
+        .isUUID()
+        .withMessage('L\'ID de la ville doit être un UUID valide'),
+    body('practicalInfo')
+        .optional()
+        .isObject()
+        .withMessage('Les informations pratiques doivent être un objet'),
+    body('arLocalization')
+        .optional()
+        .isObject()
+        .withMessage('La localisation arabe doit être un objet'),
+    body('frLocalization')
+        .optional()
+        .isObject()
+        .withMessage('La localisation française doit être un objet'),
+    body('enLocalization')
+        .optional()
+        .isObject()
+        .withMessage('La localisation anglaise doit être un objet'),
+    handleValidationErrors
+], createPOI);
+
+POIRouter.get('/:id', findOnePOI);
+
+POIRouter.put('/:id', [
+    body('coordinates')
+        .optional()
+        .isObject()
+        .withMessage('Les coordonnées doivent être un objet'),
+    body('category')
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage('La catégorie doit être un nombre entier positif'),
+    body('practicalInfo')
+        .optional()
+        .isObject()
+        .withMessage('Les informations pratiques doivent être un objet'),
+    handleValidationErrors
+], updatePOI);
+
+POIRouter.delete('/:id', deletePOI);
+
+module.exports = { POIRouter };
