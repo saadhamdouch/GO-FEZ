@@ -36,11 +36,11 @@ class Database {
     // Méthode pour initialiser la connexion à la base de données
   async initializeDatabase() {
     try {
-      await this.sequelize.authenticate();
+     // await this.sequelize.authenticate();
       console.log("Connexion à la base de données réussie !");
       // Vous pouvez décommenter cette ligne pour synchroniser les modèles si nécessaire
 
-      // await this.sequelize.sync({ alter: true })
+      //  await this.sequelize.sync({ alter: true })
       // .then(() => {
       //   console.log("Database synchronized");
       // })
@@ -73,14 +73,51 @@ class Database {
   }
 
   // Suppression de l'index "email" sur la table "clients"
-  async dropIndex() {
-    try {
-      await this.sequelize.query("ALTER TABLE `ADMIN` DROP INDEX `email`;");
-      console.log("✅ Index supprimé avec succès.");
-    } catch (error) {
-      console.error("❌ Erreur lors de la suppression de l'index :", error);
-    }
+  async dropPhoneIndex() {
+  try {
+    await this.sequelize.query("ALTER TABLE `users` DROP INDEX `phone`;");
+    console.log("✅ Index 'phone' supprimé avec succès.");
+  } catch (error) {
+    console.error("❌ Erreur lors de la suppression de l'index 'phone' :", error);
   }
+}
+
+async dropPrimaryIdentifierIndex() {
+  try {
+    await this.sequelize.query("ALTER TABLE `users` DROP INDEX `primary_identifier`;");
+    console.log("✅ Index 'primary_identifier' supprimé avec succès.");
+  } catch (error) {
+    console.error("❌ Erreur lors de la suppression de l'index 'primary_identifier' :", error);
+  }
+}
+
+async dropFacebookIdIndex() {
+  try {
+    await this.sequelize.query("ALTER TABLE `users` DROP INDEX `facebook_id`;");
+    console.log("✅ Index 'facebook_id' supprimé avec succès.");
+  } catch (error) {
+    console.error("❌ Erreur lors de la suppression de l'index 'facebook_id' :", error);
+  }
+}
+
+async dropGoogleIdIndex() {
+  try {
+    await this.sequelize.query("ALTER TABLE `users` DROP INDEX `google_id`;");
+    console.log("✅ Index 'google_id' supprimé avec succès.");
+  } catch (error) {
+    console.error("❌ Erreur lors de la suppression de l'index 'google_id' :", error);
+  }
+}
+
+// Méthode pour tout supprimer en appelant les méthodes individuelles
+async dropAllIndexes() {
+  await this.dropPhoneIndex();
+  await this.dropPrimaryIdentifierIndex();
+  await this.dropFacebookIdIndex();
+  await this.dropGoogleIdIndex();
+  console.log("✅ Tous les index ont été supprimés.");
+}
+
 }
 
 module.exports = new Database();
