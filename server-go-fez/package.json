@@ -5,7 +5,7 @@
 	"main": "index.js",
 	"scripts": {
 		"dev": "node --watch index.js",
-		"start": "nodemon index.js",
+		"start": "node index.js",
 		"seed": "node seeders/index.js",
 		"seed:admin": "node seeders/adminSeeder.js"
 	},
