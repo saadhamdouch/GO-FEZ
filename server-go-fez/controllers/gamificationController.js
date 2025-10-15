@@ -138,9 +138,6 @@ async function updateGamificationRule(req, res) {
 				data: "gamification rule not found",
 			});
 		}
-
-		console.log(updatedRows[0]);
-
 		res.status(200).json({ status: "success", data: updatedRows[0] });
 	} catch (error) {
 		console.error("server error in gamification rule update:", error);
