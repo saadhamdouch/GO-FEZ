@@ -29,10 +29,10 @@ const POILocalization = sequelize.define('POILocalization', {
             len: [0, 500]
         }
     },
-    audioFileUrl: {
+    audioFiles: {
         type: DataTypes.TEXT,
         allowNull: true,
-        comment: 'URL du fichier audio'
+        comment: 'JSON string contenant les URLs des fichiers audio'
     },
     createdAt: {
         type: DataTypes.DATE,
