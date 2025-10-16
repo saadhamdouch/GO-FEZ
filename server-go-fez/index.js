@@ -12,7 +12,8 @@ const { UserRouter } = require("./routes/UserRoute.js"); // Importer les routes 
 const CityRoute = require("./routes/CityRoute.js");
 const ThemeRoute = require("./routes/ThemeRoute.js");
 const CircuitRoutes = require("./routes/CircuitRoutes.js");
-const categoryRoutes = require("./routes/categoryRoutes.js");const { POIRouter } = require("./routes/POIRoute.js"); // Importer les routes POI
+const categoryRoutes = require("./routes/categoryRoutes.js");
+const { POIRouter } = require("./routes/POIRoute.js"); // Importer les routes POI
 
 const app = express();
 const { header } = require("express-validator");

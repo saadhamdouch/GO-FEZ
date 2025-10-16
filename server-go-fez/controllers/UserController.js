@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-const { User } = require('../Models/User');
+const { User } = require('../models/User');
 
 // Middleware pour vérifier les erreurs de validation
 const handleValidationErrors = (req, res, next) => {

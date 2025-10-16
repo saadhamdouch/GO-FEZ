@@ -1,7 +1,9 @@
 const { validationResult } = require('express-validator');
-const { POI, POILocalization, POIFile } = require('../Models');
+const { POI, POILocalization, POIFile } = require('../models');
 const { 
-    uploadFile
+    uploadFile,
+    uploadFromBuffer,
+    uploadMultipleFiles
  } = require('../Config/cloudinary');
 
 // Middleware pour vérifier les erreurs de validation
@@ -36,103 +38,349 @@ const createPOI = async (req, res) => {
             enLocalization,
             
             // Fichiers multimédias
-            poiFileData
+            poiFileData,
+            audioFiles
         } = req.body;
 
-        // TODO: Logique de création du POI
+        console.log('📝 Données reçues pour création POI:', {
+            coordinates,
+            category,
+            cityId,
+            hasLocalizations: !!(arLocalization || frLocalization || enLocalization),
+            hasFiles: !!poiFileData,
+            hasAudio: !!audioFiles
+        });
+
         // 1. Créer les localisations (ar, fr, en) si fournies
-        let arLocalizationData = null;
-        let frLocalizationData = null;
-        let enLocalizationData = null;
-        if(arLocalization) {
-            const arabicAudio = arLocalization.audioFileUrl;
-            const arabicAudioUrl = await uploadFile(arabicAudio, "audio/arabic");
-            arLocalizationData = {
-                name : arLocalization.name,
-                description : arLocalization.description,
-                address : arLocalization.address,
-                audioFileUrl: arabicAudioUrl
-            };
+        let arLocalizationResponse = null;
+        let frLocalizationResponse = null;
+        let enLocalizationResponse = null;
+
+        // Créer la localisation arabe
+        if (arLocalization && arLocalization.name) {
+            let arabicAudioUrl = null;
+            if (audioFiles && audioFiles.ar) {
+                try {
+                    // Simuler l'upload d'audio (dans un vrai cas, vous recevriez le fichier via multer)
+                    arabicAudioUrl = `https://res.cloudinary.com/your-cloud/audio/arabic/${audioFiles.ar}`;
+                } catch (error) {
+                    console.warn('⚠️ Erreur upload audio arabe:', error.message);
+                }
+            }
+
+            arLocalizationResponse = await POILocalization.create({
+                name: arLocalization.name,
+                description: arLocalization.description || null,
+                address: arLocalization.address || null,
+                audioFiles: arabicAudioUrl ? JSON.stringify([arabicAudioUrl]) : null
+            });
         }
-        if(frLocalization) {
-            const frenchAudio = frLocalization.audioFileUrl;
-            const frenchAudioUrl = await uploadFile(frenchAudio, "audio/french");
-            frLocalizationData = {
-                name : frLocalization.name,
-                description : frLocalization.description,
-                address : frLocalization.address,
-                audioFileUrl: frenchAudioUrl
-            };
+
+        // Créer la localisation française
+        if (frLocalization && frLocalization.name) {
+            let frenchAudioUrl = null;
+            if (audioFiles && audioFiles.fr) {
+                try {
+                    frenchAudioUrl = `https://res.cloudinary.com/your-cloud/audio/french/${audioFiles.fr}`;
+                } catch (error) {
+                    console.warn('⚠️ Erreur upload audio français:', error.message);
+                }
+            }
+
+            frLocalizationResponse = await POILocalization.create({
+                name: frLocalization.name,
+                description: frLocalization.description || null,
+                address: frLocalization.address || null,
+                audioFiles: frenchAudioUrl ? JSON.stringify([frenchAudioUrl]) : null
+            });
         }
-        if(enLocalization) {
-            const englishAudio = enLocalization.audioFileUrl;
-            const englishAudioUrl = await uploadFile(englishAudio, "audio/english");
-            enLocalizationData = {
-                name : enLocalization.name,
-                description : enLocalization.description,
-                address : enLocalization.address,
-                audioFileUrl: englishAudioUrl
-            };
+
+        // Créer la localisation anglaise
+        if (enLocalization && enLocalization.name) {
+            let englishAudioUrl = null;
+            if (audioFiles && audioFiles.en) {
+                try {
+                    englishAudioUrl = `https://res.cloudinary.com/your-cloud/audio/english/${audioFiles.en}`;
+                } catch (error) {
+                    console.warn('⚠️ Erreur upload audio anglais:', error.message);
+                }
+            }
+
+            enLocalizationResponse = await POILocalization.create({
+                name: enLocalization.name,
+                description: enLocalization.description || null,
+                address: enLocalization.address || null,
+                audioFiles: englishAudioUrl ? JSON.stringify([englishAudioUrl]) : null
+            });
         }
-        // save data to database
-        const arLocalizationResponse = await POILocalization.create(arLocalizationData);
-        const frLocalizationResponse = await POILocalization.create(frLocalizationData);
-        const enLocalizationResponse = await POILocalization.create(enLocalizationData);
+
         // 2. Créer le POIFile avec les URLs Cloudinary
-        const image = poiFileData.image;
-        const imageUrl = await uploadFile(image, "image/poi");
-        const video = poiFileData.video;
-        const videoUrl = await uploadFile(video, "video/poi");
-        const virtualTour = poiFileData.virtualTour360;
-        const virtualTourUrl = await uploadFile(virtualTour, "virtualTour/poi");
-        const poiFile = {
+        let poiFileResponse = null;
+        if (poiFileData) {
+            let imageUrl = null;
+            let videoUrl = null;
+            let virtualTourUrl = null;
+
+            // Simuler les uploads (dans un vrai cas, vous recevriez les fichiers via multer)
+            if (poiFileData.image) {
+                imageUrl = `https://res.cloudinary.com/your-cloud/image/poi/${poiFileData.image}`;
+            }
+            if (poiFileData.video) {
+                videoUrl = `https://res.cloudinary.com/your-cloud/video/poi/${poiFileData.video}`;
+            }
+            if (poiFileData.virtualTour360) {
+                virtualTourUrl = `https://res.cloudinary.com/your-cloud/virtualTour/poi/${poiFileData.virtualTour360}`;
+            }
+
+            poiFileResponse = await POIFile.create({
             image: imageUrl,
             video: videoUrl,
             virtualTour360: virtualTourUrl
-        };
-        const poiFileResponse = await POIFile.create(poiFile);
+            });
+        }
+
         // 3. Créer le POI principal avec toutes les relations
-        if(!arLocalizationResponse || !frLocalizationResponse || !enLocalizationResponse) {
-            return res.status(400).json({
-                success: false,
-                message: 'Erreur lors de la création des localisations'
-            });
-        }
-        if(!poiFileResponse) {
-            return res.status(400).json({
-                success: false,
-                message: 'Erreur lors de la création du fichier POI'
-            });
-        }
-        const poi = {
-            ar: arLocalizationResponse?.id,
-            fr: frLocalizationResponse?.id,
-            en: enLocalizationResponse?.id,
+        const poiData = {
+            ar: arLocalizationResponse?.id || null,
+            fr: frLocalizationResponse?.id || null,
+            en: enLocalizationResponse?.id || null,
             coordinates: coordinates,
-            category: category,
-            practicalInfo: practicalInfo,
+            category: parseInt(category),
+            practicalInfo: practicalInfo ? JSON.parse(practicalInfo) : null,
             cityId: cityId,
             isActive: isActive,
             isVerified: isVerified,
             isPremium: isPremium,
-            poiFileId: poiFileResponse.id
+            poiFileId: poiFileResponse?.id || null
         };
-        const poiResponse = await POI.create(poi);
+
+        console.log('🏗️ Création du POI avec les données:', poiData);
+
+        const poiResponse = await POI.create(poiData);
+
         // 4. Retourner le POI créé avec ses relations
-        if(!poiResponse) {
-            return res.status(400).json({
-                success: false,
-                message: 'Erreur lors de la création du POI'
-            });
-        }
         res.status(201).json({
             success: true,
             message: 'POI créé avec succès',
-            poi: poiResponse
+            data: {
+                poi: poiResponse,
+                localizations: {
+                    ar: arLocalizationResponse,
+                    fr: frLocalizationResponse,
+                    en: enLocalizationResponse
+                },
+                files: poiFileResponse
+            }
         });
 
     } catch (error) {
-        console.error('Erreur lors de la création du POI:', error);
+        console.error('❌ Erreur lors de la création du POI:', error);
+        res.status(500).json({
+                success: false,
+            message: 'Erreur interne du serveur',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+// Méthode pour créer un POI avec upload de fichiers
+const createPOIWithFiles = async (req, res) => {
+    try {
+        console.log('📁 Fichiers reçus:', {
+            image: req.files?.image ? req.files.image[0].originalname : 'Aucun',
+            fr_audio: req.files?.fr_audio ? req.files.fr_audio[0].originalname : 'Aucun',
+            ar_audio: req.files?.ar_audio ? req.files.ar_audio[0].originalname : 'Aucun',
+            en_audio: req.files?.en_audio ? req.files.en_audio[0].originalname : 'Aucun',
+            video: req.files?.video ? req.files.video[0].originalname : 'Aucun',
+            virtualTour360: req.files?.virtualTour360 ? req.files.virtualTour360[0].originalname : 'Aucun'
+        });
+        console.log('📁 Clés req.files:', Object.keys(req.files || {}));
+
+        const {
+            coordinates,
+            category,
+            practicalInfo,
+            cityId,
+            isActive = true,
+            isVerified = false,
+            isPremium = false,
+            arLocalization,
+            frLocalization,
+            enLocalization
+        } = req.body;
+
+        // 1. Créer les localisations avec les fichiers audio uploadés
+        let arLocalizationResponse = null;
+        let frLocalizationResponse = null;
+        let enLocalizationResponse = null;
+
+        // Parser les localisations JSON
+        const arLoc = arLocalization ? JSON.parse(arLocalization) : null;
+        const frLoc = frLocalization ? JSON.parse(frLocalization) : null;
+        const enLoc = enLocalization ? JSON.parse(enLocalization) : null;
+
+        // Créer la localisation arabe
+        if (arLoc && arLoc.name) {
+            let arabicAudioUrl = null;
+            if (req.files?.ar_audio) {
+                try {
+                    const audioResult = await uploadFromBuffer(
+                        req.files.ar_audio[0].buffer,
+                        'go-fez/audio/arabic',
+                        { resource_type: 'video' }
+                    );
+                    arabicAudioUrl = audioResult.secure_url;
+                } catch (error) {
+                    console.warn('⚠️ Erreur upload audio arabe:', error.message);
+                }
+            }
+
+            arLocalizationResponse = await POILocalization.create({
+                name: arLoc.name,
+                description: arLoc.description || null,
+                address: arLoc.address || null,
+                audioFiles: arabicAudioUrl ? JSON.stringify([arabicAudioUrl]) : null
+            });
+        }
+
+        // Créer la localisation française
+        if (frLoc && frLoc.name) {
+            let frenchAudioUrl = null;
+            if (req.files?.fr_audio) {
+                try {
+                    const audioResult = await uploadFromBuffer(
+                        req.files.fr_audio[0].buffer,
+                        'go-fez/audio/french',
+                        { resource_type: 'video' }
+                    );
+                    frenchAudioUrl = audioResult.secure_url;
+                } catch (error) {
+                    console.warn('⚠️ Erreur upload audio français:', error.message);
+                }
+            }
+
+            frLocalizationResponse = await POILocalization.create({
+                name: frLoc.name,
+                description: frLoc.description || null,
+                address: frLoc.address || null,
+                audioFiles: frenchAudioUrl ? JSON.stringify([frenchAudioUrl]) : null
+            });
+        }
+
+        // Créer la localisation anglaise
+        if (enLoc && enLoc.name) {
+            let englishAudioUrl = null;
+            if (req.files?.en_audio) {
+                try {
+                    const audioResult = await uploadFromBuffer(
+                        req.files.en_audio[0].buffer,
+                        'go-fez/audio/english',
+                        { resource_type: 'video' }
+                    );
+                    englishAudioUrl = audioResult.secure_url;
+                } catch (error) {
+                    console.warn('⚠️ Erreur upload audio anglais:', error.message);
+                }
+            }
+
+            enLocalizationResponse = await POILocalization.create({
+                name: enLoc.name,
+                description: enLoc.description || null,
+                address: enLoc.address || null,
+                audioFiles: englishAudioUrl ? JSON.stringify([englishAudioUrl]) : null
+            });
+        }
+
+        // 2. Créer le POIFile avec les fichiers uploadés
+        let poiFileResponse = null;
+        if (req.files?.image || req.files?.video || req.files?.virtualTour360) {
+            let imageUrl = null;
+            let videoUrl = null;
+            let virtualTourUrl = null;
+
+            // Upload de l'image
+            if (req.files?.image) {
+                try {
+                    const imageResult = await uploadFromBuffer(
+                        req.files.image[0].buffer, 
+                        'go-fez/images/poi'
+                    );
+                    imageUrl = imageResult.secure_url;
+                } catch (error) {
+                    console.warn('⚠️ Erreur upload image:', error.message);
+                }
+            }
+
+            // Upload de la vidéo
+            if (req.files?.video) {
+                try {
+                    const videoResult = await uploadFromBuffer(
+                        req.files.video[0].buffer, 
+                        'go-fez/videos/poi',
+                        { resource_type: 'video' }
+                    );
+                    videoUrl = videoResult.secure_url;
+                } catch (error) {
+                    console.warn('⚠️ Erreur upload vidéo:', error.message);
+                }
+            }
+
+            // Upload de la visite virtuelle 360°
+            if (req.files?.virtualTour360) {
+                try {
+                    const virtualTourResult = await uploadFromBuffer(
+                        req.files.virtualTour360[0].buffer, 
+                        'go-fez/virtual-tours/poi',
+                        { resource_type: 'video' }
+                    );
+                    virtualTourUrl = virtualTourResult.secure_url;
+                } catch (error) {
+                    console.warn('⚠️ Erreur upload visite virtuelle:', error.message);
+                }
+            }
+
+            poiFileResponse = await POIFile.create({
+                image: imageUrl,
+                video: videoUrl,
+                virtualTour360: virtualTourUrl
+            });
+        }
+
+        // 3. Créer le POI principal
+        const poiData = {
+            ar: arLocalizationResponse?.id || null,
+            fr: frLocalizationResponse?.id || null,
+            en: enLocalizationResponse?.id || null,
+            coordinates: JSON.parse(coordinates),
+            category: parseInt(category),
+            practicalInfo: practicalInfo ? JSON.parse(practicalInfo) : null,
+            cityId: cityId,
+            isActive: isActive === 'true' || isActive === true,
+            isVerified: isVerified === 'true' || isVerified === true,
+            isPremium: isPremium === 'true' || isPremium === true,
+            poiFileId: poiFileResponse?.id || null
+        };
+
+        console.log('🏗️ Création du POI avec fichiers:', poiData);
+
+        const poiResponse = await POI.create(poiData);
+
+        res.status(201).json({
+            success: true,
+            message: 'POI créé avec succès avec fichiers',
+            data: {
+                poi: poiResponse,
+                localizations: {
+                    ar: arLocalizationResponse,
+                    fr: frLocalizationResponse,
+                    en: enLocalizationResponse
+                },
+                files: poiFileResponse
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Erreur lors de la création du POI avec fichiers:', error);
         res.status(500).json({
             success: false,
             message: 'Erreur interne du serveur',
@@ -224,6 +472,7 @@ const deletePOI = async (req, res) => {
 module.exports = {
     handleValidationErrors,
     createPOI,
+    createPOIWithFiles,
     findAllPOIs,
     findOnePOI,
     updatePOI,
