@@ -64,8 +64,8 @@ app.use(limiter);
 app.use('/api/users', UserRouter);
 app.use('/api/city', CityRoute);
 app.use('/api/themes/', ThemeRoute);
-app.use('/api/circuits', require('./routes/CircuitRoutes'));
-app.use('/api/categorys', require('./routes/categoryRoutes'));
+app.use('/api/circuits', CircuitRoutes);
+app.use('/api/categorys', categoryRoutes);
 
 // Fonction pour démarrer le serveur
 function startServer() {

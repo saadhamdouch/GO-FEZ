@@ -34,7 +34,7 @@ const POI = sequelize.define('POI', {
         comment: 'Coordonnées géographiques {latitude, longitude, address}'
     },
     category: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         allowNull: false,
         validate: {
             min: 1
@@ -95,6 +95,10 @@ const POI = sequelize.define('POI', {
         allowNull: true,
         field: 'poi_file_id',
         comment: 'Foreign key vers POIFile'
+    },
+     isDeleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
     },
     createdAt: {
         type: DataTypes.DATE,

@@ -1,7 +1,6 @@
 const xss = require('xss');
 const { Category, POI } = require('../models');
 
-//  Créer une catégorie
 exports.createCategory = async (req, res) => {
   try {
     const { ar, fr, en, isActive } = req.body;
