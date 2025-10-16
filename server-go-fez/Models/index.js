@@ -56,15 +56,15 @@ Theme.belongsToMany(Circuit, {
 	as: "circuitsFromThemes",
 });
 
-// Category.hasMany(POI, {
-//   foreignKey: 'categoryId',
-//   as: 'pois',
-// });
+Category.hasMany(POI, {
+  foreignKey: 'category',
+  as: 'pois',
+});
 
-// POI.belongsTo(Category, {
-//   foreignKey: 'categoryId',
-//   as: 'category',
-// });
+POI.belongsTo(Category, {
+  foreignKey: 'category',
+  as: 'categoryPOI',
+});
 
 //  Associations POI ↔ POILocalization
 POI.belongsTo(POILocalization, {
@@ -106,5 +106,17 @@ POI.belongsTo(POIFile, {
 	targetKey: "id",
 });
 POIFile.hasMany(POI, { as: "pois", foreignKey: "poiFileId", sourceKey: "id" });
+
+// Associations POI ↔ City
+POI.belongsTo(City, {
+    as: "city",
+    foreignKey: "cityId", 
+    targetKey: "id",      
+});
+
+City.hasMany(POI, {
+    as: "pois",
+    foreignKey: "cityId",
+});
 
 module.exports = models;

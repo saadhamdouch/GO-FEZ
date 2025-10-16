@@ -60,14 +60,11 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Routes
-app.use("/api/users", UserRouter);
-app.use("/api/city", CityRoute);
-app.use("/api/themes/", ThemeRoute);
-app.use("/api/circuits", require("./routes/CircuitRoutes"));
-app.use("/api/categorys", require("./routes/categoryRoutes"));
-app.use("/api/pois", POIRouter);
-app.use("/api/config", ConfigRouter);
-app.use("/api/gamification", GamificationRouter);
+app.use('/api/users', UserRouter);
+app.use('/api/city', CityRoute);
+app.use('/api/themes/', ThemeRoute);
+app.use('/api/circuits', require('./routes/CircuitRoutes'));
+app.use('/api/categorys', require('./routes/categoryRoutes'));
 
 // Fonction pour démarrer le serveur
 function startServer() {

@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { User } = require('../Models/User.js');
+const { User } = require('../models/User.js');
 // const logger = require('../utils/logger.js'); // Remplacé par console.log
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });

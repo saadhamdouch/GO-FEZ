@@ -28,10 +28,7 @@ const Circuit = sequelize.define('Circuit', {
       type: DataTypes.STRING,
       allowNull: true,
     },
-  themeId: {
-      type: DataTypes.UUID,
-      allowNull: true, // car la relation est gérée via la table pivot themeCircuit
-    },
+  
     cityId: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -45,12 +42,12 @@ const Circuit = sequelize.define('Circuit', {
       allowNull: false,
     },
     startPoint: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: true,
       comment: 'Point de départ (id dans la table des POIs)',
     },
     endPoint: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: true,
       comment: 'Point d\'arrivée (id dans la table des POIs)',
     },

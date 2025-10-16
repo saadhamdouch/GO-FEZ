@@ -1,5 +1,7 @@
 const { Circuit, Theme, POI, ThemeCircuit, CircuitPOI, City } = require('../models');
 const xss = require('xss');
+const { uploadImage } = require("../config/cloudinary");
+
 
  // Créer un circuit avec ses relations (thèmes + POIs)
 
@@ -24,9 +26,9 @@ exports.createCircuitWithRelations = async (req, res) => {
     } = req.body;
 
     const sanitizedData = {
-      ar: xss(ar),
-      fr: xss(fr),
-      en: xss(en),
+      ar,
+      fr,
+      en,
       duration: duration ? Number(duration) : null,
       distance: distance ? Number(distance) : null,
       startPoint: null,
@@ -41,22 +43,22 @@ exports.createCircuitWithRelations = async (req, res) => {
       isDeleted: false
     };
 
-    // Sécurisation du parsing JSON
-    try {
-      sanitizedData.startPoint = startPoint ? JSON.parse(startPoint) : null;
-    } catch {
-      sanitizedData.startPoint = null;
-    }
+   sanitizedData.startPoint = startPoint || null;
+sanitizedData.endPoint = endPoint || null;
 
-    try {
-      sanitizedData.endPoint = endPoint ? JSON.parse(endPoint) : null;
-    } catch {
-      sanitizedData.endPoint = null;
-    }
 
-    // TODO: upload image vers Cloudinary (plus tard)
-    const urlImage = "https://example.com";
-    sanitizedData.image = urlImage;
+    // TODO: upload image vers Cloudinary (plus tard)  
+   
+      if (req.file && req.file.path) {
+    
+       console.log("✅ Image uploadée sur Cloudinary :", req.file.path);
+       sanitizedData.image = req.file.path; // URL Cloudinary directe
+     } else {
+       console.log("⚠️ Aucune image reçue dans la requête");
+       sanitizedData.image = null;
+     }
+
+ 
 
     //  Création du circuit
     const circuit = await Circuit.create(sanitizedData);
@@ -177,9 +179,9 @@ exports.updateCircuit = async (req, res) => {
       sanitizedData.isActive = circuitData.isActive === 'true' || circuitData.isActive === true;
 
     if (req.file) {
-      const urlImage = "https://example.com"; 
-      sanitizedData.image = urlImage;
-    }
+  sanitizedData.image = req.file.path; 
+}
+
 
     await circuit.update(sanitizedData);
 
