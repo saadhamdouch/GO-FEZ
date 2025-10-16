@@ -9,6 +9,7 @@ const POI = sequelize.define('POI', {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
         allowNull: false
+
     },
     ar: {
         type: DataTypes.UUID,
