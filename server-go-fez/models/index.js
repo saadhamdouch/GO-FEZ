@@ -1,4 +1,3 @@
-const { POI } = require("./POI");
 const { Circuit } = require("./Circuit");
 const { CircuitPOI } = require("./CircuitPOI");
 const { Theme } = require("./Theme");
@@ -8,6 +7,7 @@ const { POILocalization } = require("./POILocalization");
 const { POIFile } = require("./POIFile");
 const { Category } = require("./Category");
 const { GamificationRule } = require("./GamificationRule");
+const { POI } = require("./POI");
 
 // Création d’un objet contenant tous les modèles
 const models = {

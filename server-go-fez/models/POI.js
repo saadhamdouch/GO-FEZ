@@ -33,17 +33,17 @@ const POI = sequelize.define('POI', {
         allowNull: true,
         comment: 'Coordonnées géographiques {latitude, longitude, address}'
     },
-category: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    comment: 'ID de la catégorie du POI',
-    references: {
-        model: 'categories',  // nom exact de la table
-        key: 'id'             // clé primaire de Category
+    category: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        comment: 'ID de la catégorie du POI',
+        references: {
+            model: 'categories',  // nom exact de la table
+            key: 'id'             // clé primaire de Category
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
     },
-    onUpdate: 'CASCADE',
-    onDelete: 'CASCADE'
-},
     practicalInfo: {
         type: DataTypes.JSON,
         allowNull: true,
@@ -99,11 +99,11 @@ category: {
         field: 'poi_file_id',
         comment: 'Foreign key vers POIFile'
     },
-    
-isDeleted: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: false,
-        },
+
+    isDeleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
     createdAt: {
         type: DataTypes.DATE,
         allowNull: false,

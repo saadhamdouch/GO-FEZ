@@ -17,6 +17,7 @@ const { POIRouter } = require("./routes/POIRoute.js"); // Importer les routes PO
 const { ConfigRouter } = require("./routes/ConfigRoute.js");
 const { GamificationRouter } = require("./routes/gamificationRouter.js");
 
+
 const app = express();
 const { header } = require("express-validator");
 const rateLimit = require("express-rate-limit");
@@ -63,8 +64,12 @@ app.use(limiter);
 app.use('/api/users', UserRouter);
 app.use('/api/city', CityRoute);
 app.use('/api/themes/', ThemeRoute);
-app.use('/api/circuits', require('./routes/CircuitRoutes'));
-app.use('/api/categorys', require('./routes/categoryRoutes'));
+app.use('/api/circuits', CircuitRoutes);
+app.use('/api/categorys', categoryRoutes);
+app.use('/api/pois', POIRouter);
+app.use('/api/config', ConfigRouter);
+app.use('/api/gamification', GamificationRouter);
+
 
 // Fonction pour démarrer le serveur
 function startServer() {

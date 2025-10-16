@@ -9,7 +9,7 @@ const Category = sequelize.define('Category', {
     primaryKey: true,
   },
   ar: {
-    type: DataTypes.JSON, 
+    type: DataTypes.JSON,
     allowNull: false,
   },
   fr: {
@@ -24,20 +24,20 @@ const Category = sequelize.define('Category', {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
-     isDeleted: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-    },
-   createdAt: {
-        type: DataTypes.DATE,
-        field: 'created_at',
-        defaultValue: DataTypes.NOW,
-    },
-    updatedAt: {
-        type: DataTypes.DATE,
-        field: 'updated_at',
-        defaultValue: DataTypes.NOW,
-    },
+  isDeleted: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    field: 'created_at',
+    defaultValue: DataTypes.NOW,
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    field: 'updated_at',
+    defaultValue: DataTypes.NOW,
+  },
 }, {
   tableName: 'categories',
   timestamps: true,
@@ -45,4 +45,4 @@ const Category = sequelize.define('Category', {
   createdAt: 'created_at',
 });
 
-module.exports = {Category};
+module.exports = { Category };

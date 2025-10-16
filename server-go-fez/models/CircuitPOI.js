@@ -4,7 +4,6 @@ const db = require('../Config/db');
 const sequelize = db.getSequelize();
 
 const CircuitPOI = sequelize.define('CircuitPOI', {
-    
     poiId: {        
         type: DataTypes.UUID,
         allowNull: false,
