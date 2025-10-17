@@ -4,7 +4,7 @@ const {
     uploadFile,
     uploadFromBuffer,
     uploadMultipleFiles
- } = require('../config/cloudinary');
+ } = require('../Config/cloudinary');
 
 // Middleware pour vérifier les erreurs de validation
 const handleValidationErrors = (req, res, next) => {
@@ -328,10 +328,12 @@ const createPOIWithFiles = async (req, res) => {
             // Upload de la visite virtuelle 360°
             if (req.files?.virtualTour360) {
                 try {
+                    const vtFile = req.files.virtualTour360[0];
+                    const isVideo = vtFile.mimetype.startsWith('video/');
                     const virtualTourResult = await uploadFromBuffer(
-                        req.files.virtualTour360[0].buffer, 
+                        vtFile.buffer, 
                         'go-fez/virtual-tours/poi',
-                        { resource_type: 'video' }
+                        { resource_type: isVideo ? 'video' : 'image' }
                     );
                     virtualTourUrl = virtualTourResult.secure_url;
                 } catch (error) {
@@ -392,11 +394,39 @@ const createPOIWithFiles = async (req, res) => {
 // Méthode pour récupérer tous les POI
 const findAllPOIs = async (req, res) => {
 	try {
-		// TODO: Logique de récupération des POI
+		const pois = await POI.findAll({
+			where: {isDeleted: false},
+			include: [
+				{
+					model: POILocalization,
+					as: 'frLocalization',
+					foreignKey: 'fr',
+					targetKey: 'id'
+				},
+				{
+					model: POILocalization,
+					as: 'arLocalization',
+					foreignKey: 'ar',
+					targetKey: 'id'
+				},
+				{
+					model: POILocalization,
+					as: 'enLocalization',
+					foreignKey: 'en',
+					targetKey: 'id'
+				}
+			]
+		});
+        if (!pois) {
+            return res.status(404).json({
+                success: false,
+                message: "Aucun POI trouvé",
+            });
+        }
 		res.status(200).json({
 			success: true,
-			message: "Logique de récupération à implémenter",
-			pois: [],
+			message: "POI récupérés avec succès",
+			pois: pois,
 		});
 	} catch (error) {
 		console.error("Erreur lors de la récupération des POI:", error);

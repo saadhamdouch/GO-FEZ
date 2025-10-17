@@ -1,10 +1,92 @@
 const { Circuit, Theme, POI, ThemeCircuit, CircuitPOI, City } = require('../models');
 const xss = require('xss');
-const { uploadImage } = require("../config/cloudinary");
+const { uploadImage, uploadCircuitImage } = require("../Config/cloudinary");
 
 
- // Créer un circuit avec ses relations (thèmes + POIs)
+// Créer un circuit avec upload d'image
+exports.createCircuitWithImage = async (req, res) => {
+  try {
+    console.log('📁 Fichier image reçu:', req.file ? req.file.originalname : 'Aucun');
+    
+    const { data } = req.body;
+    const circuitData = JSON.parse(data);
+    
+    const {
+      cityId,
+      duration,
+      distance,
+      isActive,
+      isPremium,
+      themeIds,
+      poiIds,
+      localizations
+    } = circuitData;
 
+    const sanitizedData = {
+      ar: localizations.ar,
+      fr: localizations.fr,
+      en: localizations.en,
+      duration: duration ? Number(duration) : null,
+      distance: distance ? Number(distance) : null,
+      startPoint: null,
+      endPoint: null,
+      isPremium: isPremium === 'true' || isPremium === true,
+      price: null,
+      rating: 0,
+      reviewCount: 0,
+      cityId,
+      isActive: isActive === 'true' || isActive === true,
+      isDeleted: false,
+      image: req.file ? req.file.path : null
+    };
+
+    console.log('🏗️ Création du circuit avec les données:', sanitizedData);
+
+    // Création du circuit
+    const circuit = await Circuit.create(sanitizedData);
+
+    // Liaison des thèmes
+    if (themeIds && themeIds.length > 0) {
+      await circuit.setThemes(themeIds);
+    }
+
+    // Liaison des POIs
+    if (poiIds && poiIds.length > 0) {
+      for (let i = 0; i < poiIds.length; i++) {
+        await CircuitPOI.create({
+          circuitId: circuit.id,
+          poiId: poiIds[i],
+          order: i + 1,
+          estimatedTime: null
+        });
+      }
+    }
+
+    // Récupération du circuit complet avec ses relations
+    const circuitWithRelations = await Circuit.findByPk(circuit.id, {
+      include: [
+        { model: City, as: 'city' },
+        { model: Theme, as: 'themes', through: { attributes: [] } },
+        { model: POI, as: 'pois' }
+      ]
+    });
+
+    return res.status(201).json({ 
+      success: true,
+      message: 'Circuit créé avec succès',
+      data: circuitWithRelations 
+    });
+  } catch (error) {
+    console.error('❌ Erreur création circuit avec image:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Erreur serveur', 
+      error: error.message 
+    });
+  }
+};
+
+// Créer un circuit avec ses relations (thèmes + POIs)
 exports.createCircuitWithRelations = async (req, res) => {
   try {
     const {

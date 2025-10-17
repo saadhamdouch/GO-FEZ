@@ -32,6 +32,21 @@ const imageStorage = new CloudinaryStorage({
   }
 });
 
+// Configuration pour les images de circuits
+const circuitImageStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'go-fez/circuits',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    transformation: [
+      { width: 1200, height: 800, crop: 'limit' },
+      { quality: 'auto:best', fetch_format: 'auto' }, // Compression AI optimale
+      { flags: 'lossy' }, // Compression avec perte
+      { bytes: 400000 } // Taille maximale de 400ko (400 * 1024 bytes)
+    ]
+  }
+});
+
 // Configuration pour les fichiers audio
 const audioStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
@@ -74,6 +89,11 @@ const virtualTourStorage = new CloudinaryStorage({
 // Middlewares Multer
 const uploadImage = multer({ 
   storage: imageStorage,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
+});
+
+const uploadCircuitImage = multer({ 
+  storage: circuitImageStorage,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
 });
 
@@ -206,6 +226,7 @@ const uploadMultipleFiles = async (files, folder = "", options = {}) => {
 module.exports = {
   cloudinary,
   uploadImage,
+  uploadCircuitImage,
   uploadAudio,
   uploadVideo,
   uploadVirtualTour,
