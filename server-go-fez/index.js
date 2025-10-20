@@ -28,22 +28,35 @@ const PORT = process.env.PORT || 8080;
 // Middlewares globaux
 app.use(express.json());
 
+const ALLOWED_ORIGINS = [
+    process.env.CLIENT_URL, // http://127.0.0.1:5501
+    'http://localhost:5501', 
+    'null' 
+];
+
 console.log(process.env.CLIENT_URL);
 app.use(
-	cors({
-		origin: process.env.CLIENT_URL,
-		credentials: true,
-		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
-		allowedHeaders: [
-			"Content-Type",
-			"Authorization",
-			"X-CSRF-Token",
-			"x-method",
-		],
-		exposedHeaders: ["Content-Range", "X-Content-Range", "X-CSRF-Token"],
-		preflightContinue: false,
-		optionsSuccessStatus: 204,
-	})
+cors({
+       
+        origin: (origin, callback) => {
+            if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'), false);
+            }
+        },
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
+        allowedHeaders: [
+            "Content-Type",
+            "Authorization",
+            "X-CSRF-Token",
+            "x-method",
+        ],
+        exposedHeaders: ["Content-Range", "X-Content-Range", "X-CSRF-Token"],
+        preflightContinue: false,
+        optionsSuccessStatus: 204,
+    })
 );
 
 app.use(helmet()); // Ajouter des en-têtes de sécurité

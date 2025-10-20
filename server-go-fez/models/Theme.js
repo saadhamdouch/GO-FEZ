@@ -37,6 +37,17 @@ const Theme = sequelize.define('Theme', {
         allowNull: true,
         comment: 'Image du thème (URL ou nom de fichier)',
     },
+    imagePublicId: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Public ID de l\'image pour la suppression Cloudinary',
+  },
+  iconPublicId: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Public ID de l\'icône pour la suppression Cloudinary',
+  },    
+  
     color: {
         type: DataTypes.STRING(50),
         allowNull: true,
