@@ -1,30 +1,89 @@
 const { Theme, Circuit } = require('../models');
 const xss = require('xss');
+const { uploadImage, uploadThemeFiles, deleteFile } = require("../config/cloudinary");
+
+
+const sanitizeThemeLocalizations = (localizations) => {
+    const data = {};
+    if (localizations.ar) {
+        data.ar = {
+            name: xss(localizations.ar.name || ''),
+            desc: xss(localizations.ar.desc || '')
+        };
+    }
+    if (localizations.fr) {
+        data.fr = {
+            name: xss(localizations.fr.name || ''),
+            desc: xss(localizations.fr.desc || '')
+        };
+    }
+    if (localizations.en) {
+        data.en = {
+            name: xss(localizations.en.name || ''),
+            desc: xss(localizations.en.desc || '')
+        };
+    }
+    return data;
+};
+
 
 exports.createTheme = async (req, res) => {
-  try {
-    const { ar, fr, en, color, isActive } = req.body;
+    const iconFile = req.files?.icon ? req.files.icon[0] : null;
+    const imageFile = req.files?.image ? req.files.image[0] : null;
 
-    if (!ar || !fr || !en || !color) {
-      return res.status(400).json({ status: 'fail', message: 'Champs requis manquants' });
+    try {
+        const { data } = req.body;
+        
+        if (!data) {
+            return res.status(400).json({ status: 'fail', message: 'Le champ de données (data) est manquant.' });
+        }
+        
+        const themeData = JSON.parse(data);
+        
+        const { localizations, color, isActive } = themeData;
+
+        if (!localizations || !localizations.ar || !localizations.fr || !localizations.en || !color) {
+            return res.status(400).json({ status: 'fail', message: 'Champs de données requis (localizations, color) manquants.' });
+        }
+
+        if (!imageFile || !iconFile) {
+            if (iconFile) await deleteFile(iconFile.filename);
+            if (imageFile) await deleteFile(imageFile.filename);
+            return res.status(400).json({ status: 'fail', message: "L'image et l'icône du thème sont requises." });
+        }
+        
+        const sanitizedLocalizations = sanitizeThemeLocalizations(localizations);
+
+        const sanitizedData = {
+            ...sanitizedLocalizations, 
+            color: xss(color),
+            isActive: isActive === 'true' || isActive === true,
+            isDeleted: false,
+
+            image: imageFile.path, 
+            imagePublicId: imageFile.filename, 
+            icon: iconFile.path,
+            iconPublicId: iconFile.filename
+        };
+
+        console.log('🏗️ Création du thème avec les données:', sanitizedData);
+        
+        const theme = await Theme.create(sanitizedData);
+        
+        return res.status(201).json({ status: 'success', data: theme });
+        
+    } catch (error) {
+        console.error('❌ Erreur création thème :', error);
+        
+        if (iconFile) await deleteFile(iconFile.filename);
+        if (imageFile) await deleteFile(imageFile.filename);
+        
+        if (error instanceof SyntaxError && error.message.includes('Unexpected token')) {
+            return res.status(400).json({ status: 'fail', message: 'Le format des données JSON (data) est invalide.' });
+        }
+        
+        return res.status(500).json({ status: 'error', message: 'Erreur serveur', error: error.message });
     }
-
-    const sanitizedData = {
-      ar: xss(ar),
-      fr: xss(fr),
-      en: xss(en),
-      color: xss(color),
-      isActive: isActive === 'true' || isActive === true,
-      image: "https://example.com",
-      icon: "https://example.com"
-    };
-
-    const theme = await Theme.create(sanitizedData);
-    res.status(201).json({ status: 'success', data: theme });
-  } catch (error) {
-    console.error('Erreur création thème :', error);
-    res.status(500).json({ status: 'error', message: 'Erreur serveur', error: error.message });
-  }
 };
 
 exports.getAllThemes = async (req, res) => {
@@ -70,42 +129,98 @@ exports.getThemeById = async (req, res) => {
 };
 
 exports.updateTheme = async (req, res) => {
-  try {
-    const theme = await Theme.findByPk(req.params.id);
-    if (!theme || theme.isDeleted) {
-      return res.status(404).json({ status: 'fail', message: 'Thème introuvable' });
+    const { id } = req.params;
+    const iconFile = req.files?.icon ? req.files.icon[0] : null;
+    const imageFile = req.files?.image ? req.files.image[0] : null;
+
+    let uploadedIconPublicId = null; 
+    let uploadedImagePublicId = null;
+
+    try {
+        const theme = await Theme.findByPk(id);
+        if (!theme || theme.isDeleted) {
+            return res.status(404).json({ status: 'fail', message: 'Thème introuvable' });
+        }
+        
+        let themeData = req.body;
+
+        if (req.body.data) {
+            try {
+                themeData = JSON.parse(req.body.data);
+            } catch (e) {
+                if (iconFile) await deleteFile(iconFile.filename);
+                if (imageFile) await deleteFile(imageFile.filename);
+                return res.status(400).json({ status: 'fail', message: 'Le format des données JSON (data) est invalide.' });
+            }
+        }
+
+        const sanitizedData = {};
+        
+        if (themeData.localizations) {
+            Object.assign(sanitizedData, sanitizeThemeLocalizations(themeData.localizations));
+        }
+        
+        if (themeData.color) sanitizedData.color = xss(themeData.color);
+        if (themeData.isActive !== undefined)
+            sanitizedData.isActive = themeData.isActive === 'true' || themeData.isActive === true;
+
+        
+        if (iconFile) {
+            if (theme.iconPublicId) { 
+                console.log(` Suppression icône Cloudinary ancienne: ${theme.iconPublicId}`);
+                await deleteFile(theme.iconPublicId);
+            }
+            sanitizedData.icon = iconFile.path;
+            sanitizedData.iconPublicId = iconFile.filename;
+            uploadedIconPublicId = iconFile.filename;
+        }
+
+        if (imageFile) {
+            if (theme.imagePublicId) { 
+                console.log(` Suppression image Cloudinary ancienne: ${theme.imagePublicId}`);
+                await deleteFile(theme.imagePublicId);
+            }
+            sanitizedData.image = imageFile.path;
+            sanitizedData.imagePublicId = imageFile.filename;
+            uploadedImagePublicId = imageFile.filename;
+        } 
+        
+        await theme.update(sanitizedData);
+        const updatedTheme = await Theme.findByPk(id); 
+        
+        return res.status(200).json({ status: 'success', data: updatedTheme });
+        
+    } catch (error) {
+        console.error('❌ Erreur mise à jour thème :', error);
+        
+        if (uploadedIconPublicId) await deleteFile(uploadedIconPublicId);
+        if (uploadedImagePublicId) await deleteFile(uploadedImagePublicId);
+        
+        return res.status(500).json({ status: 'error', message: 'Erreur serveur', error: error.message });
     }
-
-    const sanitizedData = {};
-    if (req.body.ar) sanitizedData.ar = xss(req.body.ar);
-    if (req.body.fr) sanitizedData.fr = xss(req.body.fr);
-    if (req.body.en) sanitizedData.en = xss(req.body.en);
-    if (req.body.color) sanitizedData.color = xss(req.body.color);
-    if (req.body.isActive !== undefined)
-      sanitizedData.isActive = req.body.isActive === 'true' || req.body.isActive === true;
-
-    if (req.file) {
-      // TODO: gestion de l'upload Cloudinary
-      sanitizedData.image = "https://example.com";
-    }
-
-    await theme.update(sanitizedData);
-    res.status(200).json({ status: 'success', data: theme });
-  } catch (error) {
-    res.status(500).json({ status: 'error', message: 'Erreur serveur', error: error.message });
-  }
 };
 
-exports.deleteTheme = async (req, res) => {
-  try {
-    const theme = await Theme.findByPk(req.params.id);
-    if (!theme || theme.isDeleted) {
-      return res.status(404).json({ status: 'fail', message: 'Thème introuvable' });
-    }
 
-    await theme.update({ isDeleted: true });
-    res.status(200).json({ status: 'success', message: 'Thème supprimé avec succès' });
-  } catch (error) {
-    res.status(500).json({ status: 'error', message: 'Erreur serveur', error: error.message });
-  }
+exports.deleteTheme = async (req, res) => {
+    try {
+        const theme = await Theme.findByPk(req.params.id);
+        if (!theme || theme.isDeleted) {
+            return res.status(404).json({ status: 'fail', message: 'Thème introuvable' });
+        }
+        
+        if (theme.imagePublicId) { 
+            console.log(`🗑️ Suppression image Cloudinary: ${theme.imagePublicId}`);
+            await deleteFile(theme.imagePublicId);
+        } 
+        if (theme.iconPublicId) { 
+            console.log(`🗑️ Suppression icône Cloudinary: ${theme.iconPublicId}`);
+            await deleteFile(theme.iconPublicId);
+        }
+        
+        await theme.update({ isDeleted: true });
+        return res.status(200).json({ status: 'success', message: 'Thème supprimé avec succès' });
+    } catch (error) {
+        console.error('❌ Erreur suppression thème :', error);
+        return res.status(500).json({ status: 'error', message: 'Erreur serveur', error: error.message });
+    }
 };

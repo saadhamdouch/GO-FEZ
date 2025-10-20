@@ -39,8 +39,8 @@ const POI = sequelize.define('POI', {
         allowNull: true,
         comment: 'ID de la catégorie du POI',
         references: {
-            model: 'categories',  // nom exact de la table
-            key: 'id'             // clé primaire de Category
+            model: 'categories',  
+            key: 'id'             
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'

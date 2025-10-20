@@ -28,6 +28,11 @@ const Circuit = sequelize.define('Circuit', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  imagePublicId: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'Public ID de l\'image pour la suppression Cloudinary',
+  },
   cityId: {
     type: DataTypes.UUID,
     allowNull: false,

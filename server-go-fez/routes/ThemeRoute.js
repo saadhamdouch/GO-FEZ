@@ -1,11 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const ThemeController = require('../controllers/ThemeController');
+const { uploadThemeFiles } = require("../config/cloudinary");
 
-router.post('/', ThemeController.createTheme);
+
+router.post('/create-with-files', uploadThemeFiles.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'icon', maxCount: 1 }
+]), ThemeController.createTheme);
+
 router.get('/', ThemeController.getAllThemes);
 router.get('/:id', ThemeController.getThemeById);
-router.put('/:id', ThemeController.updateTheme);
+router.put('/:id', uploadThemeFiles.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'icon', maxCount: 1 }]),ThemeController.updateTheme);
 router.delete('/:id', ThemeController.deleteTheme);
 
 module.exports = router;
