@@ -1,365 +1,22 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Search, Menu, X, MapPin, Clock, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslations, useLocale } from 'next-intl';
+import { useRouter, usePathname } from '@/i18n/navigation';
+import { useGetAllThemesQuery } from '@/services/api/ThemeApi';
+import { useGetAllCircuitsQuery } from '@/services/api/CircuitApi';
+import { useGetAllCategoriesQuery } from '@/services/api/CategoryApi';
 
-// Translation Data
-const translations = {
-  en: {
-    nav: {
-      home: 'Home',
-      routes: 'Routes',
-      pois: 'POIs',
-      rewards: 'Rewards',
-      partners: 'Partners',
-      contact: 'Contact us'
-    },
-    auth: {
-      login: 'Login',
-      signup: 'Sign up'
-    },
-    hero: {
-      discover: 'Discover',
-      fez: 'Fez',
-      through: 'Through Interactive Routes and Smart Guidance',
-      subtitle: 'Your pocket companion for exploring the city\'s history, crafts, gastronomy, and hidden treasures.',
-      search: 'Search for restaurant, coffee, shopping',
-      searchButton: 'Search'
-    },
-    filters: {
-      museums: 'Museums',
-      restaurants: 'Restaurant',
-      monuments: 'Shopping',
-      markets: 'Coffee'
-    },
-    featuresSection: {
-      title: 'Explore Smarter, Travel Deeper',
-      subtitle: 'Discover Fez with intelligent routes, immersive guides, and playful rewards'
-    },
-    features: {
-      routes: {
-        title: 'Interactive Routes',
-        description: 'Follow curated paths through Fez\'s historical and cultural landmarks.'
-      },
-      audio: {
-        title: 'Audio & 360° Guides',
-        description: 'Listen to multilingual audio tours or explore places virtually.'
-      },
-      rewards: {
-        title: 'Play & Earn Rewards',
-        description: 'Complete routes, collect badges, and join the leaderboard.'
-      },
-      offline: {
-        title: 'Offline Access',
-        description: 'Download routes and guides for use without internet.'
-      }
-    },
-    exploreTheme: {
-      title: 'Explore Fez by Theme'
-    },
-    exploreCircuit: {
-      title: 'Explore Fez by Circuit'
-    },
-    card: {
-      stops: 'stops',
-      badge: {
-        theme: 'Theme',
-        circuit: 'Circuit'
-      },
-      viewRoutes: 'View Routes'
-    },
-    download: {
-      title: 'Explore Fez with GPS Guidance and 360° Tours',
-      description: 'Experience Fez through interactive routes, GPS guidance, and immersive stories.',
-      appStore: 'App Store',
-      googlePlay: 'Google Play',
-      appPreview: 'Discover Fez'
-    },
-    footer: {
-      description: 'The first free end-to-end analytics service for the site, designed to work with enterprises of various levels and business segments.',
-      links: 'Menu',
-      language: 'Languages',
-      explore: 'Explore',
-      about: 'About',
-      copyright: '© 2025 — Copyright All Rights reserved'
-    }
-  },
-  fr: {
-    nav: {
-      home: 'Accueil',
-      routes: 'Routes',
-      pois: 'POIs',
-      rewards: 'Récompenses',
-      partners: 'Partenaires',
-      contact: 'Contactez-nous'
-    },
-    auth: {
-      login: 'Connexion',
-      signup: 'S\'inscrire'
-    },
-    hero: {
-      discover: 'Découvrir',
-      fez: 'Fès',
-      through: 'À travers des itinéraires interactifs et des guides intelligents',
-      subtitle: 'Votre compagnon de poche pour explorer l\'histoire, l\'artisanat, la gastronomie et les trésors cachés de la ville.',
-      search: 'Rechercher restaurant, café, shopping',
-      searchButton: 'Rechercher'
-    },
-    filters: {
-      museums: 'Musées',
-      restaurants: 'Restaurant',
-      monuments: 'Shopping',
-      markets: 'Café'
-    },
-    featuresSection: {
-      title: 'Explorer plus intelligemment, voyager plus profondément',
-      subtitle: 'Découvrez Fès avec des itinéraires intelligents, des guides immersifs et des récompenses ludiques'
-    },
-    features: {
-      routes: {
-        title: 'Itinéraires interactifs',
-        description: 'Suivez des chemins organisés à travers les monuments historiques et culturels de Fès.'
-      },
-      audio: {
-        title: 'Guides audio et 360°',
-        description: 'Écoutez des visites audio multilingues ou explorez virtuellement les lieux.'
-      },
-      rewards: {
-        title: 'Jouez et gagnez des récompenses',
-        description: 'Complétez les itinéraires, collectez des badges et rejoignez le classement.'
-      },
-      offline: {
-        title: 'Accès hors ligne',
-        description: 'Téléchargez les itinéraires et les guides pour une utilisation sans Internet.'
-      }
-    },
-    exploreTheme: {
-      title: 'Explorer Fès par thème'
-    },
-    exploreCircuit: {
-      title: 'Explorer Fès par circuit'
-    },
-    card: {
-      stops: 'arrêts',
-      badge: {
-        theme: 'Thème',
-        circuit: 'Circuit'
-      },
-      viewRoutes: 'Voir les itinéraires'
-    },
-    download: {
-      title: 'Explorez Fès avec guidage GPS et visites 360°',
-      description: 'Vivez Fès à travers des itinéraires interactifs, un guidage GPS et des histoires immersives.',
-      appStore: 'App Store',
-      googlePlay: 'Google Play',
-      appPreview: 'Découvrir Fès'
-    },
-    footer: {
-      description: 'Le premier service d\'analyse gratuit de bout en bout pour le site, conçu pour travailler avec des entreprises de divers niveaux et segments d\'activité.',
-      links: 'Menu',
-      language: 'Langues',
-      explore: 'Explorer',
-      about: 'À propos',
-      copyright: '© 2025 — Tous droits réservés'
-    }
-  },
-  ar: {
-    nav: {
-      home: 'الرئيسية',
-      routes: 'المسارات',
-      pois: 'نقاط الاهتمام',
-      rewards: 'المكافآت',
-      partners: 'الشركاء',
-      contact: 'اتصل بنا'
-    },
-    auth: {
-      login: 'تسجيل الدخول',
-      signup: 'التسجيل'
-    },
-    hero: {
-      discover: 'اكتشف',
-      fez: 'فاس',
-      through: 'من خلال المسارات التفاعلية والإرشاد الذكي',
-      subtitle: 'رفيقك المحمول لاستكشاف تاريخ المدينة وحرفها وطعامها وكنوزها المخفية.',
-      search: 'ابحث عن مطعم، مقهى، تسوق',
-      searchButton: 'بحث'
-    },
-    filters: {
-      museums: 'المتاحف',
-      restaurants: 'مطعم',
-      monuments: 'تسوق',
-      markets: 'مقهى'
-    },
-    featuresSection: {
-      title: 'استكشف بذكاء، سافر بعمق',
-      subtitle: 'اكتشف فاس بمسارات ذكية وأدلة غامرة ومكافآت ممتعة'
-    },
-    features: {
-      routes: {
-        title: 'مسارات تفاعلية',
-        description: 'اتبع المسارات المنظمة عبر المعالم التاريخية والثقافية لفاس.'
-      },
-      audio: {
-        title: 'أدلة صوتية و360°',
-        description: 'استمع إلى جولات صوتية متعددة اللغات أو استكشف الأماكن افتراضيًا.'
-      },
-      rewards: {
-        title: 'العب واربح المكافآت',
-        description: 'أكمل المسارات، اجمع الشارات، وانضم إلى لوحة المتصدرين.'
-      },
-      offline: {
-        title: 'الوصول دون اتصال',
-        description: 'قم بتنزيل المسارات والأدلة للاستخدام بدون إنترنت.'
-      }
-    },
-    exploreTheme: {
-      title: 'استكشف فاس حسب الموضوع'
-    },
-    exploreCircuit: {
-      title: 'استكشف فاس حسب الدائرة'
-    },
-    card: {
-      stops: 'محطات',
-      badge: {
-        theme: 'موضوع',
-        circuit: 'دائرة'
-      },
-      viewRoutes: 'عرض المسارات'
-    },
-    download: {
-      title: 'استكشف فاس بإرشاد GPS وجولات 360°',
-      description: 'اختبر فاس من خلال المسارات التفاعلية وإرشاد GPS والقصص الغامرة.',
-      appStore: 'آب ستور',
-      googlePlay: 'جوجل بلاي',
-      appPreview: 'اكتشف فاس'
-    },
-    footer: {
-      description: 'أول خدمة تحليلات مجانية شاملة للموقع، مصممة للعمل مع الشركات من مختلف المستويات والقطاعات.',
-      links: 'القائمة',
-      language: 'اللغات',
-      explore: 'استكشف',
-      about: 'حول',
-      copyright: '© 2025 — جميع الحقوق محفوظة'
-    }
-  }
-};
+const mockFeatures = [
+  { icon: "route", titleKey: "features.routes.title", descriptionKey: "features.routes.description", color: "bg-emerald-600" },
+  { icon: "audio", titleKey: "features.audio.title", descriptionKey: "features.audio.description", color: "bg-emerald-600" },
+  { icon: "key", titleKey: "features.rewards.title", descriptionKey: "features.rewards.description", color: "bg-emerald-600" },
+  { icon: "offline", titleKey: "features.offline.title", descriptionKey: "features.offline.description", color: "bg-emerald-600" }
+];
 
-// Mock Data from JSON structure
-const mockData = {
-  themes: [
-    { 
-      id: 1, 
-      title: { en: 'History of Fez', fr: 'Histoire de Fès', ar: 'تاريخ فاس' },
-      image: 'https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=800',
-      category: 'theme',
-      stops: 8,
-      duration: '2-3h',
-      rating: 4.8
-    },
-    { 
-      id: 2, 
-      title: { en: 'Spiritual Fez', fr: 'Fès Spirituelle', ar: 'فاس الروحانية' },
-      image: 'https://images.unsplash.com/photo-1583291539823-1cfe83b8f581?w=800',
-      category: 'theme',
-      stops: 6,
-      duration: '2h',
-      rating: 4.9
-    },
-    { 
-      id: 3, 
-      title: { en: 'Fez Food', fr: 'Cuisine de Fès', ar: 'طعام فاس' },
-      image: 'https://images.unsplash.com/photo-1536510233921-8e5c7d3c07f7?w=800',
-      category: 'theme',
-      stops: 10,
-      duration: '3h',
-      rating: 4.7
-    },
-    { 
-      id: 4, 
-      title: { en: 'Doors of Fez', fr: 'Portes de Fès', ar: 'أبواب فاس' },
-      image: 'https://images.unsplash.com/photo-1591604021695-0c69b7c05981?w=800',
-      category: 'theme',
-      stops: 12,
-      duration: '3-4h',
-      rating: 4.8
-    }
-  ],
-  circuits: [
-    { 
-      id: 1, 
-      title: { en: 'Bab Boujloud', fr: 'Bab Boujloud', ar: 'باب بوجلود' },
-      image: 'https://images.unsplash.com/photo-1557750255-c76072a7aad1?w=800',
-      category: 'circuit',
-      stops: 12,
-      duration: '3h',
-      rating: 4.7
-    },
-    { 
-      id: 2, 
-      title: { en: 'Al Quaraouiyine', fr: 'Al Quaraouiyine', ar: 'القرويين' },
-      image: 'https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?w=800',
-      category: 'circuit',
-      stops: 8,
-      duration: '2h',
-      rating: 4.7
-    },
-    { 
-      id: 3, 
-      title: { en: 'Bou Inania Madrasa', fr: 'Medersa Bou Inania', ar: 'مدرسة بوعنانية' },
-      image: 'https://images.unsplash.com/photo-1570789210967-2cac24afeb00?w=800',
-      category: 'circuit',
-      stops: 15,
-      duration: '4h',
-      rating: 4.7
-    },
-    { 
-      id: 4, 
-      title: { en: 'Nejjarine Museum', fr: 'Musée Nejjarine', ar: 'متحف النجارين' },
-      image: 'https://images.unsplash.com/photo-1549877452-9c387954fbc2?w=800',
-      category: 'circuit',
-      stops: 6,
-      duration: '2h',
-      rating: 4.7
-    },
-    { 
-      id: 5, 
-      title: { en: 'Royal Palace', fr: 'Palais Royal', ar: 'القصر الملكي' },
-      image: 'https://images.unsplash.com/photo-1558442074-fcd72c371d3f?w=800',
-      category: 'circuit',
-      stops: 10,
-      duration: '3h',
-      rating: 4.8
-    }
-  ],
-  features: [
-    { 
-      icon: "route", 
-      titleKey: "features.routes.title",
-      descriptionKey: "features.routes.description",
-      color: "bg-emerald-600"
-    },
-    { 
-      icon: "audio", 
-      titleKey: "features.audio.title",
-      descriptionKey: "features.audio.description",
-      color: "bg-emerald-600"
-    },
-    { 
-      icon: "key", 
-      titleKey: "features.rewards.title",
-      descriptionKey: "features.rewards.description",
-      color: "bg-emerald-600"
-    },
-    { 
-      icon: "offline", 
-      titleKey: "features.offline.title",
-      descriptionKey: "features.offline.description",
-      color: "bg-emerald-600"
-    }
-  ]
-};
-
-const FeatureIcon = ({ icon, color }) => {
-  const iconMap = {
+const FeatureIcon = ({ icon, color }: { icon: string; color: string }) => {
+  const iconMap: Record<string, JSX.Element> = {
     route: (
       <svg className="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
@@ -389,14 +46,34 @@ const FeatureIcon = ({ icon, color }) => {
   );
 };
 
-const ExploreCard = ({ item, selected, onSelect, locale }) => {
+interface ExploreCardProps {
+  item: any;
+  selected: string | null;
+  onSelect: (id: string) => void;
+  currentLocale: string;
+}
+
+const ExploreCard: React.FC<ExploreCardProps> = ({ item, selected, onSelect, currentLocale }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const t = useTranslations();
   const isSelected = selected === item.id;
-  const title = item.title[locale] || item.title.en;
-  const t = translations[locale];
-  
+
+  // Extract title based on locale
+  let title = '';
+  try {
+    if (item[currentLocale]) {
+      const localization = typeof item[currentLocale] === 'string' ? JSON.parse(item[currentLocale]) : item[currentLocale];
+      title = localization.name || localization.title || '';
+    }
+  } catch (e) {
+    title = 'Untitled';
+  }
+
+  // Calculate stops (POIs)
+  const stops = item.pois?.length || 0;
+
   return (
-    <div 
+    <div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onSelect(item.id)}
@@ -406,36 +83,33 @@ const ExploreCard = ({ item, selected, onSelect, locale }) => {
     >
       <div className="absolute inset-0">
         <img 
-          src={item.image} 
-          alt={title}
-          className="w-full h-full object-cover"
+          src={item.image || 'https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=800'} 
+          alt={title} 
+          className="w-full h-full object-cover" 
         />
       </div>
-      
       <div className="absolute inset-0 bg-gradient-to-t from-[rgba(0,33,59,0.5)] via-[rgba(0,33,59,0)] to-transparent" />
-      
       <div className="absolute bottom-0 left-0 right-0 p-5 md:p-7 text-white">
         <h3 className="text-lg md:text-2xl font-bold mb-2 tracking-tight">{title}</h3>
         {(isHovered || isSelected) && (
           <div className="flex items-center gap-3 md:gap-4 text-xs md:text-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
             <span className="flex items-center gap-1">
               <MapPin size={16} />
-              {item.stops} {t.card.stops}
+              {stops} {t('card.stops')}
             </span>
             <span className="flex items-center gap-1">
               <Clock size={16} />
-              {item.duration}
+              {item.duration ? `${item.duration}h` : '2-3h'}
             </span>
             <span className="flex items-center gap-1">
               <Star size={16} fill="currentColor" />
-              {item.rating}
+              {item.rating || 4.7}
             </span>
           </div>
         )}
       </div>
-      
       <div className="absolute top-4 md:top-7 right-4 md:right-7 bg-white rounded-full px-3 md:px-4 py-1 md:py-1.5 text-black text-xs md:text-base font-medium flex items-center gap-2">
-        <span>{t.card.viewRoutes}</span>
+        <span>{t('card.viewRoutes')}</span>
         <ChevronRight size={16} />
       </div>
     </div>
@@ -443,14 +117,29 @@ const ExploreCard = ({ item, selected, onSelect, locale }) => {
 };
 
 export default function FezDiscoveryApp() {
-  const [locale, setLocale] = useState('en');
+  const t = useTranslations();
+  const locale = useLocale() as 'en' | 'fr' | 'ar';
+  const router = useRouter();
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState(null);
-  const [selectedCircuit, setSelectedCircuit] = useState(null);
+  const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+  const [selectedCircuit, setSelectedCircuit] = useState<string | null>(null);
 
-  const t = translations[locale];
+  // API Calls
+  const { data: themesData, isLoading: themesLoading, error: themesError } = useGetAllThemesQuery();
+  const { data: circuitsData, isLoading: circuitsLoading, error: circuitsError } = useGetAllCircuitsQuery();
+  const { data: categoriesData } = useGetAllCategoriesQuery();
+
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
-  const isRTL = locale === 'ar';
+
+  // Extract data or use empty array
+  const themes = themesData?.data || [];
+  const circuits = circuitsData?.data || [];
+
+  // Language switch handler
+  const switchLocale = (newLocale: 'en' | 'fr' | 'ar') => {
+    router.replace(pathname, { locale: newLocale });
+  };
 
   return (
     <div className="min-h-screen bg-white" dir={dir}>
@@ -463,30 +152,28 @@ export default function FezDiscoveryApp() {
             </p>
           </div>
         </div>
-        
         <div className="border-b border-white/20">
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16 md:h-20">
               <div className="hidden lg:flex items-center gap-6 flex-1">
-                {Object.values(t.nav).map((label, idx) => (
-                  <a key={idx} href="#" className="text-white hover:text-white/80 transition text-sm md:text-base font-medium">
-                    {label}
-                  </a>
-                ))}
+                <a href="#" className="text-white hover:text-white/80 transition text-sm md:text-base font-medium">{t('nav.home')}</a>
+                <a href="#" className="text-white hover:text-white/80 transition text-sm md:text-base font-medium">{t('nav.routes')}</a>
+                <a href="#" className="text-white hover:text-white/80 transition text-sm md:text-base font-medium">{t('nav.pois')}</a>
+                <a href="#" className="text-white hover:text-white/80 transition text-sm md:text-base font-medium">{t('nav.rewards')}</a>
+                <a href="#" className="text-white hover:text-white/80 transition text-sm md:text-base font-medium">{t('nav.partners')}</a>
+                <a href="#" className="text-white hover:text-white/80 transition text-sm md:text-base font-medium">{t('nav.contact')}</a>
               </div>
-
               <div className="flex-shrink-0">
                 <div className="w-16 h-16 md:w-20 md:h-20 bg-[#02355E] flex items-center justify-center">
                   <span className="text-white font-bold text-xl md:text-2xl">G</span>
                 </div>
               </div>
-
               <div className="hidden lg:flex items-center gap-4 flex-1 justify-end">
                 <div className="flex gap-2">
-                  {['en', 'fr', 'ar'].map((lang) => (
+                  {(['en', 'fr', 'ar'] as const).map((lang) => (
                     <button
                       key={lang}
-                      onClick={() => setLocale(lang)}
+                      onClick={() => switchLocale(lang)}
                       className={`w-10 h-10 rounded-full flex items-center justify-center transition ${
                         locale === lang ? 'bg-white text-[#304373]' : 'bg-white/20 text-white hover:bg-white/30'
                       }`}
@@ -497,39 +184,33 @@ export default function FezDiscoveryApp() {
                     </button>
                   ))}
                 </div>
-
                 <button className="px-5 py-2.5 text-sm text-white font-semibold hover:bg-white/10 transition rounded-lg">
-                  {t.auth.login}
+                  {t('auth.login')}
                 </button>
                 <button className="px-5 py-2.5 text-sm bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition font-semibold">
-                  {t.auth.signup}
+                  {t('auth.signup')}
                 </button>
               </div>
-
-              <button 
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="lg:hidden p-2 text-white"
-              >
+              <button onClick={() => setMenuOpen(!menuOpen)} className="lg:hidden p-2 text-white">
                 {menuOpen ? <X size={28} /> : <Menu size={28} />}
               </button>
             </div>
           </div>
         </div>
-
         {menuOpen && (
           <div className="lg:hidden bg-[#02355E] border-t border-white/20">
             <div className="px-4 py-6 space-y-4">
-              {Object.values(t.nav).map((label, idx) => (
-                <a key={idx} href="#" className="block text-white font-medium py-2">
-                  {label}
-                </a>
-              ))}
-              
+              <a href="#" className="block text-white font-medium py-2">{t('nav.home')}</a>
+              <a href="#" className="block text-white font-medium py-2">{t('nav.routes')}</a>
+              <a href="#" className="block text-white font-medium py-2">{t('nav.pois')}</a>
+              <a href="#" className="block text-white font-medium py-2">{t('nav.rewards')}</a>
+              <a href="#" className="block text-white font-medium py-2">{t('nav.partners')}</a>
+              <a href="#" className="block text-white font-medium py-2">{t('nav.contact')}</a>
               <div className="flex gap-2 pt-4 border-t border-white/20">
-                {['en', 'fr', 'ar'].map((lang) => (
+                {(['en', 'fr', 'ar'] as const).map((lang) => (
                   <button
                     key={lang}
-                    onClick={() => setLocale(lang)}
+                    onClick={() => switchLocale(lang)}
                     className={`flex-1 px-4 py-3 rounded-lg font-semibold ${
                       locale === lang ? 'bg-white text-[#02355E]' : 'bg-white/20 text-white'
                     }`}
@@ -538,12 +219,11 @@ export default function FezDiscoveryApp() {
                   </button>
                 ))}
               </div>
-              
               <button className="w-full px-6 py-3 text-white font-semibold border border-white rounded-lg">
-                {t.auth.login}
+                {t('auth.login')}
               </button>
               <button className="w-full px-6 py-3 bg-emerald-600 text-white rounded-full font-semibold">
-                {t.auth.signup}
+                {t('auth.signup')}
               </button>
             </div>
           </div>
@@ -566,41 +246,42 @@ export default function FezDiscoveryApp() {
             ))}
           </div>
         </div>
-
         <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[57px] font-bold mb-4 md:mb-6 leading-tight tracking-tight">
-              {t.hero.discover} <span className="text-white">{t.hero.fez}</span>
+              {t('hero.discover')} <span className="text-white">{t('hero.fez')}</span>
               <br />
-              <span className="text-2xl sm:text-3xl md:text-4xl">{t.hero.through}</span>
+              <span className="text-2xl sm:text-3xl md:text-4xl">{t('hero.through')}</span>
             </h1>
             <p className="text-base md:text-[22.5px] text-[#EDEDED] mb-6 md:mb-8 leading-relaxed">
-              {t.hero.subtitle}
+              {t('hero.subtitle')}
             </p>
-
             <div className="max-w-[587px] mx-auto mb-5">
               <div className="relative bg-white rounded-full px-4 md:px-7 py-3 md:py-4 flex items-center gap-3">
                 <Search className="text-gray-400 flex-shrink-0" size={20} />
                 <input
                   type="text"
-                  placeholder={t.hero.search}
+                  placeholder={t('hero.search')}
                   className="flex-1 bg-transparent text-gray-600 text-sm md:text-base focus:outline-none placeholder:text-gray-400"
                 />
                 <button className="bg-emerald-600 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-full font-semibold hover:bg-emerald-700 transition text-sm md:text-base whitespace-nowrap">
-                  {t.hero.searchButton}
+                  {t('hero.searchButton')}
                 </button>
               </div>
             </div>
-
             <div className="flex flex-wrap justify-center gap-2 md:gap-3">
-              {Object.values(t.filters).map((filter, idx) => (
-                <button 
-                  key={idx} 
-                  className="px-4 md:px-5 py-2 md:py-2.5 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition text-sm md:text-base font-medium"
-                >
-                  {filter}
-                </button>
-              ))}
+              <button className="px-4 md:px-5 py-2 md:py-2.5 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition text-sm md:text-base font-medium">
+                {t('filters.museums')}
+              </button>
+              <button className="px-4 md:px-5 py-2 md:py-2.5 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition text-sm md:text-base font-medium">
+                {t('filters.restaurants')}
+              </button>
+              <button className="px-4 md:px-5 py-2 md:py-2.5 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition text-sm md:text-base font-medium">
+                {t('filters.monuments')}
+              </button>
+              <button className="px-4 md:px-5 py-2 md:py-2.5 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition text-sm md:text-base font-medium">
+                {t('filters.markets')}
+              </button>
             </div>
           </div>
         </div>
@@ -611,24 +292,23 @@ export default function FezDiscoveryApp() {
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8 md:mb-16">
             <h2 className="text-3xl md:text-[40px] font-semibold mb-2 text-black leading-tight">
-              {t.featuresSection.title}
+              {t('featuresSection.title')}
             </h2>
             <p className="text-[#6A6A6A] text-base md:text-[22.5px] leading-relaxed">
-              {t.featuresSection.subtitle}
+              {t('featuresSection.subtitle')}
             </p>
           </div>
-          
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-4">
-            {mockData.features.map((feature, index) => (
+            {mockFeatures.map((feature, index) => (
               <div key={index} className="bg-white border border-[rgba(0,112,54,0.15)] rounded-tr-[40px] p-6 md:p-7 text-center hover:shadow-lg transition-shadow">
                 <div className="mx-auto mb-8 md:mb-10 flex justify-center">
                   <FeatureIcon icon={feature.icon} color={feature.color} />
                 </div>
                 <h3 className="text-xl md:text-2xl font-semibold mb-3 text-black">
-                  {t[feature.titleKey.split('.')[0]][feature.titleKey.split('.')[1]].title}
+                  {t(feature.titleKey)}
                 </h3>
                 <p className="text-black text-base md:text-xl leading-relaxed">
-                  {t[feature.descriptionKey.split('.')[0]][feature.descriptionKey.split('.')[1]].description}
+                  {t(feature.descriptionKey)}
                 </p>
               </div>
             ))}
@@ -641,37 +321,45 @@ export default function FezDiscoveryApp() {
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8 md:mb-10">
             <h2 className="text-2xl md:text-[40px] font-semibold text-black leading-tight">
-              {t.exploreTheme.title}
+              {t('exploreTheme.title')}
             </h2>
             <div className="flex gap-2">
-              <button 
-                className="p-2 md:p-4 bg-white border border-[#D9D9D9] rounded-full hover:bg-gray-50 transition"
-                aria-label="Previous"
-              >
+              <button className="p-2 md:p-4 bg-white border border-[#D9D9D9] rounded-full hover:bg-gray-50 transition" aria-label="Previous">
                 <ChevronLeft size={24} />
               </button>
-              <button 
-                className="p-2 md:p-4 bg-white border border-[#D9D9D9] rounded-full hover:bg-gray-50 transition"
-                aria-label="Next"
-              >
+              <button className="p-2 md:p-4 bg-white border border-[#D9D9D9] rounded-full hover:bg-gray-50 transition" aria-label="Next">
                 <ChevronRight size={24} />
               </button>
             </div>
           </div>
-          
-          <div className="overflow-x-auto pb-4 -mx-4 px-4">
-            <div className="flex gap-4 md:gap-5 min-w-max">
-              {mockData.themes.map((item) => (
-                <ExploreCard 
-                  key={item.id}
-                  item={item}
-                  selected={selectedTheme}
-                  onSelect={setSelectedTheme}
-                  locale={locale}
-                />
-              ))}
+          {themesLoading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+              <p className="text-gray-500 mt-4">Loading themes...</p>
             </div>
-          </div>
+          ) : themesError ? (
+            <div className="text-center py-12">
+              <p className="text-red-500">Error loading themes</p>
+            </div>
+          ) : themes.length > 0 ? (
+            <div className="overflow-x-auto pb-4 -mx-4 px-4">
+              <div className="flex gap-4 md:gap-5 min-w-max">
+                {themes.filter(t => t.isActive).map((item) => (
+                  <ExploreCard
+                    key={item.id}
+                    item={item}
+                    selected={selectedTheme}
+                    onSelect={setSelectedTheme}
+                    currentLocale={locale}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No themes available</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -680,37 +368,45 @@ export default function FezDiscoveryApp() {
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8 md:mb-10">
             <h2 className="text-2xl md:text-[40px] font-semibold text-black leading-tight">
-              {t.exploreCircuit.title}
+              {t('exploreCircuit.title')}
             </h2>
             <div className="flex gap-2">
-              <button 
-                className="p-2 md:p-4 bg-white border border-[#D9D9D9] rounded-full hover:bg-gray-50 transition"
-                aria-label="Previous"
-              >
+              <button className="p-2 md:p-4 bg-white border border-[#D9D9D9] rounded-full hover:bg-gray-50 transition" aria-label="Previous">
                 <ChevronLeft size={24} />
               </button>
-              <button 
-                className="p-2 md:p-4 bg-white border border-[#D9D9D9] rounded-full hover:bg-gray-50 transition"
-                aria-label="Next"
-              >
+              <button className="p-2 md:p-4 bg-white border border-[#D9D9D9] rounded-full hover:bg-gray-50 transition" aria-label="Next">
                 <ChevronRight size={24} />
               </button>
             </div>
           </div>
-          
-          <div className="overflow-x-auto pb-4 -mx-4 px-4">
-            <div className="flex gap-5 min-w-max">
-              {mockData.circuits.map((item) => (
-                <ExploreCard 
-                  key={item.id}
-                  item={item}
-                  selected={selectedCircuit}
-                  onSelect={setSelectedCircuit}
-                  locale={locale}
-                />
-              ))}
+          {circuitsLoading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+              <p className="text-gray-500 mt-4">Loading circuits...</p>
             </div>
-          </div>
+          ) : circuitsError ? (
+            <div className="text-center py-12">
+              <p className="text-red-500">Error loading circuits</p>
+            </div>
+          ) : circuits.length > 0 ? (
+            <div className="overflow-x-auto pb-4 -mx-4 px-4">
+              <div className="flex gap-5 min-w-max">
+                {circuits.filter(c => c.isActive).map((item) => (
+                  <ExploreCard
+                    key={item.id}
+                    item={item}
+                    selected={selectedCircuit}
+                    onSelect={setSelectedCircuit}
+                    currentLocale={locale}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No circuits available</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -718,37 +414,38 @@ export default function FezDiscoveryApp() {
       <div className="py-12 md:py-20 bg-[#02355E] text-white relative overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute right-0 top-0 w-[491px] h-full opacity-30">
-            <div className="w-full h-full" style={{
-              backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 70px)`
-            }} />
+            <div
+              className="w-full h-full"
+              style={{
+                backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.03) 35px, rgba(255,255,255,.03) 70px)`,
+              }}
+            />
           </div>
         </div>
-
         <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-[1300px] mx-auto bg-[#02355E] rounded-[38px] px-8 md:px-16 py-8 md:py-12 flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="flex-1 text-center lg:text-left max-w-[737px]">
               <h2 className="text-2xl md:text-[32px] font-bold mb-3 md:mb-4 leading-tight bg-gradient-to-r from-white to-emerald-600 bg-clip-text text-transparent">
-                {t.download.title}
+                {t('download.title')}
               </h2>
               <p className="text-white text-base md:text-xl mb-6 md:mb-8 leading-relaxed">
-                {t.download.description}
+                {t('download.description')}
               </p>
               <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
                 <button className="h-12 md:h-14 px-6 bg-white rounded-lg hover:bg-gray-100 transition flex items-center gap-2">
                   <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                   </svg>
-                  <span className="text-black text-sm md:text-base font-semibold">{t.download.appStore}</span>
+                  <span className="text-black text-sm md:text-base font-semibold">{t('download.appStore')}</span>
                 </button>
                 <button className="h-12 md:h-14 px-6 bg-white rounded-lg hover:bg-gray-100 transition flex items-center gap-2">
                   <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
                   </svg>
-                  <span className="text-black text-sm md:text-base font-semibold">{t.download.googlePlay}</span>
+                  <span className="text-black text-sm md:text-base font-semibold">{t('download.googlePlay')}</span>
                 </button>
               </div>
             </div>
-            
             <div className="flex-shrink-0 relative">
               <div className="relative w-48 md:w-64">
                 <div className="relative z-10">
@@ -760,7 +457,7 @@ export default function FezDiscoveryApp() {
                         </div>
                         <h3 className="text-lg md:text-xl font-bold mb-2">GO FEZ</h3>
                         <p className="text-blue-100 text-xs md:text-sm text-center">
-                          {t.download.appPreview}
+                          {t('download.appPreview')}
                         </p>
                       </div>
                     </div>
@@ -786,23 +483,20 @@ export default function FezDiscoveryApp() {
                   </div>
                 </div>
                 <p className="text-black text-base md:text-xl leading-relaxed mb-4">
-                  {t.footer.description}
+                  {t('footer.description')}
                 </p>
               </div>
-
               <div>
-                <h3 className="font-medium text-xl mb-6 md:mb-8 text-black tracking-tight">{t.footer.links}</h3>
+                <h3 className="font-medium text-xl mb-6 md:mb-8 text-black tracking-tight">{t('footer.links')}</h3>
                 <ul className="space-y-3 md:space-y-4">
-                  {Object.values(t.nav).map((label, idx) => (
-                    <li key={idx}>
-                      <a href="#" className="text-[#6A6A6A] hover:text-black transition text-base">
-                        {label}
-                      </a>
-                    </li>
-                  ))}
+                  <li><a href="#" className="text-[#6A6A6A] hover:text-black transition text-base">{t('nav.home')}</a></li>
+                  <li><a href="#" className="text-[#6A6A6A] hover:text-black transition text-base">{t('nav.routes')}</a></li>
+                  <li><a href="#" className="text-[#6A6A6A] hover:text-black transition text-base">{t('nav.pois')}</a></li>
+                  <li><a href="#" className="text-[#6A6A6A] hover:text-black transition text-base">{t('nav.rewards')}</a></li>
+                  <li><a href="#" className="text-[#6A6A6A] hover:text-black transition text-base">{t('nav.partners')}</a></li>
+                  <li><a href="#" className="text-[#6A6A6A] hover:text-black transition text-base">{t('nav.contact')}</a></li>
                 </ul>
               </div>
-
               <div>
                 <h3 className="font-medium text-xl mb-6 md:mb-8 text-black tracking-tight">Links</h3>
                 <div className="flex gap-3">
@@ -823,21 +517,20 @@ export default function FezDiscoveryApp() {
                   </a>
                 </div>
               </div>
-
               <div>
-                <h3 className="font-medium text-xl mb-6 md:mb-8 text-black tracking-tight">{t.footer.language}</h3>
+                <h3 className="font-medium text-xl mb-6 md:mb-8 text-black tracking-tight">{t('footer.language')}</h3>
                 <div className="flex gap-3">
-                  {[
+                  {([
                     { lang: 'en', label: 'En' },
                     { lang: 'fr', label: 'Fr' },
                     { lang: 'ar', label: 'Ar' }
-                  ].map(({ lang, label }) => (
+                  ] as const).map(({ lang, label }) => (
                     <button
                       key={lang}
-                      onClick={() => setLocale(lang)}
+                      onClick={() => switchLocale(lang)}
                       className={`px-4 py-1 rounded-full border transition ${
-                        locale === lang 
-                          ? 'bg-white text-black border-[#D9D9D9]' 
+                        locale === lang
+                          ? 'bg-white text-black border-[#D9D9D9]'
                           : 'bg-transparent text-[#6A6A6A] border-[#D9D9D9] hover:bg-white/50'
                       }`}
                     >
@@ -847,9 +540,8 @@ export default function FezDiscoveryApp() {
                 </div>
               </div>
             </div>
-
             <div className="pt-8 border-t border-black/10 text-center">
-              <p className="text-black text-sm md:text-base">{t.footer.copyright}</p>
+              <p className="text-black text-sm md:text-base">{t('footer.copyright')}</p>
             </div>
           </div>
         </div>

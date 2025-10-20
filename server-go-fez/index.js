@@ -29,10 +29,11 @@ const PORT = process.env.PORT || 8080;
 app.use(express.json());
 
 const ALLOWED_ORIGINS = [
-    process.env.CLIENT_URL, // http://127.0.0.1:5501
-    'http://localhost:5501', 
-    'null' 
+    process.env.CLIENT_URL,
+    'http://localhost:3000', 
+    'null'
 ];
+
 
 console.log(process.env.CLIENT_URL);
 app.use(
