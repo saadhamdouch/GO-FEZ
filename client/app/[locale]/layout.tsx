@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
+//import '@fortawesome/fontawesome-free/css/all.min.css';
 
 // Les polices et les styles globaux sont gérés dans le root layout.
 

@@ -35,13 +35,30 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
     <nav className="fixed top-0 w-full z-50 bg-transparent">
       {/* Top Banner */}
       {showTopBanner && (
-        <div className="bg-[#02355E]/80 backdrop-blur-md border-b border-white/10">
-          <div className="max-w-[1440px] mx-0 px-0 sm:px-0 lg:px-8 py-2 text-left">
-            <p className="text-white text-xs md:text-sm font-semibold">
-              Explore Fez like never before — <a href="#" className="underline hover:text-emerald-300 transition">Download the GO-FEZ App today!</a>
-            </p>
-          </div>
-        </div>
+<div className="bg-[#02355E]/80 backdrop-blur-md border-b border-white/10">
+  <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
+    <p className="text-white text-xs md:text-sm font-semibold">
+      Explore Fez like never before —{' '}
+      <a href="#" className="underline hover:text-emerald-300 transition">
+        Download the GO-FEZ App today!
+      </a>
+    </p>
+
+    <div className="flex items-center gap-3">
+      <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="bg-white rounded-full w-8 h-8 flex items-center justify-center hover:scale-105 transition">
+        <i className="fab fa-facebook-f text-[#02355E] text-sm"></i>
+      </a>
+      <a href="https://telegram.org" target="_blank" rel="noopener noreferrer" className="bg-white rounded-full w-8 h-8 flex items-center justify-center hover:scale-105 transition">
+        <i className="fab fa-telegram-plane text-[#02355E] text-sm"></i>
+      </a>
+      <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="bg-white rounded-full w-8 h-8 flex items-center justify-center hover:scale-105 transition">
+        <i className="fab fa-instagram text-[#02355E] text-sm"></i>
+      </a>
+    </div>
+  </div>
+</div>
+
+
       )}
       
       {/* Main Navigation */}

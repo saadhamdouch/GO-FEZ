@@ -7,6 +7,7 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import ReduxProvider from '../lib/ReduxProvider';
 import { Toaster } from '@/components/ui/sonner';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 // Police principale Cairo
 const cairo = Cairo({
