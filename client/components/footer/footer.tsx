@@ -23,7 +23,7 @@ export default function Footer({ locale, isRTL, onLanguageChange }: FooterProps)
               <div className={`flex items-center gap-3 mb-6 bg-[#02355E] rounded-[22px] p-4 w-fit ${isRTL ? 'mr-auto' : ''}`}>
                 <div className="w-10 h-16 flex items-center justify-center">
                   <img 
-                    src="/images/logo.png" 
+                    src="/images/Logo_footer.png" 
                     alt="Go Fez Logo" 
                     className="w-full h-full object-contain"
                   />
