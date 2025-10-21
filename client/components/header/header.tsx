@@ -104,6 +104,9 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
           <a href="#" className="text-white hover:text-emerald-400 transition text-sm font-medium">{t('nav.routes')}</a>
           <a href="#" className="text-white hover:text-emerald-400 transition text-sm font-medium">{t('nav.pois')}</a>
           <a href="#" className="text-white hover:text-emerald-400 transition text-sm font-medium">{t('nav.rewards')}</a>
+          <a href="#" className="text-white hover:text-emerald-400 transition text-sm font-medium">{t('nav.partners')}</a>
+          <a href="#" className="text-white hover:text-emerald-400 transition text-sm font-medium">{t('nav.contact')}</a>
+
         </div>
 
         {/* Center Logo */}
@@ -122,8 +125,6 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
 
         {/* Right Actions */}
         <div className="flex items-center gap-3">
-          <a href="#" className="text-white hover:text-emerald-400 transition text-sm font-medium">{t('nav.partners')}</a>
-          <a href="#" className="text-white hover:text-emerald-400 transition text-sm font-medium">{t('nav.contact')}</a>
           <LanguageDropdown locale={locale} onLanguageChange={onLanguageChange} />
           <button className="px-4 py-2 text-sm text-white font-semibold hover:bg-white/10 transition rounded-lg">
             {t('auth.login')}
