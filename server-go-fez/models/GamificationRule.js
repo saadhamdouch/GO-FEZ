@@ -15,7 +15,7 @@ const GamificationRule = sequelize.define(
 				"COMPLETE_REGISTRATION",
 				"COMPLETE_CIRCUIT",
 				"COMPLETE_PREMIUM_CIRCUIT",
-				"SHARE_WITH_FRIEND",
+			"SHARE_WITH_FRIEND",
 				"LEAVE_REVIEW",
 				"VISIT_POI"
 			),

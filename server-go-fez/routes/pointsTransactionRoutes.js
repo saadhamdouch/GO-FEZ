@@ -1,14 +1,13 @@
 const express = require('express');
 const { createPointsTransaction, findUserTransactions } = require('../controllers/PointsTransactionController');
+const { authenticateToken }= require('../middleware/authEnhanced')
 
 const router = express.Router();
 
 // Route pour créer une nouvelle transaction de points
-// POST /api/v1/transactions/
-router.post('/', createPointsTransaction);
+router.post('/:activity', authenticateToken, createPointsTransaction);
 
 // Route pour récupérer toutes les transactions d'un utilisateur
-// GET /api/v1/transactions/user/:userId
-router.get('/user/:userId', findUserTransactions);
+router.get('/user/:userId', authenticateToken, findUserTransactions);
 
 module.exports = router;
