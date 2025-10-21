@@ -16,6 +16,7 @@ const categoryRoutes = require("./routes/categoryRoutes.js");
 const { POIRouter } = require("./routes/POIRoute.js"); // Importer les routes POI
 const { ConfigRouter } = require("./routes/ConfigRoute.js");
 const { GamificationRouter } = require("./routes/gamificationRouter.js");
+const pointsTransactionRoutes = require('./routes/pointsTransactionRoutes.js');
 
 
 const app = express();
@@ -82,6 +83,7 @@ app.use('/api/categorys', categoryRoutes);
 app.use('/api/pois', POIRouter);
 app.use('/api/config', ConfigRouter);
 app.use('/api/gamification', GamificationRouter);
+app.use('/api/pointsTransaction', pointsTransactionRoutes);
 
 
 // Fonction pour démarrer le serveur

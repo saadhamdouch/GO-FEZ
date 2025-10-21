@@ -1,4 +1,5 @@
-const { Circuit, Theme, POI, ThemeCircuit, CircuitPOI, City } = require('../models');
+const { Sequelize } = require('sequelize');
+const { Circuit, Theme, POI, ThemeCircuit, CircuitPOI, City, Review } = require('../models');
 const xss = require('xss');
 const { uploadImage, deleteFile } = require("../config/cloudinary");
 
@@ -92,18 +93,33 @@ exports.createCircuitWithImage = async (req, res) => {
   }
 };
 
-
- // Récupérer tous les circuits
-
+// Récupérer tous les circuits avec notes moyennes et nombre d'avis
 exports.getAllCircuits = async (req, res) => {
   try {
     const circuits = await Circuit.findAll({
       where: { isDeleted: false },
+      attributes: {
+        include: [
+          [Sequelize.fn('AVG', Sequelize.col('reviews.rating')), 'rating'], 
+          [Sequelize.fn('COUNT', Sequelize.col('reviews.id')), 'reviewCount']
+        ]
+      },
+      // 🚨 Ajout de la jointure Review et du filtre isAccepted
       include: [
+        { 
+            model: Review, 
+            as: 'reviews', 
+            attributes: [], // N'inclut pas les champs Review dans l'objet final
+            required: false, // Utilise LEFT JOIN pour inclure les circuits sans avis
+            where: { isAccepted: true } 
+        },
         { model: City, as: 'city' },
         { model: Theme, as: 'themes', through: ThemeCircuit },
         { model: POI, as: 'pois' }
-      ]
+      ],
+      // 🚨 Ajout du GROUP BY nécessaire pour les agrégations sur les relations
+      group: ['Circuit.id', 'city.id', 'themes.id', 'pois.id', 'themes->ThemeCircuit.circuitId', 'pois->CircuitPOI.circuitId']
+      // Vous pourriez avoir besoin d'ajuster la liste `group` si vous avez des clés composites
     });
 
     return res.status(200).json({ status: 'success', data: circuits });
@@ -117,16 +133,34 @@ exports.getAllCircuits = async (req, res) => {
 // Récupérer un circuit par ID
 
 exports.getCircuitById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const circuit = await Circuit.findOne({
-      where: { id, isDeleted: false },
-      include: [
-        { model: City, as: 'city' },
-        { model: Theme, as: 'themes', through: ThemeCircuit },
-        { model: POI, as: 'pois' }
-      ]
-    });
+   try {
+      const { id } = req.params;
+      const circuit = await Circuit.findOne({
+         where: { id, isDeleted: false },
+        attributes: {
+                include: [
+                    [Sequelize.fn('AVG', Sequelize.col('reviews.rating')), 'rating'],
+                    [Sequelize.fn('COUNT', Sequelize.col('reviews.id')), 'reviewCount']
+                ]
+            },
+            // 🚨 Ajout de la jointure Review et du filtre isAccepted
+            include: [
+                { 
+                    model: Review, 
+                    as: 'reviews', 
+                    attributes: [], 
+                    required: false, 
+                    where: { isAccepted: true } 
+                },
+                { model: City, as: 'city' },
+                { model: Theme, as: 'themes', through: ThemeCircuit },
+                { model: POI, as: 'pois' }
+            ],
+            // 🚨 Ajout du GROUP BY (nécessaire même pour findOne avec des includes d'agrégation)
+            group: ['Circuit.id', 'city.id', 'themes.id', 'pois.id', 'themes->ThemeCircuit.circuitId', 'pois->CircuitPOI.circuitId']
+        });
+
+
 
     if (!circuit)
       return res.status(404).json({ status: 'fail', message: 'Circuit non trouvé' });

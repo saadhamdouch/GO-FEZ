@@ -4,7 +4,7 @@ const {
     uploadFile,
     uploadFromBuffer,
     uploadMultipleFiles
- } = require('../Config/cloudinary');
+ } = require('../config/cloudinary');
 
 // Middleware pour vérifier les erreurs de validation
 const handleValidationErrors = (req, res, next) => {

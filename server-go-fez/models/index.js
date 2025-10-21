@@ -1,4 +1,5 @@
 const { Circuit } = require("./Circuit");
+const  Review  = require("./Review");
 const { CircuitPOI } = require("./CircuitPOI");
 const { Theme } = require("./Theme");
 const { ThemeCircuit } = require("./ThemeCircuit");
@@ -8,6 +9,8 @@ const { POIFile } = require("./POIFile");
 const { Category } = require("./Category");
 const { GamificationRule } = require("./GamificationRule");
 const { POI } = require("./POI");
+const  PointsTransaction  = require("./PointsTransaction");
+const  {User}  = require("./User");
 
 // Création d’un objet contenant tous les modèles
 const models = {
@@ -21,6 +24,9 @@ const models = {
 	POIFile,
 	Category,
 	GamificationRule,
+	Review,
+	PointsTransaction,
+	User,
 };
 
 // Appel automatique de toutes les associations si elles existent
@@ -119,4 +125,36 @@ City.hasMany(POI, {
     foreignKey: "cityId",
 });
 
+
+//Associations PointsTransaction ↔ User (1.*)
+User.hasMany(PointsTransaction, {
+    foreignKey: "userId",
+    as: "pointsTransactions",
+});
+PointsTransaction.belongsTo(User, {
+    foreignKey: "userId",
+    as: "users",
+});
+
+// Associations PointsTransaction ↔ GamificationRule (1.1)
+PointsTransaction.belongsTo(GamificationRule, {
+    foreignKey: "gamificationRuleId",
+    as: "rule",
+});
+GamificationRule.hasMany(PointsTransaction, {
+    foreignKey: "gamificationRuleId",
+    as: "pointsTransactions",
+});
+Circuit.hasMany(Review, {
+    foreignKey: 'targetId',
+    scope: {
+        targetType: 'CIRCUIT'
+    },
+    as: 'reviews'
+});
+
+Review.belongsTo(Circuit, {
+    foreignKey: 'targetId',
+    constraints: false 
+});
 module.exports = models;
