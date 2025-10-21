@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import LanguageDropdown from './LanguageDropdown';
@@ -14,17 +14,34 @@ interface HeaderProps {
 export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps) {
   const t = useTranslations();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showTopBanner, setShowTopBanner] = useState(true);
+
+  // Listen to scroll events
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 50) { // hide banner after scrolling 50px
+        setShowTopBanner(false);
+      } else {
+        setShowTopBanner(true);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-transparent">
       {/* Top Banner */}
-      <div className="bg-[#02355E]/80 backdrop-blur-md border-b border-white/10">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-2 text-center">
-          <p className="text-white text-xs md:text-sm font-semibold">
-            Explore Fez like never before — Download the GO-FEZ App today!
-          </p>
+      {showTopBanner && (
+        <div className="bg-[#02355E]/80 backdrop-blur-md border-b border-white/10">
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-2 text-center">
+            <p className="text-white text-xs md:text-sm font-semibold">
+              Explore Fez like never before — Download the GO-FEZ App today!
+            </p>
+          </div>
         </div>
-      </div>
+      )}
       
       {/* Main Navigation */}
       <div className="bg-[#02355E]/60 backdrop-blur-lg border-b border-white/10">
