@@ -46,14 +46,15 @@ export default function AppDownload({ isRTL }: AppDownloadProps) {
 {/* Download Buttons - Using Font Awesome */}
 <div className={`flex flex-wrap gap-4 justify-center ${isRTL ? 'lg:justify-end' : 'lg:justify-start'}`}>
   <button className="h-12 md:h-14 px-6 bg-white rounded-xl hover:bg-gray-100 transition flex items-center gap-2 shadow-md">
-    <i className="fab fa-apple text-xl" /> {/* Font Awesome Apple icon */}
+    <i className="fab fa-apple text-xl text-black" /> {/* Font Awesome Apple icon */}
     <span className="text-black text-sm md:text-base font-semibold">
       {t('download.appStore') || 'Download on the App Store'}
     </span>
   </button>
 
   <button className="h-12 md:h-14 px-6 bg-white rounded-xl hover:bg-gray-100 transition flex items-center gap-2 shadow-md">
-    <i className="fab fa-google-play text-xl" /> {/* Font Awesome Google Play icon */}
+    <i className="fab fa-google-play text-xl text-black" />
+ {/* Font Awesome Google Play icon */}
     <span className="text-black text-sm md:text-base font-semibold">
       {t('download.googlePlay') || 'Get it on Google Play'}
     </span>
@@ -72,9 +73,6 @@ export default function AppDownload({ isRTL }: AppDownloadProps) {
     />
   </div>
 </div>
-
-
-
         </div>
       </div>
     </div>
