@@ -28,8 +28,13 @@ export default function LanguageDropdown({ locale, onLanguageChange }: LanguageD
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition text-white"
       >
-        <span className="text-xl">{currentLang.flag}</span>
-        <span className="hidden md:inline text-sm font-medium">{currentLang.name}</span>
+        
+        <img
+  src={currentLang.flag}
+  alt={`${currentLang.name} flag`}
+  className="w-5 h-5 rounded-full"
+/>
+
         <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
@@ -46,7 +51,12 @@ export default function LanguageDropdown({ locale, onLanguageChange }: LanguageD
                 locale === lang.code ? 'bg-blue-50' : ''
               }`}
             >
-              <span className="text-2xl">{lang.flag}</span>
+              <img
+  src={lang.flag}
+  alt={`${lang.name} flag`}
+  className="w-6 h-6 rounded-full"
+/>
+
               <div className="flex flex-col items-start">
                 <span className={`text-sm font-medium ${locale === lang.code ? 'text-blue-600' : 'text-gray-900'}`}>
                   {lang.name}

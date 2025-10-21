@@ -5,8 +5,24 @@ export const mockFeatures = [
   { icon: "offline", titleKey: "features.offline.title", descriptionKey: "features.offline.description", color: "bg-emerald-600" }
 ];
 
+
 export const languages = [
-  { code: 'en', name: 'English', flag: '🇺🇸', country: 'USA' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷', country: 'France' },
-  { code: 'ar', name: 'العربية', flag: '🇲🇦', country: 'Morocco' }
+  {
+    code: 'en',
+    name: 'English',
+    country: 'United States',
+    flag: '/images/usa.png',
+  },
+  {
+    code: 'fr',
+    name: 'Français',
+    country: 'France',
+    flag: '/images/france.png',
+  },
+  {
+    code: 'ar',
+    name: 'العربية',
+    country: 'المغرب',
+    flag: '/images/maroc.png',
+  },
 ];

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import LanguageDropdown from './LanguageDropdown';
+import Image from 'next/image';
 
 interface HeaderProps {
   locale: string;
@@ -35,9 +36,9 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
       {/* Top Banner */}
       {showTopBanner && (
         <div className="bg-[#02355E]/80 backdrop-blur-md border-b border-white/10">
-          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-2 text-center">
+          <div className="max-w-[1440px] mx-0 px-0 sm:px-0 lg:px-8 py-2 text-left">
             <p className="text-white text-xs md:text-sm font-semibold">
-              Explore Fez like never before — Download the GO-FEZ App today!
+              Explore Fez like never before — <a href="#" className="underline hover:text-emerald-300 transition">Download the GO-FEZ App today!</a>
             </p>
           </div>
         </div>
@@ -56,9 +57,16 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
               <a href="#" className="text-white hover:text-emerald-400 transition text-sm font-medium">{t('nav.contact')}</a>
             </div>
             <div className="flex-shrink-0">
-              <div className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center">
-                <span className="text-white font-bold text-xl md:text-2xl">G</span>
-              </div>
+<div className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center">
+  <Image
+    src="/images/logo.png"
+    alt="GO-FEZ Logo"
+    width={64}
+    height={64}
+    className="object-contain"
+    priority
+  />
+</div>
             </div>
             <div className={`hidden lg:flex items-center gap-3 flex-1 ${isRTL ? 'flex-row-reverse' : 'justify-end'}`}>
               <LanguageDropdown locale={locale} onLanguageChange={onLanguageChange} />

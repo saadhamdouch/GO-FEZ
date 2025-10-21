@@ -16,28 +16,29 @@ export default function Hero({ dir, isRTL }: HeroProps) {
 
   return (
     <div className="relative pt-[90px] md:pt-[100px] text-white overflow-hidden min-h-[600px] md:min-h-[700px]">
-      {/* Background Image */}
-      <div className="">
-        {!imgError ? (
-<Image
-  src="/images/hero.jpg"
-  alt="Fez Background"
-  fill
-  className="object-cover"
-  priority
-  onError={(e) => {
-    console.error('Hero background image failed to load:', e);
-  }}
-/>
+      {/* Background Image */} <br /> <br /> <br />
+    <div className="property absolute inset-0 w-full h-full">
+  {!imgError ? (
+    <Image
+      src="/images/hero.jpg"
+      alt="Fez Background"
+      fill
+      className="object-cover object-center"
+      priority
+      onError={(e) => {
+        console.error('Hero background image failed to load:', e);
+      }}
+    />
+  ) : (
+    <div className="absolute inset-0 bg-gray-700 flex items-center justify-center text-white">
+      Image failed to load
+    </div>
+  )}
 
-        ) : (
-          <div className="absolute inset-0 bg-gray-700 flex items-center justify-center text-white">
-            Image failed to load
-          </div>
-        )}
+  {/* Lighter overlay to make background more visible */}
+  <div className="absolute inset-0 bg-gradient-to-b from-[#02355E]/30 via-[#02355E]/20 to-[#02355E]/40" />
+</div>
 
-        <div className="absolute inset-0 bg-gradient-to-b from-[#02355E]/70 via-[#02355E]/60 to-[#02355E]/80" />
-      </div>
 
 
       {/* Hero Content */}
@@ -67,20 +68,27 @@ export default function Hero({ dir, isRTL }: HeroProps) {
             </div>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-2 md:gap-3">
-            <button className="px-5 md:px-6 py-2 md:py-2.5 bg-white/20 backdrop-blur-md rounded-full hover:bg-white/30 transition text-sm md:text-base font-medium border border-white/30">
-              {t('filters.museums')}
-            </button>
-            <button className="px-5 md:px-6 py-2 md:py-2.5 bg-white/20 backdrop-blur-md rounded-full hover:bg-white/30 transition text-sm md:text-base font-medium border border-white/30">
-              {t('filters.restaurants')}
-            </button>
-            <button className="px-5 md:px-6 py-2 md:py-2.5 bg-white/20 backdrop-blur-md rounded-full hover:bg-white/30 transition text-sm md:text-base font-medium border border-white/30">
-              {t('filters.monuments')}
-            </button>
-            <button className="px-5 md:px-6 py-2 md:py-2.5 bg-white/20 backdrop-blur-md rounded-full hover:bg-white/30 transition text-sm md:text-base font-medium border border-white/30">
-              {t('filters.markets')}
-            </button>
-          </div>
+         <div className="flex flex-wrap justify-center gap-2 md:gap-3">
+  <button className="px-5 md:px-6 py-2 md:py-2.5 bg-white/20 backdrop-blur-md rounded-full hover:bg-white/30 transition text-sm md:text-base font-medium border border-white/30 flex items-center gap-2">
+    <Image src="/images/MUSEUM.png" alt="Museum" width={20} height={20} />
+    {t('filters.museums')}
+  </button>
+
+  <button className="px-5 md:px-6 py-2 md:py-2.5 bg-white/20 backdrop-blur-md rounded-full hover:bg-white/30 transition text-sm md:text-base font-medium border border-white/30 flex items-center gap-2">
+    <Image src="/images/COFFE-CUP.png" alt="Coffee" width={20} height={20} />
+    {t('filters.restaurants')}
+  </button>
+
+  <button className="px-5 md:px-6 py-2 md:py-2.5 bg-white/20 backdrop-blur-md rounded-full hover:bg-white/30 transition text-sm md:text-base font-medium border border-white/30 flex items-center gap-2">
+    <Image src="/images/RESTAURANT.png" alt="Restaurant" width={20} height={20} />
+    {t('filters.monuments')}
+  </button>
+
+  <button className="px-5 md:px-6 py-2 md:py-2.5 bg-white/20 backdrop-blur-md rounded-full hover:bg-white/30 transition text-sm md:text-base font-medium border border-white/30 flex items-center gap-2">
+    <Image src="/images/SHOP.png" alt="Shop" width={20} height={20} />
+    {t('filters.markets')}
+  </button>
+</div>
         </div>
       </div>
     </div>
