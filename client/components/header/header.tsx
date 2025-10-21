@@ -211,7 +211,7 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
                   <i className="fab fa-instagram text-[#02355E] text-sm"></i>
                 </a>
                 <div className="ml-1">
-                  <LanguageDropdown locale={locale} onLanguageChange={onLanguageChange} />
+                  <LanguageDropdown dropUp={true} locale={locale} onLanguageChange={onLanguageChange} />
                 </div>
               </div>
             </div>
