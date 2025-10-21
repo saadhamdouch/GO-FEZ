@@ -96,7 +96,7 @@ export default function Footer({ locale, isRTL, onLanguageChange }: FooterProps)
           </div>
 
           {/* Copyright */}
-          <div className="pt-8 border-t border-black/10 text-center">
+          <div className="pt-8 border-t border-black/10 text-left">
             <p className="text-black text-sm md:text-base">{t('footer.copyright')}</p>
           </div>
 
