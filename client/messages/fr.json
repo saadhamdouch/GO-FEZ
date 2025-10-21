@@ -1,0 +1,93 @@
+{
+  "hello": "Bonjour",
+  "nav": {
+    "home": "ACCUEIL",
+    "routes": "ROUTES",
+    "pois": "POIs",
+    "rewards": "Récompenses",
+    "partners": "Partenaires",
+    "contact": "Contactez-nous"
+  },
+  "auth": {
+    "login": "Connexion",
+    "signup": "S'inscrire"
+  },
+  "hero": {
+    "discover": "Découvrez",
+    "fez": "Fès",
+    "through": "À travers des itinéraires interactifs et des guides intelligents",
+    "subtitle": "Votre guide personnel pour explorer le site du patrimoine mondial de l'UNESCO de Fès el-Bali",
+    "search": "Rechercher des destinations...",
+    "searchButton": "Rechercher"
+  },
+  "filters": {
+    "museums": "Musées",
+    "restaurants": "Restaurants",
+    "monuments": "Monuments",
+    "markets": "Marchés"
+  },
+  "featuresSection": {
+    "title": "Explorez plus intelligemment, voyagez plus profondément",
+    "subtitle": "Libérez tout le potentiel de votre aventure à Fès"
+  },
+  "features": {
+    "routes": {
+      "title": "Itinéraires interactifs",
+      "description": "Naviguez facilement grâce aux chemins guidés par GPS"
+    },
+    "audio": {
+      "title": "Audio et galerie VR",
+      "description": "Expérience multimédia immersive"
+    },
+    "rewards": {
+      "title": "Jouez et gagnez des récompenses",
+      "description": "Débloquez des succès et des prix"
+    },
+    "offline": {
+      "title": "Accès hors ligne",
+      "description": "Téléchargez des cartes pour une utilisation hors ligne"
+    }
+  },
+  "themes": {
+    "historical": "Sites historiques",
+    "cuisine": "Cuisine locale",
+    "crafts": "Artisanat traditionnel",
+    "architecture": "Architecture"
+  },
+  "circuits": {
+    "medina": "Circuit de la médina",
+    "palace": "Visite du palais royal",
+    "souks": "Souks et marchés",
+    "tanneries": "Promenade des tanneries",
+    "garden": "Chemin des jardins"
+  },
+  "card": {
+    "stops": "arrêts",
+    "viewRoutes": "Voir les itinéraires",
+    "badge": {
+      "theme": "Thème",
+      "circuit": "Circuit"
+    }
+  },
+  "exploreTheme": {
+    "title": "Explorer Fès par thème"
+  },
+  "exploreCircuit": {
+    "title": "Explorer Fès par circuit"
+  },
+  "download": {
+    "title": "Améliorez votre visite avec le guidage GPS et les visites à 360°",
+    "description": "Naviguez dans les rues sinueuses de Fès en toute confiance. Obtenez des directions étape par étape et des expériences immersives.",
+    "appStore": "App Store",
+    "googlePlay": "Google Play",
+    "appPreview": "Explorez Fès"
+  },
+  "footer": {
+    "description": "Votre compagnon de confiance pour explorer l'ancienne ville de Fès. Découvrez des trésors cachés, naviguez en toute confiance et plongez dans une culture riche.",
+    "links": "Liens",
+    "explore": "Explorer",
+    "about": "À propos",
+    "language": "Langue",
+    "copyright": "© 2025 - Go Fez. Tous droits réservés"
+  }
+}

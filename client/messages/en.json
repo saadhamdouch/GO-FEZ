@@ -1,0 +1,93 @@
+{
+  "hello": "Hello",
+  "nav": {
+    "home": "HOME",
+    "routes": "ROUTES",
+    "pois": "POIs",
+    "rewards": "Rewards",
+    "partners": "Partners",
+    "contact": "Contact US"
+  },
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up"
+  },
+  "hero": {
+    "discover": "Discover",
+    "fez": "Fez",
+    "through": "Through Interactive Routes and Smart Guidance",
+    "subtitle": "Your personal guide to exploring the UNESCO World Heritage site of Fez el-Bali",
+    "search": "Search destinations...",
+    "searchButton": "Search"
+  },
+  "filters": {
+    "museums": "Museums",
+    "restaurants": "Restaurants",
+    "monuments": "Monuments",
+    "markets": "Markets"
+  },
+  "featuresSection": {
+    "title": "Explore Smarter, Travel Deeper",
+    "subtitle": "Unlock the full potential of your Fez adventure"
+  },
+  "features": {
+    "routes": {
+      "title": "Interactive Routes",
+      "description": "Navigate with ease through GPS-guided paths"
+    },
+    "audio": {
+      "title": "Audio & VR Gallery",
+      "description": "Immersive multimedia experience"
+    },
+    "rewards": {
+      "title": "Play & Earn Rewards",
+      "description": "Unlock achievements and prizes"
+    },
+    "offline": {
+      "title": "Offline Access",
+      "description": "Download maps for offline use"
+    }
+  },
+  "themes": {
+    "historical": "Historical Sites",
+    "cuisine": "Local Cuisine",
+    "crafts": "Traditional Crafts",
+    "architecture": "Architecture"
+  },
+  "circuits": {
+    "medina": "Medina Circuit",
+    "palace": "Royal Palace Tour",
+    "souks": "Souks & Markets",
+    "tanneries": "Tanneries Walk",
+    "garden": "Garden Path"
+  },
+  "card": {
+    "stops": "stops",
+    "viewRoutes": "View Routes",
+    "badge": {
+      "theme": "Theme",
+      "circuit": "Circuit"
+    }
+  },
+  "exploreTheme": {
+    "title": "Explore Fez by Theme"
+  },
+  "exploreCircuit": {
+    "title": "Explore Fez by Circuit"
+  },
+  "download": {
+    "title": "Enhance Your Visit with GPS Guidance and 360° Tours",
+    "description": "Navigate Fez's winding streets with confidence. Get turn-by-turn directions and immersive experiences.",
+    "appStore": "App Store",
+    "googlePlay": "Google Play",
+    "appPreview": "Explore Fez"
+  },
+  "footer": {
+    "description": "Your trusted companion for exploring the ancient city of Fez. Discover hidden gems, navigate with confidence, and immerse yourself in rich culture.",
+    "links": "Links",
+    "explore": "Explore",
+    "about": "About",
+    "language": "Language",
+    "copyright": "© 2025 - Go Fez. All rights reserved"
+  }
+}
