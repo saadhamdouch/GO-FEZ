@@ -7,9 +7,20 @@ import FeatureIcon from './FeatureIcon';
 export default function FeaturesSection() {
     const t = useTranslations();
     
+    // NOTE: The 'client\public' path should translate to the root '/' path in the browser context.
+    const backgroundImageStyle = {
+        backgroundImage: `url('/images/zlij.png')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed', // Makes the background stable while scrolling content over it
+    };
+
     return (
-        // Restored original background color
-        <div className="py-12 md:py-20 bg-gradient-to-b from-white to-white"> 
+        // Replaced bg-gradient-to-b with inline style for the background image
+        <div 
+            className="py-12 md:py-20 bg-white"
+            style={backgroundImageStyle}
+        > 
             <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-8 md:mb-16">
                     <h2 className="text-3xl md:text-[40px] font-semibold mb-2 text-black leading-tight">
@@ -19,14 +30,15 @@ export default function FeaturesSection() {
                         {t('featuresSection.subtitle')}
                     </p>
                 </div>
-                {/* Changed to lg:grid-cols-4 to display all four features */}
+                {/* Grid layout for the four features */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-4"> 
-                    {/* Using all mockFeatures */}
                     {mockFeatures.map((feature, index) => (
-                        // RESTORED ALL ORIGINAL CARD STYLES
+                        // Kept original card styles, but adding 'bg-opacity-80' or similar
+                        // might be useful if the background image is very busy.
+                        // I will add a slight white background to ensure text visibility over the image.
                         <div 
                             key={index} 
-                            className="bg-white border border-[rgba(0,112,54,0.15)] rounded-tr-[40px] p-6 md:p-7 text-center hover:shadow-lg transition-shadow"
+                            className="bg-white/90 border border-[rgba(0,112,54,0.15)] rounded-tr-[40px] p-6 md:p-7 text-center hover:shadow-lg transition-shadow"
                         > 
                             {/* Icon Container */}
                             <div className="mx-auto mb-8 md:mb-10 flex justify-center"> 
