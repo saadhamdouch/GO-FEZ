@@ -150,7 +150,7 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
           />
           
           {/* Sidebar */}
-          <div className="lg:hidden fixed top-0 left-0 h-full w-64 bg-[#02355E] z-50 flex flex-col shadow-2xl">
+<div className="lg:hidden fixed top-0 left-0 h-full w-64 bg-[#02355E] z-50 flex flex-col shadow-2xl overflow-y-auto">
             {/* Logo Section */}
             <div className="p-6 border-b border-white/10">
               <div className="w-16 h-16 mx-auto flex items-center justify-center">
