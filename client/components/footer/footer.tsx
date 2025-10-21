@@ -17,16 +17,24 @@ export default function Footer({ locale, isRTL, onLanguageChange }: FooterProps)
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1218px] mx-auto">
           <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12 ${isRTL ? 'text-right' : 'text-left'}`}>
+            
+            {/* Logo and Description */}
             <div className="lg:col-span-1">
               <div className={`flex items-center gap-3 mb-6 bg-[#02355E] rounded-[22px] p-4 w-fit ${isRTL ? 'mr-auto' : ''}`}>
                 <div className="w-10 h-16 flex items-center justify-center">
-                  <span className="text-white font-bold text-2xl">G</span>
+                  <img 
+                    src="/images/logo.png" 
+                    alt="Go Fez Logo" 
+                    className="w-full h-full object-contain"
+                  />
                 </div>
               </div>
               <p className="text-black text-base md:text-xl leading-relaxed mb-4">
                 {t('footer.description')}
               </p>
             </div>
+
+            {/* Main Links */}
             <div>
               <h3 className="font-medium text-xl mb-6 md:mb-8 text-black tracking-tight">{t('footer.links')}</h3>
               <ul className="space-y-3 md:space-y-4">
@@ -38,6 +46,8 @@ export default function Footer({ locale, isRTL, onLanguageChange }: FooterProps)
                 <li><a href="#" className="text-[#6A6A6A] hover:text-black transition text-base">{t('nav.contact')}</a></li>
               </ul>
             </div>
+
+            {/* Social Links */}
             <div>
               <h3 className="font-medium text-xl mb-6 md:mb-8 text-black tracking-tight">Links</h3>
               <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
@@ -58,6 +68,8 @@ export default function Footer({ locale, isRTL, onLanguageChange }: FooterProps)
                 </a>
               </div>
             </div>
+
+            {/* Language Selector */}
             <div>
               <h3 className="font-medium text-xl mb-6 md:mb-8 text-black tracking-tight">{t('footer.language')}</h3>
               <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
@@ -80,10 +92,14 @@ export default function Footer({ locale, isRTL, onLanguageChange }: FooterProps)
                 ))}
               </div>
             </div>
+
           </div>
+
+          {/* Copyright */}
           <div className="pt-8 border-t border-black/10 text-center">
             <p className="text-black text-sm md:text-base">{t('footer.copyright')}</p>
           </div>
+
         </div>
       </div>
     </footer>
