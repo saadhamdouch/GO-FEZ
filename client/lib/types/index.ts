@@ -5,7 +5,7 @@ export interface ExploreCardProps {
   currentLocale: string;
 }
 
-export interface LanguageDropdownProps {
+export interface LanguageSelectorProps {
   locale: string;
   onLanguageChange: (lang: 'en' | 'fr' | 'ar') => void;
 }

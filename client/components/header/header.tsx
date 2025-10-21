@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import LanguageDropdown from './LanguageDropdown';
 import Image from 'next/image';
+import LanguageSelector from './LanguageSelector';
 
 interface HeaderProps {
   locale: string;
@@ -125,7 +125,7 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
 
         {/* Right Actions */}
         <div className="flex items-center gap-3">
-          <LanguageDropdown locale={locale} onLanguageChange={onLanguageChange} />
+          <LanguageSelector locale={locale} onLanguageChange={onLanguageChange} />
           <button className="px-4 py-2 text-sm text-white font-semibold hover:bg-white/10 transition rounded-lg">
             {t('auth.login')}
           </button>
@@ -211,7 +211,7 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
                   <i className="fab fa-instagram text-[#02355E] text-sm"></i>
                 </a>
                 <div className="ml-1">
-                  <LanguageDropdown dropUp={true} locale={locale} onLanguageChange={onLanguageChange} />
+                  <LanguageSelector dropUp={true} locale={locale} onLanguageChange={onLanguageChange} />
                 </div>
               </div>
             </div>

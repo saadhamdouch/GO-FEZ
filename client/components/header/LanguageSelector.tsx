@@ -2,13 +2,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { languages } from '@/lib/constants/features';
-import type { LanguageDropdownProps } from '@/lib/types';
+import type { LanguageSelectorProps } from '@/lib/types';
 
-interface ExtendedLanguageDropdownProps extends LanguageDropdownProps {
+interface ExtendedLanguageSelectorProps extends LanguageSelectorProps {
   dropUp?: boolean;
 }
 
-export default function LanguageDropdown({ locale, onLanguageChange, dropUp = false }: ExtendedLanguageDropdownProps) {
+export default function LanguageSelector({ locale, onLanguageChange, dropUp = false }: ExtendedLanguageDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
