@@ -63,6 +63,7 @@
   },
   "card": {
     "stops": "stops",
+    "viewRoutes": "View Routes",
     "badge": {
       "theme": "Theme",
       "circuit": "Circuit"

@@ -1,12 +1,13 @@
 "use client"
 
-import React, { useState } from 'react';
-import { Search, Menu, X, MapPin, Clock, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, Menu, X, MapPin, Clock, Star, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter, usePathname } from '@/i18n/navigation';
 import { useGetAllThemesQuery } from '@/services/api/ThemeApi';
 import { useGetAllCircuitsQuery } from '@/services/api/CircuitApi';
 import { useGetAllCategoriesQuery } from '@/services/api/CategoryApi';
+import Image from 'next/image';
 
 const mockFeatures = [
   { icon: "route", titleKey: "features.routes.title", descriptionKey: "features.routes.description", color: "bg-emerald-600" },
@@ -14,6 +15,71 @@ const mockFeatures = [
   { icon: "key", titleKey: "features.rewards.title", descriptionKey: "features.rewards.description", color: "bg-emerald-600" },
   { icon: "offline", titleKey: "features.offline.title", descriptionKey: "features.offline.description", color: "bg-emerald-600" }
 ];
+
+const languages = [
+  { code: 'en', name: 'English', flag: '🇺🇸', country: 'USA' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷', country: 'France' },
+  { code: 'ar', name: 'العربية', flag: '🇲🇦', country: 'Morocco' }
+];
+
+const LanguageDropdown = ({ locale, onLanguageChange }: { locale: string; onLanguageChange: (lang: 'en' | 'fr' | 'ar') => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  const currentLang = languages.find(lang => lang.code === locale) || languages[0];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition text-white"
+      >
+        <span className="text-xl">{currentLang.flag}</span>
+        <span className="hidden md:inline text-sm font-medium">{currentLang.name}</span>
+        <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full mt-2 right-0 bg-white rounded-lg shadow-xl overflow-hidden min-w-[200px] z-50">
+          {languages.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => {
+                onLanguageChange(lang.code as 'en' | 'fr' | 'ar');
+                setIsOpen(false);
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-100 transition ${
+                locale === lang.code ? 'bg-blue-50' : ''
+              }`}
+            >
+              <span className="text-2xl">{lang.flag}</span>
+              <div className="flex flex-col items-start">
+                <span className={`text-sm font-medium ${locale === lang.code ? 'text-blue-600' : 'text-gray-900'}`}>
+                  {lang.name}
+                </span>
+                <span className="text-xs text-gray-500">{lang.country}</span>
+              </div>
+              {locale === lang.code && (
+                <span className="ml-auto text-blue-600">✓</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const FeatureIcon = ({ icon, color }: { icon: string; color: string }) => {
   const iconMap: Record<string, JSX.Element> = {
@@ -131,6 +197,7 @@ export default function FezDiscoveryApp() {
   const { data: categoriesData } = useGetAllCategoriesQuery();
 
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
+  const isRTL = locale === 'ar';
 
   // Extract data or use empty array
   const themes = themesData?.data || [];
@@ -155,7 +222,7 @@ export default function FezDiscoveryApp() {
         <div className="border-b border-white/20">
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16 md:h-20">
-              <div className="hidden lg:flex items-center gap-6 flex-1">
+              <div className={`hidden lg:flex items-center gap-6 flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <a href="#" className="text-white hover:text-white/80 transition text-sm md:text-base font-medium">{t('nav.home')}</a>
                 <a href="#" className="text-white hover:text-white/80 transition text-sm md:text-base font-medium">{t('nav.routes')}</a>
                 <a href="#" className="text-white hover:text-white/80 transition text-sm md:text-base font-medium">{t('nav.pois')}</a>
@@ -168,22 +235,8 @@ export default function FezDiscoveryApp() {
                   <span className="text-white font-bold text-xl md:text-2xl">G</span>
                 </div>
               </div>
-              <div className="hidden lg:flex items-center gap-4 flex-1 justify-end">
-                <div className="flex gap-2">
-                  {(['en', 'fr', 'ar'] as const).map((lang) => (
-                    <button
-                      key={lang}
-                      onClick={() => switchLocale(lang)}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center transition ${
-                        locale === lang ? 'bg-white text-[#304373]' : 'bg-white/20 text-white hover:bg-white/30'
-                      }`}
-                    >
-                      {lang === 'en' && '🇺🇸'}
-                      {lang === 'fr' && '🇫🇷'}
-                      {lang === 'ar' && '🇲🇦'}
-                    </button>
-                  ))}
-                </div>
+              <div className={`hidden lg:flex items-center gap-4 flex-1 ${isRTL ? 'flex-row-reverse' : 'justify-end'}`}>
+                <LanguageDropdown locale={locale} onLanguageChange={switchLocale} />
                 <button className="px-5 py-2.5 text-sm text-white font-semibold hover:bg-white/10 transition rounded-lg">
                   {t('auth.login')}
                 </button>
@@ -206,18 +259,8 @@ export default function FezDiscoveryApp() {
               <a href="#" className="block text-white font-medium py-2">{t('nav.rewards')}</a>
               <a href="#" className="block text-white font-medium py-2">{t('nav.partners')}</a>
               <a href="#" className="block text-white font-medium py-2">{t('nav.contact')}</a>
-              <div className="flex gap-2 pt-4 border-t border-white/20">
-                {(['en', 'fr', 'ar'] as const).map((lang) => (
-                  <button
-                    key={lang}
-                    onClick={() => switchLocale(lang)}
-                    className={`flex-1 px-4 py-3 rounded-lg font-semibold ${
-                      locale === lang ? 'bg-white text-[#02355E]' : 'bg-white/20 text-white'
-                    }`}
-                  >
-                    {lang.toUpperCase()}
-                  </button>
-                ))}
+              <div className="pt-4 border-t border-white/20">
+                <LanguageDropdown locale={locale} onLanguageChange={switchLocale} />
               </div>
               <button className="w-full px-6 py-3 text-white font-semibold border border-white rounded-lg">
                 {t('auth.login')}
@@ -232,6 +275,20 @@ export default function FezDiscoveryApp() {
 
       {/* Hero Section */}
       <div className="relative mt-[108px] md:mt-[140px] bg-[#02355E] text-white overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <Image
+            src="/images/hero-fez-bg.jpg"
+            alt="Fez Background"
+            fill
+            className="object-cover opacity-30"
+            priority
+          />
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#02355E]/80 via-[#02355E]/70 to-[#02355E]/90" />
+        </div>
+
+        {/* Dot Pattern */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 opacity-5">
             {[...Array(100)].map((_, i) => (
@@ -246,6 +303,7 @@ export default function FezDiscoveryApp() {
             ))}
           </div>
         </div>
+
         <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[57px] font-bold mb-4 md:mb-6 leading-tight tracking-tight">
@@ -257,12 +315,13 @@ export default function FezDiscoveryApp() {
               {t('hero.subtitle')}
             </p>
             <div className="max-w-[587px] mx-auto mb-5">
-              <div className="relative bg-white rounded-full px-4 md:px-7 py-3 md:py-4 flex items-center gap-3">
+              <div className={`relative bg-white rounded-full px-4 md:px-7 py-3 md:py-4 flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Search className="text-gray-400 flex-shrink-0" size={20} />
                 <input
                   type="text"
                   placeholder={t('hero.search')}
-                  className="flex-1 bg-transparent text-gray-600 text-sm md:text-base focus:outline-none placeholder:text-gray-400"
+                  className={`flex-1 bg-transparent text-gray-600 text-sm md:text-base focus:outline-none placeholder:text-gray-400 ${isRTL ? 'text-right' : 'text-left'}`}
+                  dir={dir}
                 />
                 <button className="bg-emerald-600 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-full font-semibold hover:bg-emerald-700 transition text-sm md:text-base whitespace-nowrap">
                   {t('hero.searchButton')}
@@ -319,16 +378,16 @@ export default function FezDiscoveryApp() {
       {/* Explore by Theme */}
       <div className="py-12 md:py-20 bg-white">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8 md:mb-10">
+          <div className={`flex items-center justify-between mb-8 md:mb-10 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <h2 className="text-2xl md:text-[40px] font-semibold text-black leading-tight">
               {t('exploreTheme.title')}
             </h2>
-            <div className="flex gap-2">
+            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <button className="p-2 md:p-4 bg-white border border-[#D9D9D9] rounded-full hover:bg-gray-50 transition" aria-label="Previous">
-                <ChevronLeft size={24} />
+                <ChevronLeft size={24} className={isRTL ? 'rotate-180' : ''} />
               </button>
               <button className="p-2 md:p-4 bg-white border border-[#D9D9D9] rounded-full hover:bg-gray-50 transition" aria-label="Next">
-                <ChevronRight size={24} />
+                <ChevronRight size={24} className={isRTL ? 'rotate-180' : ''} />
               </button>
             </div>
           </div>
@@ -343,7 +402,7 @@ export default function FezDiscoveryApp() {
             </div>
           ) : themes.length > 0 ? (
             <div className="overflow-x-auto pb-4 -mx-4 px-4">
-              <div className="flex gap-4 md:gap-5 min-w-max">
+              <div className={`flex gap-4 md:gap-5 min-w-max ${isRTL ? 'flex-row-reverse' : ''}`}>
                 {themes.filter(t => t.isActive).map((item) => (
                   <ExploreCard
                     key={item.id}
@@ -366,16 +425,16 @@ export default function FezDiscoveryApp() {
       {/* Explore by Circuit */}
       <div className="py-12 md:py-20 bg-white">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8 md:mb-10">
+          <div className={`flex items-center justify-between mb-8 md:mb-10 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <h2 className="text-2xl md:text-[40px] font-semibold text-black leading-tight">
               {t('exploreCircuit.title')}
             </h2>
-            <div className="flex gap-2">
+            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <button className="p-2 md:p-4 bg-white border border-[#D9D9D9] rounded-full hover:bg-gray-50 transition" aria-label="Previous">
-                <ChevronLeft size={24} />
+                <ChevronLeft size={24} className={isRTL ? 'rotate-180' : ''} />
               </button>
               <button className="p-2 md:p-4 bg-white border border-[#D9D9D9] rounded-full hover:bg-gray-50 transition" aria-label="Next">
-                <ChevronRight size={24} />
+                <ChevronRight size={24} className={isRTL ? 'rotate-180' : ''} />
               </button>
             </div>
           </div>
@@ -390,7 +449,7 @@ export default function FezDiscoveryApp() {
             </div>
           ) : circuits.length > 0 ? (
             <div className="overflow-x-auto pb-4 -mx-4 px-4">
-              <div className="flex gap-5 min-w-max">
+              <div className={`flex gap-5 min-w-max ${isRTL ? 'flex-row-reverse' : ''}`}>
                 {circuits.filter(c => c.isActive).map((item) => (
                   <ExploreCard
                     key={item.id}
@@ -413,7 +472,7 @@ export default function FezDiscoveryApp() {
       {/* App Download Section */}
       <div className="py-12 md:py-20 bg-[#02355E] text-white relative overflow-hidden">
         <div className="absolute inset-0">
-          <div className="absolute right-0 top-0 w-[491px] h-full opacity-30">
+          <div className={`absolute ${isRTL ? 'left-0' : 'right-0'} top-0 w-[491px] h-full opacity-30`}>
             <div
               className="w-full h-full"
               style={{
@@ -423,15 +482,15 @@ export default function FezDiscoveryApp() {
           </div>
         </div>
         <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-[1300px] mx-auto bg-[#02355E] rounded-[38px] px-8 md:px-16 py-8 md:py-12 flex flex-col lg:flex-row items-center justify-between gap-8">
-            <div className="flex-1 text-center lg:text-left max-w-[737px]">
+          <div className={`max-w-[1300px] mx-auto bg-[#02355E] rounded-[38px] px-8 md:px-16 py-8 md:py-12 flex flex-col lg:flex-row items-center justify-between gap-8 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
+            <div className={`flex-1 text-center ${isRTL ? 'lg:text-right' : 'lg:text-left'} max-w-[737px]`}>
               <h2 className="text-2xl md:text-[32px] font-bold mb-3 md:mb-4 leading-tight bg-gradient-to-r from-white to-emerald-600 bg-clip-text text-transparent">
                 {t('download.title')}
               </h2>
               <p className="text-white text-base md:text-xl mb-6 md:mb-8 leading-relaxed">
                 {t('download.description')}
               </p>
-              <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+              <div className={`flex flex-wrap gap-3 justify-center ${isRTL ? 'lg:justify-end' : 'lg:justify-start'}`}>
                 <button className="h-12 md:h-14 px-6 bg-white rounded-lg hover:bg-gray-100 transition flex items-center gap-2">
                   <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
@@ -475,9 +534,9 @@ export default function FezDiscoveryApp() {
       <footer className="bg-[#F4FAFF] py-12 md:py-16">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-[1218px] mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12">
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12 ${isRTL ? 'text-right' : 'text-left'}`}>
               <div className="lg:col-span-1">
-                <div className="flex items-center gap-3 mb-6 bg-[#02355E] rounded-[22px] p-4 w-fit">
+                <div className={`flex items-center gap-3 mb-6 bg-[#02355E] rounded-[22px] p-4 w-fit ${isRTL ? 'mr-auto' : ''}`}>
                   <div className="w-10 h-16 flex items-center justify-center">
                     <span className="text-white font-bold text-2xl">G</span>
                   </div>
@@ -499,7 +558,7 @@ export default function FezDiscoveryApp() {
               </div>
               <div>
                 <h3 className="font-medium text-xl mb-6 md:mb-8 text-black tracking-tight">Links</h3>
-                <div className="flex gap-3">
+                <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                   <a href="#" className="w-10 h-10 bg-[#0A5A9A] rounded-full flex items-center justify-center hover:bg-[#084a7d] transition">
                     <svg className="w-5 h-5" fill="white" viewBox="0 0 24 24">
                       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
@@ -519,7 +578,7 @@ export default function FezDiscoveryApp() {
               </div>
               <div>
                 <h3 className="font-medium text-xl mb-6 md:mb-8 text-black tracking-tight">{t('footer.language')}</h3>
-                <div className="flex gap-3">
+                <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                   {([
                     { lang: 'en', label: 'En' },
                     { lang: 'fr', label: 'Fr' },

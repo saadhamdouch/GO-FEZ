@@ -86,8 +86,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar">
-      <body
+ <body
         className={`${cairo.variable} ${tajawal.variable} ${poppins.variable} ${mulish.variable} ${ibmPlexSansArabic.variable} ${geistSans.variable} font-cairo antialiased bg-background text-foreground`}
+        suppressHydrationWarning
       >
         <Suspense>
           <ReduxProvider>
