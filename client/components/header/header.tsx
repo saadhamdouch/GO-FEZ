@@ -26,11 +26,11 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
   }, []);
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-transparent">
+    <nav className="fixed top-0 w-full z-50">
 
       {/* Top Banner */}
       {showTopBanner && (
-        <div className="bg-[#02355E]/80 backdrop-blur-md border-b border-white/10">
+        <div className="border-b border-white/10">
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-col lg:flex-row items-center justify-center lg:justify-between">
 
             {/* Text: hide on small screens, show on md and up */}
@@ -65,8 +65,9 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
       )}
 
 {/* Main Navigation */}
-<div className="bg-[#02355E]/60 backdrop-blur-lg border-b border-white/10">
-  <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 relative">
+<div className="border-b border-white/10"> 
+ <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 relative">
+
     <div className="flex justify-between items-center h-16 md:h-18">
 
       {/* Mobile layout only */}

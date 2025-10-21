@@ -16,14 +16,14 @@ export default function Hero({ dir, isRTL }: HeroProps) {
 
   return (
     <div className="relative pt-[90px] md:pt-[100px] text-white overflow-hidden min-h-[600px] md:min-h-[700px]">
-      {/* Background Image */} <br /> <br /> <br />
+      {/* Background Image */} <br /> <br /> <br /><br /><br /><br />
     <div className="property absolute inset-0 w-full h-full">
   {!imgError ? (
     <Image
       src="/images/hero.jpg"
       alt="Fez Background"
       fill
-      className="object-cover object-center"
+      className="object-cover object-fill"
       priority
       onError={(e) => {
         console.error('Hero background image failed to load:', e);
