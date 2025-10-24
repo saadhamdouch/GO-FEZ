@@ -1,104 +1,70 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet, Text, View } from 'react-native';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
-import "../global.css";
+import BottomSheetContent from "@/components/BottomSheetContent"
+import BottomSheet from "@gorhom/bottom-sheet"
+import { useCallback, useMemo, useRef, useState } from "react"
+import { Dimensions, StyleSheet, View } from "react-native"
+import { GestureHandlerRootView } from "react-native-gesture-handler"
+import MapView, { Marker } from "react-native-maps"
+
+const { height } = Dimensions.get("window")
+
+const INITIAL_REGION = {
+  latitude: 34.0626,
+  longitude: -5.0077,
+  latitudeDelta: 0.05,
+  longitudeDelta: 0.05,
+}
+
+const LOCATIONS = [
+  { id: 1, latitude: 34.0626, longitude: -5.0077, title: "Fez Medina", type: "landmark" },
+  { id: 2, latitude: 34.0656, longitude: -5.0087, title: "Restaurant", type: "restaurant" },
+  { id: 3, latitude: 34.0596, longitude: -5.0067, title: "Museum", type: "museum" },
+  { id: 4, latitude: 34.0646, longitude: -5.0047, title: "Café", type: "coffee" },
+  { id: 5, latitude: 34.0616, longitude: -5.0107, title: "Shop", type: "shop" },
+]
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-xl font-bold text-red-500">
-          Welcome to Nativewind!
-        </Text>
-      </View>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const bottomSheetRef = useRef<BottomSheet>(null)
+  const snapPoints = useMemo(() => [100, 300, height * 0.8], [height])
+  const [selectedLocation, setSelectedLocation] = useState<(typeof LOCATIONS)[0] | null>(null)
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+  const handleMarkerPress = useCallback((location: (typeof LOCATIONS)[0]) => {
+    setSelectedLocation(location)
+    bottomSheetRef.current?.snapToIndex(1)
+  }, [])
+
+  return (
+    <GestureHandlerRootView style={styles.container}>
+      <View style={styles.mapContainer}>
+        <MapView style={styles.map} initialRegion={INITIAL_REGION} showsUserLocation showsMyLocationButton>
+          {LOCATIONS.map((location) => (
+            <Marker
+              key={location.id}
+              coordinate={{ latitude: location.latitude, longitude: location.longitude }}
+              title={location.title}
+              onPress={() => handleMarkerPress(location)}
+            />
+          ))}
+        </MapView>
+      </View>
+
+      <BottomSheet ref={bottomSheetRef} snapPoints={snapPoints} enablePanDownToClose={false} enableOverDrag={false}>
+        <BottomSheetContent selectedLocation={selectedLocation} />
+      </BottomSheet>
+    </GestureHandlerRootView>
+  )
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  mapContainer: {
+    flex: 1,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  map: {
+    width: "100%",
+    height: "100%",
   },
-});
+})
