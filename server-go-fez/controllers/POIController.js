@@ -1,5 +1,7 @@
 const { validationResult } = require('express-validator');
-const { POI, POILocalization, POIFile } = require('../models');
+const { Op, Sequelize } = require('sequelize');
+const { POI, POILocalization, POIFile, Category,User, UserSpace, TransportMode} = require('../models');
+const EARTH_RADIUS_KM = 6371;
 const { 
     uploadFile,
     uploadFromBuffer,
@@ -495,6 +497,205 @@ const deletePOI = async (req, res) => {
 	}
 };
 
+// Méthode pour récupérer les POIs pour le Parcours Libre
+
+const getPOIsForParcoursLibre = async (req, res) => {
+    const { latitude, longitude, mode } = req.query;
+
+    // 1. Validation de base
+    if (!latitude || !longitude) {
+        return res.status(400).json({
+            success: false,
+            message: "Les paramètres géographiques (latitude, longitude) sont requis."
+        });
+    }
+
+    try {
+        const targetLat = parseFloat(latitude);
+        const targetLon = parseFloat(longitude);
+
+        // 1. Définir une durée de référence (ex: 10 minutes en heures)
+        const referenceTimeHours = 10 / 60; 
+        
+        let modeKey = mode || 'walk'; // Par défaut : 'walk' si non spécifié
+        let maxDistanceKm = 5.0; // Rayon par défaut de secours
+
+        // 2. Chercher la vitesse moyenne du mode de transport
+        const transportMode = await TransportMode.findOne({
+            where: { modeKey: modeKey },
+            attributes: ['averageSpeedKmH']
+        });
+
+        if (transportMode && transportMode.averageSpeedKmH) {
+            const speed = transportMode.averageSpeedKmH;
+            // Distance = Vitesse (km/h) * Temps (heures)
+            maxDistanceKm = speed * referenceTimeHours; 
+            
+            // On s'assure qu'on ne dépasse pas une limite raisonnable (ex: 15 km)
+            if (maxDistanceKm > 15) {
+                maxDistanceKm = 15.0; 
+            }
+        }
+
+        // 2. Construction de la formule Haversine pour calculer la distance
+        const POI_LAT = 'JSON_EXTRACT(POI.coordinates, "$.latitude")';
+        const POI_LON = 'JSON_EXTRACT(POI.coordinates, "$.longitude")';
+
+        const distanceLiteral = `(
+            ${EARTH_RADIUS_KM} * acos(
+                cos( radians(:targetLat) ) * cos( radians(${POI_LAT}) ) * cos( radians(${POI_LON}) - radians(:targetLon) )
+                + sin( radians(:targetLat) ) * sin( radians(${POI_LAT}) )
+            )
+        )`;
+
+        // 3. Conditions WHERE (filtrage par distance uniquement)
+        const whereCondition = {
+            isDeleted: false,
+            isActive: true
+        };
+
+        const distanceWhere = Sequelize.where(Sequelize.literal(distanceLiteral), {
+            [Op.lte]: maxDistanceKm
+        });
+
+        whereCondition[Op.and] = [distanceWhere];
+
+        // 4. Exécution de la requête
+        let pois = await POI.findAll({
+            attributes: [
+                'id',
+                'coordinates',
+                'cityId',
+                'category',
+                [Sequelize.literal(distanceLiteral), 'distance_km']
+            ],
+            where: whereCondition,
+            replacements: { targetLat, targetLon },
+            include: [
+                {
+                    model: POILocalization,
+                    as: 'frLocalization',
+                    attributes: ['name', 'description']
+                },
+                {
+                    model: Category,
+                    as: 'categoryPOI',
+                    attributes: ['id', 'fr', 'ar']
+                },
+               {
+                    model: UserSpace,
+                    as: 'spaceDetails', 
+                    required: false,    
+                    attributes: ['userId'], 
+                    include: [
+                        {
+                            model: User,
+                            as: 'spaceOwner', 
+                            attributes: ['id', 'firstName', 'lastName', 'email', 'phone'],
+                            required: true    
+                        }
+                    ]
+                }
+            ],
+            order: [[Sequelize.literal('distance_km'), 'ASC']],
+            raw: false,
+            nest: true
+        });
+
+        // 5. Traitement des données : affichage conditionnel du propriétaire
+        pois = pois.map(poi => {
+            const plainPoi = poi.get({ plain: true });
+
+            let ownerDetails = null;
+           const spaceOwner = plainPoi.spaceDetails ? plainPoi.spaceDetails.spaceOwner : null;
+
+            const isManaged = !!spaceOwner; 
+
+            if (isManaged) {
+                ownerDetails = spaceOwner;
+            }
+
+            delete plainPoi.spaceDetails; 
+            
+            return {
+                ...plainPoi,
+                infoProprietaire: ownerDetails
+            };
+        });
+
+        // 6. Réponse finale
+        res.status(200).json({
+            success: true,
+            message: `Parcours Libre exécuté avec succès. Rayon utilisé : ${maxDistanceKm.toFixed(2)} km. (Mode: ${modeKey}).`,
+            count: pois.length,
+            pois: pois
+        });
+
+    } catch (error) {
+        console.error('❌ Erreur lors du parcours libre :', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la recherche des points d’intérêt.',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+const getTravelTime = async (req, res) => {
+
+    const { distanceKm, mode } = req.query;
+
+    if (!distanceKm || !mode) {
+        return res.status(400).json({
+            success: false,
+            message: "Les paramètres 'distanceKm' et 'mode' sont requis."
+        });
+    }
+
+    try {
+        const distance = parseFloat(distanceKm);
+        const modeKey = mode.toLowerCase();
+        
+        if (isNaN(distance) || distance <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Le paramètre 'distanceKm' doit être un nombre positif."
+            });
+        }
+        
+        const transportMode = await TransportMode.findOne({
+            where: { modeKey: modeKey },
+            attributes: ['averageSpeedKmH']
+        });
+
+        if (!transportMode || !transportMode.averageSpeedKmH) {
+            return res.status(404).json({
+                success: false,
+                message: `Mode de transport inconnu ou non supporté : '${modeKey}'.`
+            });
+        }
+
+        const speedKmH = transportMode.averageSpeedKmH; 
+
+        const travelTimeHours = distance / speedKmH;
+        
+        const travelTimeMinutes = travelTimeHours * 60; 
+
+        res.status(200).json({
+            success: true,
+            message: "Calcul du temps de trajet réussi.",
+            mode: modeKey,
+            speedKmH: speedKmH,
+            distanceKm: parseFloat(distance.toFixed(2)),
+            travelTimeMinutes: parseFloat(travelTimeMinutes.toFixed(2))
+        });
+
+    } catch (error) {
+        console.error('❌ Erreur lors du calcul du temps de trajet :', error);
+    }
+};
+
+
 module.exports = {
     handleValidationErrors,
     createPOI,
@@ -502,5 +703,7 @@ module.exports = {
     findAllPOIs,
     findOnePOI,
     updatePOI,
-    deletePOI
+    deletePOI,
+    getPOIsForParcoursLibre,
+    getTravelTime
 };

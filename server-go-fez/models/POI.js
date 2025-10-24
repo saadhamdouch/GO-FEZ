@@ -34,6 +34,11 @@ const POI = sequelize.define('POI', {
         allowNull: true,
         comment: 'Coordonnées géographiques {latitude, longitude, address}'
     },
+    ownerId: {
+            type: DataTypes.INTEGER, // Ou DataTypes.INTEGER si c'est le type de l'ID utilisateur
+            allowNull: true,      // Ou false, selon votre logique
+            field: 'ownerId'      // Assurez-vous que 'field' correspond au nom réel de la colonne
+        },
     category: {
         type: DataTypes.UUID,
         allowNull: true,

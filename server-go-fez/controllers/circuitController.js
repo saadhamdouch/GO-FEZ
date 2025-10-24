@@ -93,6 +93,17 @@ exports.createCircuitWithImage = async (req, res) => {
   }
 };
 
+exports.rateCircuit = async (req, res) => {
+  try {
+    const userId = req.user.userId; // Récupérer l'ID de l'utilisateur authentifié
+    const { circuitId, rating } = req.body;
+    
+  } catch (error) {
+    console.error('❌ Erreur notation circuit :', error);
+    return res.status(500).json({ status: 'error', message: 'Erreur serveur', error });
+  }
+};
+
 // Récupérer tous les circuits avec notes moyennes et nombre d'avis
 exports.getAllCircuits = async (req, res) => {
   try {

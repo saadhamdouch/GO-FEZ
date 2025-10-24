@@ -11,6 +11,8 @@ const { GamificationRule } = require("./GamificationRule");
 const { POI } = require("./POI");
 const  PointsTransaction  = require("./PointsTransaction");
 const  {User}  = require("./User");
+const  {UserSpace}  = require("./UserSpace");
+const { TransportMode } = require("./TransportMode");
 
 // Création d’un objet contenant tous les modèles
 const models = {
@@ -27,6 +29,8 @@ const models = {
 	Review,
 	PointsTransaction,
 	User,
+	UserSpace,
+	TransportMode
 };
 
 // Appel automatique de toutes les associations si elles existent
@@ -157,4 +161,20 @@ Review.belongsTo(Circuit, {
     foreignKey: 'targetId',
     constraints: false 
 });
+
+POI.hasMany(Review, { 
+    foreignKey: 'poiId', 
+    as: 'reviews' 
+});
+POI.belongsTo(User, {
+    foreignKey: 'ownerId',
+    as: 'ownerInfo' 
+});
+
+POI.hasOne(UserSpace, { foreignKey: 'poi_id', as: 'spaceDetails' }); 
+UserSpace.belongsTo(POI, { foreignKey: 'poi_id' });
+
+UserSpace.belongsTo(User, { foreignKey: 'user_id', as: 'spaceOwner' }); 
+User.hasMany(UserSpace, { foreignKey: 'user_id' });
+
 module.exports = models;

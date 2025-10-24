@@ -1,14 +1,25 @@
 const { City } = require('../models');
 const xss = require('xss');
+const { deleteFile } = require("../config/cloudinary");
 
-//  Créer une ville
+//  Créer une ville avec upload d’image
 exports.createCity = async (req, res) => {
     try {
-        const { name, nameAr, nameEn, country, radius, isActive } = req.body;
+        
+    console.log('📁 Fichier image reçu:', req.file ? req.file.originalname : 'Aucun');
+        const { name, nameAr, nameEn, country, radius, isActive, address, adressAr, adressEn, latitude, longitude } = req.body;
 
         if (!name || !nameAr || !nameEn || !country || !radius) {
             return res.status(400).json({ status: 'fail', message: 'Champs requis manquants' });
         }
+
+        const coordinatesObject = {
+            address: xss(address),
+            addressAr: xss(adressAr), // Correction du nom de variable 'adressAr' dans le code original
+            addressEn: xss(adressEn), // Correction du nom de variable 'adressEn' dans le code original
+            longitude: longitude ? Number(longitude) : null,
+            latitude: latitude ? Number(latitude) : null,
+        };
 
         const sanitizedData = {
             name: xss(name),
@@ -16,13 +27,14 @@ exports.createCity = async (req, res) => {
             nameEn: xss(nameEn),
             country: xss(country),
             radius: radius ? Number(radius) : null,
+            coordinates: coordinatesObject,
             isActive: isActive === 'true' || isActive === true,
-            isDeleted: false
-        };
+            isDeleted: false,
+            image: req.file ? req.file.path : null, // URL
+            imagePublicId: req.file ? req.file.filename : null // Public ID
 
-        // TODO: Insertion de l'image depuis req.file vers Cloudinary
-        const urlImage = "https://example.com";
-        sanitizedData.image = urlImage;
+        };
+        console.log('🏗️ Création du city avec les données:', sanitizedData);
 
         const existingCity = await City.findOne({ where: { name: sanitizedData.name, isDeleted: false } });
         if (existingCity) {
@@ -65,13 +77,26 @@ exports.updateCity = async (req, res) => {
         if (req.body.nameEn) sanitizedData.nameEn = xss(req.body.nameEn);
         if (req.body.country) sanitizedData.country = xss(req.body.country);
         if (req.body.radius) sanitizedData.radius = Number(req.body.radius);
+            if (req.body.address || req.body.adressAr || req.body.adressEn || req.body.latitude || req.body.longitude) {    
+            const updatedCoordinates = { ...city.coordinates };
+            if (req.body.address) updatedCoordinates.address = xss(req.body.address);
+            if (req.body.adressAr) updatedCoordinates.addressAr = xss(req.body.adressAr);
+            if (req.body.adressEn) updatedCoordinates.addressEn = xss(req.body.adressEn);   
+            if (req.body.latitude) updatedCoordinates.latitude = Number(req.body.latitude);
+            if (req.body.longitude) updatedCoordinates.longitude = Number(req.body.longitude);
+                
+            sanitizedData.coordinates = updatedCoordinates;
+        }
         if (req.body.isActive !== undefined)
             sanitizedData.isActive = req.body.isActive === 'true' || req.body.isActive === true;
 
         if (req.file) {
-            // TODO: si une image existe déjà, la supprimer de Cloudinary avant de mettre la nouvelle
-            const urlImage = "https://example.com";
-            sanitizedData.image = urlImage;
+            if (city.imagePublicId) { 
+                console.log(`🗑️ Suppression image Cloudinary ancienne: ${city.imagePublicId}`);
+                await deleteFile(city.imagePublicId);
+            }
+            sanitizedData.image = req.file.path; 
+            sanitizedData.imagePublicId = req.file.filename; 
         }
 
         await city.update(sanitizedData);
@@ -88,6 +113,10 @@ exports.deleteCity = async (req, res) => {
         const city = await City.findByPk(req.params.id);
         if (!city || city.isDeleted) {
             return res.status(404).json({ status: 'fail', message: 'Ville introuvable' });
+        }
+        if (city.imagePublicId) {
+            console.log(`🗑️ Suppression image Cloudinary: ${city.imagePublicId}`);
+            await deleteFile(city.imagePublicId);
         }
 
         await city.update({ isDeleted: true });
