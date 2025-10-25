@@ -156,9 +156,9 @@ POIRouter.post('/create-with-files',
         body('coordinates')
             .isString()
             .withMessage('Les coordonnées doivent être une chaîne JSON valide'),
-        body('category')
-            .isInt({ min: 1 })
-            .withMessage('La catégorie doit être un nombre entier positif'),
+body('category')
+  .isUUID()
+  .withMessage('La catégorie doit être un UUID valide'),
         body('cityId')
             .isUUID()
             .withMessage('L\'ID de la ville doit être un UUID valide'),

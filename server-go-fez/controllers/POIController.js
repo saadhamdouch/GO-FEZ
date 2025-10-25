@@ -354,7 +354,7 @@ const createPOIWithFiles = async (req, res) => {
             fr: frLocalizationResponse?.id || null,
             en: enLocalizationResponse?.id || null,
             coordinates: JSON.parse(coordinates),
-            category: parseInt(category),
+            category: category,
             practicalInfo: practicalInfo ? JSON.parse(practicalInfo) : null,
             cityId: cityId,
             isActive: isActive === 'true' || isActive === true,
