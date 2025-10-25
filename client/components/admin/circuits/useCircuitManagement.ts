@@ -25,11 +25,6 @@ interface CircuitFormData {
   isActive: boolean;
   themeIds: string[];
   poiIds: string[];
-  poisWithOrder: Array<{
-    poiId: string;
-    order: number;
-    estimatedTime: number;
-  }>;
   localizations: {
     fr: { name: string; description: string };
     ar: { name: string; description: string };
@@ -48,7 +43,6 @@ const initialFormData: CircuitFormData = {
   isActive: true,
   themeIds: [],
   poiIds: [],
-  poisWithOrder: [],
   localizations: {
     fr: { name: '', description: '' },
     ar: { name: '', description: '' },
@@ -61,6 +55,7 @@ export function useCircuitManagement() {
   const { data: citiesData } = useGetAllCitiesQuery();
   const { data: themesData } = useGetAllThemesQuery();
   const { data: poisData } = useGetAllPOIsQuery();
+
   const [createCircuit, { isLoading: isCreating }] = useCreateCircuitMutation();
   const [updateCircuit, { isLoading: isUpdating }] = useUpdateCircuitMutation();
   const [deleteCircuit, { isLoading: isDeleting }] = useDeleteCircuitMutation();
@@ -77,6 +72,7 @@ export function useCircuitManagement() {
   const themes = themesData?.data || [];
   const pois = poisData?.pois || [];
 
+  // Parser les localisations
   const parseLoc = (loc: string | any): { name: string; description: string } => {
     if (typeof loc === 'string') {
       try {
@@ -91,22 +87,36 @@ export function useCircuitManagement() {
     return loc || { name: '', description: '' };
   };
 
+  // Gestion de l'image
   const handleImageChange = async (file: File) => {
     try {
       const compressed = await compressImageByType(file);
       setImageFile(compressed.file);
       const previewUrl = URL.createObjectURL(compressed.file);
       setImagePreview(previewUrl);
+      toast.success('Image compressée avec succès');
     } catch (error) {
       toast.error("Erreur lors de la compression de l'image");
     }
   };
 
+  // Soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validation
     if (!formData.cityId || !formData.duration || !formData.distance) {
       toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    // Validation: Au moins un nom de localisation requis
+    if (
+      !formData.localizations.fr.name &&
+      !formData.localizations.ar.name &&
+      !formData.localizations.en.name
+    ) {
+      toast.error('Au moins un nom de localisation est requis (FR, AR ou EN)');
       return;
     }
 
@@ -115,8 +125,20 @@ export function useCircuitManagement() {
       return;
     }
 
+    // Validation des thèmes et POIs
+    if (!formData.themeIds || formData.themeIds.length === 0) {
+      toast.error('Veuillez sélectionner au moins un thème');
+      return;
+    }
+
+    if (!formData.poiIds || formData.poiIds.length === 0) {
+      toast.error('Veuillez sélectionner au moins un POI');
+      return;
+    }
+
     const apiFormData = new FormData();
     apiFormData.append('data', JSON.stringify(formData));
+
     if (imageFile) {
       apiFormData.append('image', imageFile);
     }
@@ -129,6 +151,7 @@ export function useCircuitManagement() {
         await createCircuit(apiFormData).unwrap();
         toast.success('Circuit créé avec succès');
       }
+
       refetch();
       setIsModalOpen(false);
       resetForm();
@@ -138,6 +161,7 @@ export function useCircuitManagement() {
     }
   };
 
+  // Suppression d'un circuit
   const handleDelete = async (id: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce circuit ?')) return;
 
@@ -151,6 +175,7 @@ export function useCircuitManagement() {
     }
   };
 
+  // Réinitialiser le formulaire
   const resetForm = () => {
     setSelectedCircuit(null);
     setImageFile(null);
@@ -158,13 +183,18 @@ export function useCircuitManagement() {
     setFormData(initialFormData);
   };
 
+  // Éditer un circuit
   const handleEdit = (circuit: Circuit) => {
     setSelectedCircuit(circuit);
     setImagePreview(circuit.image);
+    
     setFormData({
       cityId: circuit.cityId,
       duration: String(circuit.duration),
       distance: String(circuit.distance),
+      price: circuit.price ? String(circuit.price) : '',
+      startPoint: circuit.startPoint || '',
+      endPoint: circuit.endPoint || '',
       isPremium: circuit.isPremium,
       isActive: circuit.isActive,
       themeIds: circuit.themes?.map((t: any) => t.id) || [],
@@ -175,13 +205,23 @@ export function useCircuitManagement() {
         en: parseLoc(circuit.en),
       },
     });
+    
     setIsModalOpen(true);
   };
 
+  // Filtrer les circuits
   const filteredCircuits = circuits.filter((circuit: Circuit) => {
     if (!searchTerm) return true;
     const frLoc = parseLoc(circuit.fr);
-    return frLoc.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const arLoc = parseLoc(circuit.ar);
+    const enLoc = parseLoc(circuit.en);
+    const searchLower = searchTerm.toLowerCase();
+    
+    return (
+      frLoc.name?.toLowerCase().includes(searchLower) ||
+      arLoc.name?.toLowerCase().includes(searchLower) ||
+      enLoc.name?.toLowerCase().includes(searchLower)
+    );
   });
 
   return {

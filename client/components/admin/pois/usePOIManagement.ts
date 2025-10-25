@@ -23,9 +23,21 @@ interface POIFormData {
   isActive: boolean;
   isVerified: boolean;
   isPremium: boolean;
-  frLocalization: { name: string; description: string; address: string };
-  arLocalization: { name: string; description: string; address: string };
-  enLocalization: { name: string; description: string; address: string };
+  frLocalization: {
+    name: string;
+    description: string;
+    address: string;
+  };
+  arLocalization: {
+    name: string;
+    description: string;
+    address: string;
+  };
+  enLocalization: {
+    name: string;
+    description: string;
+    address: string;
+  };
 }
 
 const initialFormData: POIFormData = {
@@ -47,6 +59,7 @@ export function usePOIManagement() {
   const { data: poisData, isLoading, error, refetch } = useGetAllPOIsQuery();
   const { data: categoriesData } = useGetAllCategoriesQuery();
   const { data: citiesData } = useGetAllCitiesQuery();
+
   const [createPOIWithFiles, { isLoading: isCreating }] = useCreatePOIWithFilesMutation();
   const [updatePOI, { isLoading: isUpdating }] = useUpdatePOIMutation();
   const [deletePOI, { isLoading: isDeleting }] = useDeletePOIMutation();
@@ -61,23 +74,19 @@ export function usePOIManagement() {
   const categories = categoriesData?.data || [];
   const cities = citiesData?.data || [];
 
-  // Helper functions
-// Helper functions
+  // Helper pour récupérer le nom de catégorie
   const getCategoryName = (categoryId: string): string => {
     const category = categories.find((c: any) => c.id === categoryId);
     if (!category) return 'Non catégorisé';
-    
+
     try {
-      // Try to parse the fr field if it's a string
       if (typeof category.fr === 'string') {
         const parsed = JSON.parse(category.fr);
         return parsed.name || 'Sans nom';
       }
-      // If it's already an object
       if (category.fr && typeof category.fr === 'object') {
         return category.fr.name || 'Sans nom';
       }
-      // Fallback to other languages
       if (category.en && typeof category.en === 'object') {
         return category.en.name || 'Sans nom';
       }
@@ -91,13 +100,16 @@ export function usePOIManagement() {
     }
   };
 
+  // Helper pour récupérer le nom de ville
   const getCityName = (cityId: string): string => {
     const city = cities.find((c: any) => c.id === cityId);
     return city?.name || 'Inconnue';
   };
 
+  // Gestion des fichiers avec compression
   const handleFileChange = async (file: File, key: string) => {
     try {
+      // Compresser les images uniquement
       if (key === 'image' && file.type.startsWith('image/')) {
         const compressed = await compressImageByType(file);
         setFiles((prev) => ({ ...prev, [key]: compressed.file }));
@@ -111,6 +123,7 @@ export function usePOIManagement() {
     }
   };
 
+  // Soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -120,12 +133,17 @@ export function usePOIManagement() {
       return;
     }
 
-    if (!formData.frLocalization.name || !formData.arLocalization.name || !formData.enLocalization.name) {
-      toast.error('Les noms de localisation sont requis dans les trois langues');
+    // Validation: Au moins un nom de localisation requis
+    if (
+      !formData.frLocalization.name &&
+      !formData.arLocalization.name &&
+      !formData.enLocalization.name
+    ) {
+      toast.error('Au moins un nom de localisation est requis (FR, AR ou EN)');
       return;
     }
 
-    // Validate JSON for practicalInfo
+    // Valider le JSON practicalInfo
     if (formData.practicalInfo && formData.practicalInfo !== '{}') {
       try {
         JSON.parse(formData.practicalInfo);
@@ -137,8 +155,8 @@ export function usePOIManagement() {
 
     try {
       const apiFormData = new FormData();
-      
-      // Coordinates
+
+      // Coordonnées
       apiFormData.append(
         'coordinates',
         JSON.stringify({
@@ -148,21 +166,26 @@ export function usePOIManagement() {
         })
       );
 
-      // Basic fields
+      // Champs basiques
       apiFormData.append('category', formData.category);
       apiFormData.append('cityId', formData.cityId);
 
-      // Practical info
+      // Informations pratiques
       if (formData.practicalInfo && formData.practicalInfo !== '{}') {
         apiFormData.append('practicalInfo', formData.practicalInfo);
       }
 
-      // Localizations
+      // Localisations (envoyer même si vides pour que le backend les gère)
       apiFormData.append('arLocalization', JSON.stringify(formData.arLocalization));
       apiFormData.append('frLocalization', JSON.stringify(formData.frLocalization));
       apiFormData.append('enLocalization', JSON.stringify(formData.enLocalization));
 
-      // Files
+      // Status flags
+      apiFormData.append('isActive', String(formData.isActive));
+      apiFormData.append('isVerified', String(formData.isVerified));
+      apiFormData.append('isPremium', String(formData.isPremium));
+
+      // Fichiers
       Object.entries(files).forEach(([key, file]) => {
         apiFormData.append(key, file);
       });
@@ -180,7 +203,6 @@ export function usePOIManagement() {
       resetForm();
     } catch (error: any) {
       console.error('Error saving POI:', error);
-      
       if (error?.data?.errors) {
         console.error('Validation errors:', error.data.errors);
         error.data.errors.forEach((err: any) => {
@@ -192,6 +214,7 @@ export function usePOIManagement() {
     }
   };
 
+  // Suppression d'un POI
   const handleDelete = async (id: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce POI ?')) return;
 
@@ -205,12 +228,14 @@ export function usePOIManagement() {
     }
   };
 
+  // Réinitialiser le formulaire
   const resetForm = () => {
     setSelectedPOI(null);
     setFormData(initialFormData);
     setFiles({});
   };
 
+  // Éditer un POI
   const handleEdit = (poi: POI) => {
     setSelectedPOI(poi);
     setFormData({
@@ -230,6 +255,7 @@ export function usePOIManagement() {
     setIsModalOpen(true);
   };
 
+  // Filtrer les POIs par terme de recherche
   const filteredPOIs = pois.filter((poi: POI) => {
     const searchLower = searchTerm.toLowerCase();
     return (
