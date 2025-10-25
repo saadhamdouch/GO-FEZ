@@ -62,18 +62,32 @@ export function usePOIManagement() {
   const cities = citiesData?.data || [];
 
   // Helper functions
+// Helper functions
   const getCategoryName = (categoryId: string): string => {
     const category = categories.find((c: any) => c.id === categoryId);
-    if (!category) return 'Inconnue';
+    if (!category) return 'Non catégorisé';
     
     try {
+      // Try to parse the fr field if it's a string
       if (typeof category.fr === 'string') {
         const parsed = JSON.parse(category.fr);
         return parsed.name || 'Sans nom';
       }
-      return category.fr?.name || 'Sans nom';
+      // If it's already an object
+      if (category.fr && typeof category.fr === 'object') {
+        return category.fr.name || 'Sans nom';
+      }
+      // Fallback to other languages
+      if (category.en && typeof category.en === 'object') {
+        return category.en.name || 'Sans nom';
+      }
+      if (category.ar && typeof category.ar === 'object') {
+        return category.ar.name || 'Sans nom';
+      }
+      return 'Sans nom';
     } catch (e) {
-      return category.fr || 'Sans nom';
+      console.error('Error parsing category name:', e);
+      return category.fr || category.en || category.ar || 'Sans nom';
     }
   };
 

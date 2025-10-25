@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
-const { POI, POILocalization, POIFile } = require('../models');
+const { POI, POILocalization, POIFile, POIFile, City } = require('../models');
+
 const { 
     uploadFile,
     uploadFromBuffer,
@@ -398,23 +399,38 @@ const findAllPOIs = async (req, res) => {
 			where: {isDeleted: false},
 			include: [
 				{
-					model: POILocalization,
-					as: 'frLocalization',
-					foreignKey: 'fr',
-					targetKey: 'id'
-				},
-				{
-					model: POILocalization,
-					as: 'arLocalization',
-					foreignKey: 'ar',
-					targetKey: 'id'
-				},
-				{
-					model: POILocalization,
-					as: 'enLocalization',
-					foreignKey: 'en',
-					targetKey: 'id'
-				}
+          model: POILocalization,
+          as: 'frLocalization',
+          foreignKey: 'fr',
+          targetKey: 'id'
+        },
+        {
+          model: POILocalization,
+          as: 'arLocalization',
+          foreignKey: 'ar',
+          targetKey: 'id'
+        },
+        {
+          model: POILocalization,
+          as: 'enLocalization',
+          foreignKey: 'en',
+          targetKey: 'id'
+        },
+        {
+          model: Category,
+          as: 'categoryPOI',
+          attributes: ['id', 'fr', 'ar', 'en']
+        },
+        {
+          model: POIFile,
+          as: 'poiFile',
+          attributes: ['id', 'image', 'video', 'virtualTour360']
+        },
+        {
+          model: City,
+          as: 'city',
+          attributes: ['id', 'name', 'nameAr', 'nameEn']
+        }
 			]
 		});
         if (!pois) {

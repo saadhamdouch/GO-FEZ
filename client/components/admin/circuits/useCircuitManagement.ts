@@ -18,10 +18,18 @@ interface CircuitFormData {
   cityId: string;
   duration: string;
   distance: string;
+  price: string;
+  startPoint: string;
+  endPoint: string;
   isPremium: boolean;
   isActive: boolean;
   themeIds: string[];
   poiIds: string[];
+  poisWithOrder: Array<{
+    poiId: string;
+    order: number;
+    estimatedTime: number;
+  }>;
   localizations: {
     fr: { name: string; description: string };
     ar: { name: string; description: string };
@@ -33,10 +41,14 @@ const initialFormData: CircuitFormData = {
   cityId: '',
   duration: '',
   distance: '',
+  price: '',
+  startPoint: '',
+  endPoint: '',
   isPremium: false,
   isActive: true,
   themeIds: [],
   poiIds: [],
+  poisWithOrder: [],
   localizations: {
     fr: { name: '', description: '' },
     ar: { name: '', description: '' },

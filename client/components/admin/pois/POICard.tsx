@@ -31,11 +31,13 @@ export function POICard({ poi, onEdit, onDelete, isDeleting, getCategoryName, ge
     return 'Aucune description';
   };
 
+  // Get category name from the relation
+  const categoryName = poi.categoryPOI ? getCategoryName(poi.category) : 'Non catégorisé';
+
   // Check available media
   const hasVideo = poi.poiFile?.video;
   const has360Tour = poi.poiFile?.virtualTour360;
   const hasAudio = poi.frLocalization?.audioFiles || poi.arLocalization?.audioFiles || poi.enLocalization?.audioFiles;
-
   return (
     <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden border border-gray-100">
       {/* Image with Media Badges */}
@@ -89,7 +91,7 @@ export function POICard({ poi, onEdit, onDelete, isDeleting, getCategoryName, ge
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 text-purple-600">📂</span>
             <span className="font-medium">Catégorie:</span>
-            <span>{getCategoryName(poi.category)}</span>
+            <span>{categoryName}</span>
           </div>
           {poi.coordinates && (
             <div className="flex items-center gap-2">

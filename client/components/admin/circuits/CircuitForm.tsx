@@ -102,7 +102,8 @@ export function CircuitForm({
       </div>
 
       {/* Duration and Distance Section */}
-      <div className="grid grid-cols-2 gap-6">
+{/* Duration, Distance, Price Section */}
+      <div className="grid grid-cols-3 gap-6">
         <FormField label="Durée (heures)" required>
           <input
             type="number"
@@ -114,7 +115,6 @@ export function CircuitForm({
             placeholder="Ex: 2.5"
           />
         </FormField>
-
         <FormField label="Distance (km)" required>
           <input
             type="number"
@@ -125,6 +125,48 @@ export function CircuitForm({
             required
             placeholder="Ex: 5.3"
           />
+        </FormField>
+        <FormField label="Prix (MAD)">
+          <input
+            type="number"
+            step="0.01"
+            value={formData.price || ''}
+            onChange={(e) => onFormDataChange({ ...formData, price: e.target.value })}
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            placeholder="Ex: 150.00"
+          />
+        </FormField>
+      </div>
+
+      {/* Start/End Points Section */}
+      <div className="grid grid-cols-2 gap-6">
+        <FormField label="Point de départ">
+          <select
+            value={formData.startPoint || ''}
+            onChange={(e) => onFormDataChange({ ...formData, startPoint: e.target.value })}
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          >
+            <option value="">Sélectionner un POI</option>
+            {pois.map((poi: any) => (
+              <option key={poi.id} value={poi.id}>
+                {poi.frLocalization?.name || `POI ${poi.id.substring(0, 8)}`}
+              </option>
+            ))}
+          </select>
+        </FormField>
+        <FormField label="Point d'arrivée">
+          <select
+            value={formData.endPoint || ''}
+            onChange={(e) => onFormDataChange({ ...formData, endPoint: e.target.value })}
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          >
+            <option value="">Sélectionner un POI</option>
+            {pois.map((poi: any) => (
+              <option key={poi.id} value={poi.id}>
+                {poi.frLocalization?.name || `POI ${poi.id.substring(0, 8)}`}
+              </option>
+            ))}
+          </select>
         </FormField>
       </div>
 

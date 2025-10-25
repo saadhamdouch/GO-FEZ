@@ -9,32 +9,20 @@ exports.createCircuitWithImage = async (req, res) => {
     console.log('📁 Fichier image reçu:', req.file ? req.file.originalname : 'Aucun');
     
     const { data } = req.body;
-    const circuitData = JSON.parse(data);
-    
-    const {
-      cityId,
-      duration,
-      distance,
-      startPoint,
-      endPoint,
-      isActive,
-      isPremium,
-      themeIds,
-      poiIds,
-      localizations
-    } = circuitData;
-//ajouter xss aux localisations
+const circuitData = JSON.parse(data);
+    const { cityId, duration, distance, startPoint, endPoint, price, isActive, isPremium, themeIds, pois, localizations } = circuitData;
 
+    //ajouter xss aux localisations
     const sanitizedData = {
-      ar:  localizations.ar,
+      ar: localizations.ar,
       fr: localizations.fr,
       en: localizations.en,
       duration: duration ? Number(duration) : null,
       distance: distance ? Number(distance) : null,
-      startPoint: null,
-      endPoint: null,
+      startPoint: startPoint || null,
+      endPoint: endPoint || null,
       isPremium: isPremium === 'true' || isPremium === true,
-      price: null,
+      price: price ? Number(price) : null,
       rating: 0,
       reviewCount: 0,
       cityId,
@@ -42,10 +30,8 @@ exports.createCircuitWithImage = async (req, res) => {
       isDeleted: false,
       image: req.file ? req.file.path : null, // URL
       imagePublicId: req.file ? req.file.filename : null // Public ID
-
     };
 
-   
     console.log('🏗️ Création du circuit avec les données:', sanitizedData);
 
     // Création du circuit
@@ -56,14 +42,14 @@ exports.createCircuitWithImage = async (req, res) => {
       await circuit.setThemes(themeIds);
     }
 
-    // Liaison des POIs
-    if (poiIds && poiIds.length > 0) {
-      for (let i = 0; i < poiIds.length; i++) {
+    // Liaison des POIs avec ordre et temps estimé
+    if (pois && pois.length > 0) {
+      for (const poiData of pois) {
         await CircuitPOI.create({
           circuitId: circuit.id,
-          poiId: poiIds[i],
-          order: i + 1,
-          estimatedTime: null
+          poiId: poiData.poiId,
+          order: poiData.order || null,
+          estimatedTime: poiData.estimatedTime || null
         });
       }
     }
