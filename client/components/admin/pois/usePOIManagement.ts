@@ -61,15 +61,37 @@ export function usePOIManagement() {
   const categories = categoriesData?.data || [];
   const cities = citiesData?.data || [];
 
+  // Helper functions
+  const getCategoryName = (categoryId: string): string => {
+    const category = categories.find((c: any) => c.id === categoryId);
+    if (!category) return 'Inconnue';
+    
+    try {
+      if (typeof category.fr === 'string') {
+        const parsed = JSON.parse(category.fr);
+        return parsed.name || 'Sans nom';
+      }
+      return category.fr?.name || 'Sans nom';
+    } catch (e) {
+      return category.fr || 'Sans nom';
+    }
+  };
+
+  const getCityName = (cityId: string): string => {
+    const city = cities.find((c: any) => c.id === cityId);
+    return city?.name || 'Inconnue';
+  };
+
   const handleFileChange = async (file: File, key: string) => {
     try {
       if (key === 'image' && file.type.startsWith('image/')) {
         const compressed = await compressImageByType(file);
         setFiles((prev) => ({ ...prev, [key]: compressed.file }));
+        toast.success('Image compressée avec succès');
       } else {
         setFiles((prev) => ({ ...prev, [key]: file }));
+        toast.success('Fichier chargé avec succès');
       }
-      toast.success('Fichier chargé avec succès');
     } catch (error) {
       toast.error('Erreur lors du chargement du fichier');
     }
@@ -78,18 +100,31 @@ export function usePOIManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validation
     if (!formData.category || !formData.cityId || !formData.latitude || !formData.longitude) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
     if (!formData.frLocalization.name || !formData.arLocalization.name || !formData.enLocalization.name) {
-      toast.error('Les noms de localisation sont requis');
+      toast.error('Les noms de localisation sont requis dans les trois langues');
       return;
+    }
+
+    // Validate JSON for practicalInfo
+    if (formData.practicalInfo && formData.practicalInfo !== '{}') {
+      try {
+        JSON.parse(formData.practicalInfo);
+      } catch (e) {
+        toast.error('Format JSON invalide pour les informations pratiques');
+        return;
+      }
     }
 
     try {
       const apiFormData = new FormData();
+      
+      // Coordinates
       apiFormData.append(
         'coordinates',
         JSON.stringify({
@@ -98,17 +133,22 @@ export function usePOIManagement() {
           address: formData.address || '',
         })
       );
+
+      // Basic fields
       apiFormData.append('category', formData.category);
       apiFormData.append('cityId', formData.cityId);
 
+      // Practical info
       if (formData.practicalInfo && formData.practicalInfo !== '{}') {
         apiFormData.append('practicalInfo', formData.practicalInfo);
       }
 
+      // Localizations
       apiFormData.append('arLocalization', JSON.stringify(formData.arLocalization));
       apiFormData.append('frLocalization', JSON.stringify(formData.frLocalization));
       apiFormData.append('enLocalization', JSON.stringify(formData.enLocalization));
 
+      // Files
       Object.entries(files).forEach(([key, file]) => {
         apiFormData.append(key, file);
       });
@@ -126,7 +166,15 @@ export function usePOIManagement() {
       resetForm();
     } catch (error: any) {
       console.error('Error saving POI:', error);
-      toast.error(error?.data?.message || "Erreur lors de l'enregistrement");
+      
+      if (error?.data?.errors) {
+        console.error('Validation errors:', error.data.errors);
+        error.data.errors.forEach((err: any) => {
+          toast.error(`${err.path || err.param}: ${err.msg}`);
+        });
+      } else {
+        toast.error(error?.data?.message || "Erreur lors de l'enregistrement");
+      }
     }
   };
 
@@ -157,7 +205,7 @@ export function usePOIManagement() {
       latitude: String(poi.coordinates.latitude),
       longitude: String(poi.coordinates.longitude),
       address: poi.coordinates.address || '',
-      practicalInfo: JSON.stringify(poi.practicalInfo || {}),
+      practicalInfo: JSON.stringify(poi.practicalInfo || {}, null, 2),
       isActive: poi.isActive,
       isVerified: poi.isVerified,
       isPremium: poi.isPremium,
@@ -168,9 +216,16 @@ export function usePOIManagement() {
     setIsModalOpen(true);
   };
 
-  const filteredPOIs = pois.filter((poi: POI) =>
-    poi.frLocalization?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPOIs = pois.filter((poi: POI) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      poi.frLocalization?.name?.toLowerCase().includes(searchLower) ||
+      poi.arLocalization?.name?.toLowerCase().includes(searchLower) ||
+      poi.enLocalization?.name?.toLowerCase().includes(searchLower) ||
+      getCategoryName(poi.category).toLowerCase().includes(searchLower) ||
+      getCityName(poi.cityId).toLowerCase().includes(searchLower)
+    );
+  });
 
   return {
     pois: filteredPOIs,
@@ -194,5 +249,7 @@ export function usePOIManagement() {
     handleEdit,
     resetForm,
     refetch,
+    getCategoryName,
+    getCityName,
   };
 }

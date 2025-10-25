@@ -10,7 +10,7 @@ import { CardGrid } from './shared/CardGrid';
 import { POICard } from './pois/POICard';
 import { POIForm } from './pois/POIForm';
 import { usePOIManagement } from './pois/usePOIManagement';
-import { Map360 } from 'lucide-react';
+import { Map } from 'lucide-react';
 
 export default function POIManagement() {
   const {
@@ -36,7 +36,27 @@ export default function POIManagement() {
     resetForm,
     refetch,
   } = usePOIManagement();
+const getCategoryName = (categoryId: string) => {
+  const category = (categories as any[]).find((c) => c.id === categoryId);
+  return (
+    category?.fr?.name ||
+    category?.en?.name ||
+    category?.ar?.name ||
+    category?.name ||
+    'Inconnue'
+  );
+};
 
+const getCityName = (cityId: string) => {
+  const city = (cities as any[]).find((c) => c.id === cityId);
+  return (
+    city?.fr?.name ||
+    city?.en?.name ||
+    city?.ar?.name ||
+    city?.name ||
+    'Inconnue'
+  );
+};
   if (isLoading) return <LoadingState message="Chargement des POIs..." />;
   if (error) return <ErrorState error={error} onRetry={refetch} />;
 
@@ -56,7 +76,7 @@ export default function POIManagement() {
 
       {pois.length === 0 ? (
         <EmptyState
-          icon={<Map360 className="w-16 h-16 text-gray-400 mx-auto" />}
+          icon={<Map className="w-16 h-16 text-gray-400 mx-auto" />}
           title="Aucun POI trouvé"
           action={
             !searchTerm
@@ -70,7 +90,9 @@ export default function POIManagement() {
       ) : (
         <CardGrid>
           {pois.map((poi) => (
-            <POICard
+            <POICard 
+              getCityName={getCityName}
+              getCategoryName={getCategoryName}
               key={poi.id}
               poi={poi}
               onEdit={() => handleEdit(poi)}
