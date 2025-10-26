@@ -1,7 +1,7 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { body, validationResult } = require('express-validator');
-const { User } = require('../models/User');
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { body, validationResult } = require("express-validator");
+const { User } = require("../models/User");
 
 // Middleware pour vérifier les erreurs de validation
 const handleValidationErrors = (req, res, next) => {
@@ -82,7 +82,7 @@ const registerUser = async (req, res) => {
 				email: newUser.email,
 				role: newUser.role,
 			},
-			process.env.JWT_SECRET || "your-secret-key",
+			process.env.JWT_SECRET,
 			{ expiresIn: "24h" }
 		);
 
