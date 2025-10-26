@@ -1,12 +1,14 @@
 import BottomSheetContent from '@/components/BottomSheetContent';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { Camera, MapView } from '@maplibre/maplibre-react-native';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import MapboxGL from '@rnmapbox/maps';
 
 const { height } = Dimensions.get('window');
+
 const MAPTILER_API_KEY = 'cKuGgc1qdSgluaz2JWLK';
+MapboxGL.setAccessToken(MAPTILER_API_KEY);
 const INITIAL_REGION = {
   latitude: 34.0626,
   longitude: -5.0077,
@@ -61,19 +63,7 @@ export default function HomeScreen() {
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.mapcontainer}>
-        <MapView
-          style={styles.map}
-          // mapStyle={`https://api.maptiler.com/maps/019a213d-06f4-7ef2-be61-48b4b8fb7e56/style.json?key=cKuGgc1qdSgluaz2JWLK`}
-          logoEnabled={false}
-          attributionPosition={{ bottom: 8, right: 8 }}
-        >
-          <Camera
-            centerCoordinate={[2, 41.5]}
-            zoomLevel={8}
-            animationDuration={2000}
-            animationMode='easeTo'
-          />
-        </MapView>
+        <MapboxGL.MapView style={styles.map}></MapboxGL.MapView>
       </View>
 
       <BottomSheet
