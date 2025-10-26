@@ -49,7 +49,7 @@ const LOCATIONS = [
 
 export default function HomeScreen() {
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => [100, 300, height * 0.8], [height]);
+  const snapPoints = useMemo(() => [100, height * 0.5, height * 0.8], [height]);
   const [selectedLocation, setSelectedLocation] = useState<
     (typeof LOCATIONS)[0] | null
   >(null);
