@@ -40,12 +40,7 @@
 					}
 				}
 			],
-			[
-        		"react-native-maps",
-				{
-				"MapsApiKey": "AIzaSyDxPrH4ZqzyYoplhzq91xWNmjR8xWXRFEw"
-				}
-			]
+			"@maplibre/maplibre-react-native"
 		],
 		"experiments": {
 			"typedRoutes": true,

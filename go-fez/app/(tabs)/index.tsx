@@ -1,13 +1,12 @@
 import BottomSheetContent from '@/components/BottomSheetContent';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { Image } from 'expo-image';
+import { Camera, MapView } from '@maplibre/maplibre-react-native';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import MapView, { Marker } from 'react-native-maps';
 
 const { height } = Dimensions.get('window');
-
+const MAPTILER_API_KEY = 'cKuGgc1qdSgluaz2JWLK';
 const INITIAL_REGION = {
   latitude: 34.0626,
   longitude: -5.0077,
@@ -61,31 +60,20 @@ export default function HomeScreen() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <View style={styles.mapContainer}>
-        {/* <MapView
+      <View style={styles.mapcontainer}>
+        <MapView
           style={styles.map}
-          initialRegion={INITIAL_REGION}
-          showsUserLocation
-          showsMyLocationButton
+          // mapStyle={`https://api.maptiler.com/maps/019a213d-06f4-7ef2-be61-48b4b8fb7e56/style.json?key=cKuGgc1qdSgluaz2JWLK`}
+          logoEnabled={false}
+          attributionPosition={{ bottom: 8, right: 8 }}
         >
-          {LOCATIONS.map((location) => (
-            <Marker
-              key={location.id}
-              coordinate={{
-                latitude: location.latitude,
-                longitude: location.longitude,
-              }}
-              title={location.title}
-              onPress={() => handleMarkerPress(location)}
-            />
-          ))}
-        </MapView> */}
-        <Image
-          style={styles.map}
-          source={{
-            uri: 'https://media.istockphoto.com/id/153899589/fr/vectoriel/fiction-plan-de-la-ville.jpg?s=1024x1024&w=is&k=20&c=L8r6LEJfMemcffuHVIsDPGGbQAWK87vrilLdDpvNXnA=',
-          }}
-        />
+          <Camera
+            centerCoordinate={[2, 41.5]}
+            zoomLevel={8}
+            animationDuration={2000}
+            animationMode='easeTo'
+          />
+        </MapView>
       </View>
 
       <BottomSheet
@@ -109,6 +97,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   map: {
+    flex: 1,
+  },
+  mapcontainer: {
     width: '100%',
     height: '100%',
   },

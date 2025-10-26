@@ -3,13 +3,16 @@ const db = require("../Config/db");
 const { GAMIFICATIONS_ENUM } = require("../constants/gamifications");
 const sequelize = db.getSequelize();
 
-const GamificationRule = sequelize.define(
-	"GamificationRule",
+const PointsTransaction = sequelize.define(
+	"PointsTransaction",
 	{
 		id: {
 			type: DataTypes.UUID,
 			defaultValue: DataTypes.UUIDV4,
 			primaryKey: true,
+		},
+		userId: {
+			type: DataTypes.UUID,
 		},
 		activity: {
 			type: DataTypes.ENUM(...GAMIFICATIONS_ENUM),
@@ -47,11 +50,11 @@ const GamificationRule = sequelize.define(
 		},
 	},
 	{
-		tableName: "gamification_rules",
+		tableName: "points_transaction",
 		timestamps: true,
 		updatedAt: "updated_at",
 		createdAt: "created_at",
 	}
 );
 
-module.exports = { GamificationRule };
+module.exports = { PointsTransaction };
