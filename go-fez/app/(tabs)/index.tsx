@@ -3,12 +3,12 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import MapboxGL from '@rnmapbox/maps';
+import MapLocationSelector from '@/components/map';
+import MonumentsMapViewer from '@/components/map';
 
 const { height } = Dimensions.get('window');
 
 const MAPTILER_API_KEY = 'cKuGgc1qdSgluaz2JWLK';
-MapboxGL.setAccessToken(MAPTILER_API_KEY);
 const INITIAL_REGION = {
   latitude: 34.0626,
   longitude: -5.0077,
@@ -63,7 +63,7 @@ export default function HomeScreen() {
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.mapcontainer}>
-        <MapboxGL.MapView style={styles.map}></MapboxGL.MapView>
+        <MonumentsMapViewer monuments={LOCATIONS} />
       </View>
 
       <BottomSheet
