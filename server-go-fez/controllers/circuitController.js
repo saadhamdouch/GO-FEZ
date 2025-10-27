@@ -1,6 +1,6 @@
 const { Circuit, Theme, POI, ThemeCircuit, CircuitPOI, City, POILocalization } = require('../models');
 const xss = require('xss');
-const { deleteFile } = require("../Config/cloudinary");
+const { deleteFile } = require("../config/cloudinary");
 
 // Créer un circuit avec upload d'image
 exports.createCircuitWithImage = async (req, res) => {

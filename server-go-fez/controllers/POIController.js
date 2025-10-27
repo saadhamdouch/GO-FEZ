@@ -2,7 +2,7 @@ const { validationResult } = require('express-validator');
 const { Op, Sequelize } = require('sequelize');
 const { POI, POILocalization, POIFile, City, Category,User, UserSpace, TransportMode} = require('../models');
 const EARTH_RADIUS_KM = 6371;
-const { uploadFromBuffer, deleteFile } = require('../Config/cloudinary');
+const { uploadFromBuffer, deleteFile } = require('../config/cloudinary');
 const xss = require('xss');
 
 // Middleware pour vérifier les erreurs de validation

@@ -38,31 +38,33 @@ const City = sequelize.define('City', {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
     },
-        
+
     isActive: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
     },
-       isDeleted: {
+    isDeleted: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
+    },
+    createdAt: {
+        type: DataTypes.DATE,
+        field: 'created_at',
+    },
+    updatedAt: {
+        type: DataTypes.DATE,
+        field: 'updated_at',
     },
 }, {
     tableName: 'cities',
     timestamps: true,
-    indexes: [
-        {
-            unique: true,
-            fields: ['nameEn'],
-        }
-    ]
 });
 
 City.associate = (models) => {
-  City.hasMany(models.Circuit, {
-    foreignKey: 'cityId',
-    as: 'circuits',
-  });
+    City.hasMany(models.Circuit, {
+        foreignKey: 'cityId',
+        as: 'circuits',
+    });
 };
 
 
