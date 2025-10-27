@@ -5,6 +5,8 @@ import { Menu, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import LanguageSelector from './LanguageSelector';
+import Login from '../auth/Login';
+import SignUp from '../auth/SignUp';
 
 interface HeaderProps {
   locale: string;
@@ -17,6 +19,8 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
   const [menuOpen, setMenuOpen] = useState(false);
   const [showTopBanner, setShowTopBanner] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false); // ✨ 1. Add new state for scroll effect
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isSignUpOpen, setIsSignUpOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,7 +36,8 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
   }, []); // Empty dependency array means this effect runs only once on mount
 
   return (
-    // ✨ 3. Apply a transition to the entire nav for smooth color/blur changes
+    <>
+    {/* ✨ 3. Apply a transition to the entire nav for smooth color/blur changes */}
     <nav className="fixed top-0 w-full z-50 transition-all duration-300">
 
       {/* Top Banner */}
@@ -84,7 +89,7 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
               <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 text-white">
                 {menuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
-              <div className="flex-1 flex justify-center">
+            <div className="flex-1 flex justify-center">
                 <div className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center">
                   <Image
                     src="/images/logo.png"
@@ -96,7 +101,7 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
                   />
                 </div>
               </div>
-              <button className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition font-semibold">
+            <button onClick={() => setIsSignUpOpen(true)} className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition font-semibold">
                 {t('auth.signup')}
               </button>
             </div>
@@ -126,10 +131,10 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
               </div>
               <div className="flex items-center gap-3">
                 <LanguageSelector locale={locale} onLanguageChange={onLanguageChange} />
-                <button className="px-4 py-2 text-sm text-white font-semibold hover:bg-white/10 transition rounded-lg">
+                <button onClick={() => setIsLoginOpen(true)} className="px-4 py-2 text-sm text-white font-semibold hover:bg-white/10 transition rounded-lg">
                   {t('auth.login')}
                 </button>
-                <button className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition font-semibold">
+                <button onClick={() => setIsSignUpOpen(true)} className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition font-semibold">
                   {t('auth.signup')}
                 </button>
               </div>
@@ -169,8 +174,8 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
               <a href="#" className="block text-white font-medium py-3 hover:text-emerald-400 transition">{t('nav.contact')}</a>
             </div>
             <div className="p-6 space-y-4 border-t border-white/10">
-              <button className="w-full px-6 py-3 bg-emerald-600 text-white rounded-full font-semibold hover:bg-emerald-700 transition">{t('auth.signup')}</button>
-              <button className="w-full px-6 py-3 text-white font-semibold border border-white/30 rounded-lg hover:bg-white/10 transition">{t('auth.login')}</button>
+              <button onClick={() => setIsSignUpOpen(true)} className="w-full px-6 py-3 bg-emerald-600 text-white rounded-full font-semibold hover:bg-emerald-700 transition">{t('auth.signup')}</button>
+              <button onClick={() => setIsLoginOpen(true)} className="w-full px-6 py-3 text-white font-semibold border border-white/30 rounded-lg hover:bg-white/10 transition">{t('auth.login')}</button>
               <div className="flex items-center justify-center gap-3 pt-2">
                 <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="bg-white rounded-full w-9 h-9 flex items-center justify-center hover:scale-105 transition"><i className="fab fa-facebook-f text-[#02355E] text-sm"></i></a>
                 <a href="https://telegram.org" target="_blank" rel="noopener noreferrer" className="bg-white rounded-full w-9 h-9 flex items-center justify-center hover:scale-105 transition"><i className="fab fa-telegram-plane text-[#02355E] text-sm"></i></a>
@@ -185,5 +190,25 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
       )}
 
     </nav>
+    {isLoginOpen && (
+      <Login
+        onClose={() => setIsLoginOpen(false)}
+        onSwitchToSignUp={() => {
+          setIsLoginOpen(false);
+          setIsSignUpOpen(true);
+        }}
+        onSwitchToForgotPassword={() => setIsLoginOpen(false)}
+      />
+    )}
+    {isSignUpOpen && (
+      <SignUp
+        onClose={() => setIsSignUpOpen(false)}
+        onSwitchToLogin={() => {
+          setIsSignUpOpen(false);
+          setIsLoginOpen(true);
+        }}
+      />
+    )}
+    </>
   );
 }
