@@ -22,7 +22,7 @@ const imageStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'go-fez/images',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg'],
     transformation: [
       { width: 1200, height: 800, crop: 'limit' },
       { quality: 'auto:best', fetch_format: 'auto' }, // Compression AI optimale
@@ -37,7 +37,7 @@ const circuitImageStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'go-fez/circuits',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg'],
     transformation: [
       { width: 1200, height: 800, crop: 'limit' },
       { quality: 'auto:best', fetch_format: 'auto' }, // Compression AI optimale
@@ -52,7 +52,7 @@ const themeImageStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'go-fez/themes',  
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg'],
     transformation: [ 
       { width: 1200, height: 800, crop: 'limit' },
       { quality: 'auto:best', fetch_format: 'auto' }, // Compression AI optimale
@@ -66,7 +66,7 @@ const cityImageStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'go-fez/cities',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg'],
     transformation: [
       { width: 1200, height: 800, crop: 'limit' },
       { quality: 'auto:best', fetch_format: 'auto' }, // Compression AI optimale
@@ -127,12 +127,12 @@ const uploadCircuitImage = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
 });
 
-uploadThemeFiles = multer({
+const uploadThemeFiles = multer({
   storage: themeImageStorage,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB max per file           
 });
 
-uploadCityFiles = multer({
+const uploadCityFiles = multer({
   storage: cityImageStorage,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB max per file
 });

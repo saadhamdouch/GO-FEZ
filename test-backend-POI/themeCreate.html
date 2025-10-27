@@ -61,7 +61,7 @@ document.getElementById('themeForm').addEventListener('submit', async (e) => {
 
   const res = await fetch('http://localhost:8080/api/themes/create-with-files', {
     method: 'POST',
-    body: formData
+    body: formData,
   });
 
   const result = await res.json();

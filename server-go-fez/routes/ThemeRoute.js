@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const ThemeController = require('../controllers/ThemeController');
-const { uploadThemeFiles } = require("../Config/cloudinary");
+const { uploadThemeFiles } = require("../Config/cloudinary.js");
 
 
 router.post('/create-with-files', uploadThemeFiles.fields([
-  { name: 'image', maxCount: 1 },
-  { name: 'icon', maxCount: 1 }
+    { name: 'image', maxCount: 1 },
+    { name: 'icon', maxCount: 1 }
 ]), ThemeController.createTheme);
 
 router.get('/', ThemeController.getAllThemes);

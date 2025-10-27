@@ -1,6 +1,6 @@
 const { Theme, Circuit } = require('../models');
 const xss = require('xss');
-const { uploadImage, uploadThemeFiles, deleteFile } = require("../Config/cloudinary");
+const { uploadImage, uploadThemeFiles, deleteFile } = require("../Config/cloudinary.js");
 
 
 const sanitizeThemeLocalizations = (localizations) => {
@@ -30,7 +30,7 @@ const sanitizeThemeLocalizations = (localizations) => {
 exports.createTheme = async (req, res) => {
     const iconFile = req.files?.icon ? req.files.icon[0] : null;
     const imageFile = req.files?.image ? req.files.image[0] : null;
-
+    
     try {
         const { data } = req.body;
         
@@ -47,12 +47,25 @@ exports.createTheme = async (req, res) => {
         }
 
         if (!imageFile || !iconFile) {
-            if (iconFile) await deleteFile(iconFile.filename);
-            if (imageFile) await deleteFile(imageFile.filename);
+            if (iconFile) {
+                const iconPublicId = iconFile.filename || iconFile.public_id;
+                if (iconPublicId) await deleteFile(iconPublicId);
+            }
+            if (imageFile) {
+                const imagePublicId = imageFile.filename || imageFile.public_id;
+                if (imagePublicId) await deleteFile(imagePublicId);
+            }
             return res.status(400).json({ status: 'fail', message: "L'image et l'icône du thème sont requises." });
         }
         
         const sanitizedLocalizations = sanitizeThemeLocalizations(localizations);
+
+        // CloudinaryStorage retourne les fichiers avec une structure spéciale
+        // path = URL Cloudinary, filename = public_id
+        const imageUrl = imageFile.path || imageFile.url || imageFile.location;
+        const iconUrl = iconFile.path || iconFile.url || iconFile.location;
+        const imagePublicId = imageFile.filename || imageFile.public_id;
+        const iconPublicId = iconFile.filename || iconFile.public_id;
 
         const sanitizedData = {
             ...sanitizedLocalizations, 
@@ -60,10 +73,10 @@ exports.createTheme = async (req, res) => {
             isActive: isActive === 'true' || isActive === true,
             isDeleted: false,
 
-            image: imageFile.path, 
-            imagePublicId: imageFile.filename, 
-            icon: iconFile.path,
-            iconPublicId: iconFile.filename
+            image: imageUrl, 
+            imagePublicId: imagePublicId, 
+            icon: iconUrl,
+            iconPublicId: iconPublicId
         };
 
         console.log('🏗️ Création du thème avec les données:', sanitizedData);
@@ -75,8 +88,15 @@ exports.createTheme = async (req, res) => {
     } catch (error) {
         console.error('❌ Erreur création thème :', error);
         
-        if (iconFile) await deleteFile(iconFile.filename);
-        if (imageFile) await deleteFile(imageFile.filename);
+        // Supprimer les fichiers uploadés en cas d'erreur
+        if (iconFile) {
+            const iconPublicId = iconFile.filename || iconFile.public_id;
+            if (iconPublicId) await deleteFile(iconPublicId).catch(console.error);
+        }
+        if (imageFile) {
+            const imagePublicId = imageFile.filename || imageFile.public_id;
+            if (imagePublicId) await deleteFile(imagePublicId).catch(console.error);
+        }
         
         if (error instanceof SyntaxError && error.message.includes('Unexpected token')) {
             return res.status(400).json({ status: 'fail', message: 'Le format des données JSON (data) est invalide.' });
@@ -175,22 +195,22 @@ exports.updateTheme = async (req, res) => {
         
         if (iconFile) {
             if (theme.iconPublicId) { 
-                console.log(` Suppression icône Cloudinary ancienne: ${theme.iconPublicId}`);
+                console.log(`🗑️ Suppression icône Cloudinary ancienne: ${theme.iconPublicId}`);
                 await deleteFile(theme.iconPublicId);
             }
-            sanitizedData.icon = iconFile.path;
-            sanitizedData.iconPublicId = iconFile.filename;
-            uploadedIconPublicId = iconFile.filename;
+            sanitizedData.icon = iconFile.path || iconFile.url || iconFile.location;
+            sanitizedData.iconPublicId = iconFile.filename || iconFile.public_id;
+            uploadedIconPublicId = iconFile.filename || iconFile.public_id;
         }
 
         if (imageFile) {
             if (theme.imagePublicId) { 
-                console.log(` Suppression image Cloudinary ancienne: ${theme.imagePublicId}`);
+                console.log(`🗑️ Suppression image Cloudinary ancienne: ${theme.imagePublicId}`);
                 await deleteFile(theme.imagePublicId);
             }
-            sanitizedData.image = imageFile.path;
-            sanitizedData.imagePublicId = imageFile.filename;
-            uploadedImagePublicId = imageFile.filename;
+            sanitizedData.image = imageFile.path || imageFile.url || imageFile.location;
+            sanitizedData.imagePublicId = imageFile.filename || imageFile.public_id;
+            uploadedImagePublicId = imageFile.filename || imageFile.public_id;
         } 
         
         await theme.update(sanitizedData);
@@ -201,8 +221,8 @@ exports.updateTheme = async (req, res) => {
     } catch (error) {
         console.error('❌ Erreur mise à jour thème :', error);
         
-        if (uploadedIconPublicId) await deleteFile(uploadedIconPublicId);
-        if (uploadedImagePublicId) await deleteFile(uploadedImagePublicId);
+        if (uploadedIconPublicId) await deleteFile(uploadedIconPublicId).catch(console.error);
+        if (uploadedImagePublicId) await deleteFile(uploadedImagePublicId).catch(console.error);
         
         return res.status(500).json({ status: 'error', message: 'Erreur serveur', error: error.message });
     }

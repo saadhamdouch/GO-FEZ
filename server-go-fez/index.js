@@ -25,13 +25,9 @@ const rateLimit = require("express-rate-limit");
 
 // Charger les variables sensibles depuis le fichier .env
 const PORT = process.env.PORT || 8080;
-
-// Middlewares globaux
-app.use(express.json());
-
 const ALLOWED_ORIGINS = [
     process.env.CLIENT_URL,
-    'http://localhost:3000', 
+    'http://localhost:3000',
     'null'
 ];
 
@@ -75,17 +71,30 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
-// Routes
-app.use('/api/users', UserRouter);
-app.use('/api/city', CityRoute);
+const jsonMiddleware = express.json({ limit: '50mb' });
+
+// Routes avec files (multer)
 app.use('/api/themes/', ThemeRoute);
 app.use('/api/circuits', CircuitRoutes);
-app.use('/api/categorys', categoryRoutes);
+app.use('/api/city', CityRoute);
 app.use('/api/pois', POIRouter);
-app.use('/api/config', ConfigRouter);
-app.use('/api/gamification', GamificationRouter);
-app.use('/api/pointsTransaction', pointsTransactionRoutes);
 
+// Routes sans files
+app.use('/api/users', jsonMiddleware, UserRouter);
+app.use('/api/categorys', jsonMiddleware, categoryRoutes);
+app.use('/api/config', jsonMiddleware, ConfigRouter);
+app.use('/api/gamification', jsonMiddleware, GamificationRouter);
+app.use('/api/pointsTransaction', jsonMiddleware, pointsTransactionRoutes);
+
+// Middleware de gestion d'erreurs global
+app.use((err, req, res, next) => {
+    console.error('❌ Erreur:', err.message);
+    
+    res.status(err.status || 500).json({
+        status: 'error',
+        message: err.message || 'Erreur serveur'
+    });
+});
 
 // Fonction pour démarrer le serveur
 function startServer() {

@@ -4,7 +4,7 @@ const multer = require("multer");
 const path = require('path');
 const router = express.Router();
 const CityController = require('../controllers/CityController');
-const { uploadImage, uploadCityFiles } = require("../config/cloudinary");
+const { uploadImage, uploadCityFiles } = require("../Config/cloudinary");
 // middleware/auth.js 
 // const authenticateJWT = (req, res, next) => {
 //     next(); 

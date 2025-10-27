@@ -1,6 +1,6 @@
 const { City } = require('../models');
 const xss = require('xss');
-const { deleteFile } = require("../config/cloudinary");
+const { deleteFile } = require("../Config/cloudinary");
 
 //  Créer une ville avec upload d’image
 exports.createCity = async (req, res) => {

@@ -38,7 +38,7 @@ class Database {
 			await this.sequelize.authenticate();
 			console.log("Connexion à la base de données réussie !");
 			// Vous pouvez décommenter cette ligne pour synchroniser les modèles si nécessaire
-
+			if(process.env.ASYNC_DB === 'true') {
 			  await this.sequelize.sync({ alter: true })
 			 .then(() => {
 			   console.log("Database synchronized");
@@ -46,6 +46,7 @@ class Database {
 			   .catch((error) => {
 				   console.error("Error synchronizing the database:", error);
 			   });
+			}
 		} catch (error) {
 			console.error(
 				"Erreur lors de la connexion à la base de données :",
