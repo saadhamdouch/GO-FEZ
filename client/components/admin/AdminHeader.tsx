@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MapPin, Route, Palette, Folder } from 'lucide-react';
+import { MapPin, Route, Palette, Folder,Globe  } from 'lucide-react';
 
 interface AdminHeaderProps {
   locale?: string;
@@ -16,7 +16,8 @@ export default function AdminHeader({ locale = 'fr' }: AdminHeaderProps) {
     { href: `/${locale}/admin/pois`, label: 'POIs', icon: MapPin },
     { href: `/${locale}/admin/circuits`, label: 'Circuits', icon: Route },
     { href: `/${locale}/admin/themes`, label: 'Thèmes', icon: Palette },
-    { href: `/${locale}/admin/categories`, label: 'Catégories', icon: Folder }
+    { href: `/${locale}/admin/categories`, label: 'Catégories', icon: Folder },
+    { href: `/${locale}/admin/cities`, label: 'Cities', icon: Globe  }
   ];
 
   return (

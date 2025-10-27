@@ -50,8 +50,6 @@ const City = sequelize.define('City', {
 }, {
     tableName: 'cities',
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
     indexes: [
         {
             unique: true,

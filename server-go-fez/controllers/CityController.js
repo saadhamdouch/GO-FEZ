@@ -50,18 +50,27 @@ exports.createCity = async (req, res) => {
 };
 
 //  Récupérer toutes les villes
+// Récupérer toutes les villes
 exports.getAllCities = async (req, res) => {
-    try {
-        const cities = await City.findAll({
-            where: { isDeleted: false },
-            order: [['name', 'ASC']]
-        });
-        res.status(200).json({ status: 'success', data: cities });
-    } catch (error) {
-        console.error('Erreur récupération villes :', error);
-        res.status(500).json({ status: 'error', message: 'Erreur serveur interne'});
-    }
+  try {
+    const cities = await City.findAll({
+      where: { isDeleted: false },
+      order: [['name', 'ASC']]
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: cities
+    });
+  } catch (error) {
+    console.error('Erreur récupération villes :', error.message, error.stack);
+    res.status(500).json({
+      status: 'error',
+      message: 'Erreur serveur interne'
+    });
+  }
 };
+
 
 //  Mettre à jour une ville
 exports.updateCity = async (req, res) => {
