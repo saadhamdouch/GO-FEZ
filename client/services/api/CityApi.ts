@@ -1,18 +1,23 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import baseQuery from "../BaseQuery";
 
+export interface CityCoordinates {
+  address: string;
+  addressAr: string;
+  addressEn: string;
+  longitude: number;
+  latitude: number;
+}
+
 export interface City {
   id: string;
   name: string;
   nameAr: string;
   nameEn: string;
   image: string;
+  imagePublicId: string;
   country: string;
-  coordinates: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  };
+  coordinates: CityCoordinates;
   radius: number;
   isActive: boolean;
   isDeleted: boolean;
@@ -26,6 +31,11 @@ export interface CreateCityData {
   nameEn: string;
   country: string;
   radius: number;
+  address: string;
+  addressAr: string;
+  addressEn: string;
+  latitude: number;
+  longitude: number;
   isActive?: boolean;
 }
 
@@ -35,6 +45,11 @@ export interface UpdateCityData {
   nameEn?: string;
   country?: string;
   radius?: number;
+  address?: string;
+  addressAr?: string;
+  addressEn?: string;
+  latitude?: number;
+  longitude?: number;
   isActive?: boolean;
 }
 
@@ -43,7 +58,6 @@ export const cityApi = createApi({
   baseQuery: baseQuery,
   tagTypes: ['City', 'Cities'],
   endpoints: (builder) => ({
-    // Récupérer toutes les villes
     getAllCities: builder.query<{ status: string; data: City[] }, void>({
       query: () => ({
         url: "/api/city/",
@@ -52,22 +66,31 @@ export const cityApi = createApi({
       providesTags: ['Cities'],
     }),
 
-    // Créer une ville
-    createCity: builder.mutation<{ status: string; data: City }, CreateCityData>({
-      query: (data) => ({
+    getCityById: builder.query<{ status: string; data: City }, string>({
+      query: (id) => ({
+        url: `/api/city/${id}`,
+        method: "GET",
+      }),
+      providesTags: (result, error, id) => [{ type: 'City', id }],
+    }),
+
+    createCityWithImage: builder.mutation<{ status: string; data: City }, FormData>({
+      query: (formData) => ({
         url: "/api/city/",
         method: "POST",
-        body: data,
+        body: formData,
       }),
       invalidatesTags: ['Cities'],
     }),
 
-    // Mettre à jour une ville
-    updateCity: builder.mutation<{ status: string; data: City }, { id: string; data: UpdateCityData }>({
-      query: ({ id, data }) => ({
+    updateCityWithImage: builder.mutation<
+      { status: string; data: City },
+      { id: string; formData: FormData }
+    >({
+      query: ({ id, formData }) => ({
         url: `/api/city/${id}`,
         method: "PUT",
-        body: data,
+        body: formData,
       }),
       invalidatesTags: (result, error, { id }) => [
         { type: 'City', id },
@@ -75,7 +98,6 @@ export const cityApi = createApi({
       ],
     }),
 
-    // Supprimer une ville (logique)
     deleteCity: builder.mutation<{ status: string; message: string }, string>({
       query: (id) => ({
         url: `/api/city/${id}`,
@@ -88,8 +110,9 @@ export const cityApi = createApi({
 
 export const {
   useGetAllCitiesQuery,
-  useCreateCityMutation,
-  useUpdateCityMutation,
+  useGetCityByIdQuery,
+  useCreateCityWithImageMutation,
+  useUpdateCityWithImageMutation,
   useDeleteCityMutation,
 } = cityApi;
 
