@@ -12,4 +12,9 @@ GamificationRouter.patch(
 	GamificationController.updateGamificationRule
 );
 
+GamificationRouter.post(
+	"/complete-gamification",
+	GamificationController.completeGamificatedTask
+);
+
 module.exports = { GamificationRouter };

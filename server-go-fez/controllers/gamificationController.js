@@ -1,5 +1,8 @@
 const xss = require("xss");
 const { GamificationRule } = require("../models");
+const { GAMIFICATIONS_ENUM } = require("../constants/gamifications");
+const { PointsTransaction } = require("../models/PointsTransaction");
+const { User } = require("../models/User");
 
 /**
  * Create a new gamification rule.
@@ -100,15 +103,7 @@ async function updateGamificationRule(req, res) {
 		const updateFields = {};
 		if (points !== undefined) updateFields.points = points;
 		if (activity !== undefined) {
-			const validActivities = [
-				"COMPLETE_REGISTRATION",
-				"COMPLETE_CIRCUIT",
-				"COMPLETE_PREMIUM_CIRCUIT",
-				"SHARE_WITH_FRIEND",
-				"LEAVE_REVIEW",
-				"VISIT_POI",
-			];
-			if (!validActivities.includes(activity)) {
+			if (!GAMIFICATIONS_ENUM.includes(activity)) {
 				return res.status(400).json({
 					status: "failure",
 					data: "invalid value for field activity",
@@ -147,5 +142,59 @@ async function updateGamificationRule(req, res) {
 		});
 	}
 }
+async function getGamificationByName(gamification) {
+	if (!gamification || !GAMIFICATIONS_ENUM.includes(gamification)) {
+		throw new Error("invalid gamification name");
+	}
+	const gamificationRule = await GamificationRule.findOne({
+		where: { activity: gamification },
+	});
+	return gamificationRule;
+}
 
-module.exports = { createGamificationRule, updateGamificationRule };
+async function completeGamificatedTask(req, res) {
+	try {
+		const { userId, gamificationRuleName } = req.body;
+		if (!userId || !GAMIFICATIONS_ENUM.includes(gamificationRuleName)) {
+			res.status(400).json({
+				status: "failure",
+				data: "enter valid values for user id and gamification rule",
+			});
+			return;
+		}
+		const userExist = await User.findOne({ where: { id: userId } });
+		if (!userExist) {
+			return res.status(404).json({
+				status: "failure",
+				data: "user not found",
+			});
+		}
+		const gamificationRule = await getGamificationByName(
+			gamificationRuleName
+		);
+		const pointsTransaction = await PointsTransaction.create({
+			userId,
+			points: gamificationRule.points,
+			activity,
+			description: gamificationRule.description,
+			descriptionAr: gamificationRule.descriptionAr,
+			descriptionFr: gamificationRule.descriptionFr,
+		});
+		//update user points INCREMENT
+		res.status(201).json({ status: "success", data: pointsTransaction });
+	} catch (error) {
+		res.status(500).json({
+			status: "failure",
+			data: "server error occured",
+		});
+	}
+}
+async function name(params) {
+	//update user points DECREMENT
+}
+
+module.exports = {
+	createGamificationRule,
+	updateGamificationRule,
+	completeGamificatedTask,
+};
