@@ -44,12 +44,16 @@ Circuit.belongsToMany(POI, {
 	foreignKey: "circuitId",
 	otherKey: "poiId",
 	as: "pois",
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
 });
 POI.belongsToMany(Circuit, {
 	through: CircuitPOI,
 	foreignKey: "poiId",
 	otherKey: "circuitId",
 	as: "circuits",
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
 });
 
 //  Associations Circuit ↔ Theme via ThemeCircuit
@@ -58,22 +62,30 @@ Circuit.belongsToMany(Theme, {
 	foreignKey: "circuitId",
 	otherKey: "themeId",
 	as: "themes",
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
 });
 Theme.belongsToMany(Circuit, {
 	through: ThemeCircuit,
 	foreignKey: "themeId",
 	otherKey: "circuitId",
 	as: "circuitsFromThemes",
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
 });
 
 Category.hasMany(POI, {
   foreignKey: 'category',
   as: 'pois',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
 });
 
 POI.belongsTo(Category, {
   foreignKey: 'category',
   as: 'categoryPOI',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
 });
 
 //  Associations POI ↔ POILocalization
@@ -81,32 +93,44 @@ POI.belongsTo(POILocalization, {
 	as: "arLocalization",
 	foreignKey: "ar",
 	targetKey: "id",
+	onDelete: 'SET NULL',
+	onUpdate: 'CASCADE'
 });
 POI.belongsTo(POILocalization, {
 	as: "frLocalization",
 	foreignKey: "fr",
 	targetKey: "id",
+	onDelete: 'SET NULL',
+	onUpdate: 'CASCADE'
 });
 POI.belongsTo(POILocalization, {
 	as: "enLocalization",
 	foreignKey: "en",
 	targetKey: "id",
+	onDelete: 'SET NULL',
+	onUpdate: 'CASCADE'
 });
 
 POILocalization.hasMany(POI, {
 	as: "arPOIs",
 	foreignKey: "ar",
 	sourceKey: "id",
+	onDelete: 'SET NULL',
+	onUpdate: 'CASCADE'
 });
 POILocalization.hasMany(POI, {
 	as: "frPOIs",
 	foreignKey: "fr",
 	sourceKey: "id",
+	onDelete: 'SET NULL',
+	onUpdate: 'CASCADE'
 });
 POILocalization.hasMany(POI, {
 	as: "enPOIs",
 	foreignKey: "en",
 	sourceKey: "id",
+	onDelete: 'SET NULL',
+	onUpdate: 'CASCADE'
 });
 
 //  Associations POI ↔ POIFile
@@ -114,19 +138,31 @@ POI.belongsTo(POIFile, {
 	as: "poiFile",
 	foreignKey: "poiFileId",
 	targetKey: "id",
+	onDelete: 'SET NULL',
+	onUpdate: 'CASCADE'
 });
-POIFile.hasMany(POI, { as: "pois", foreignKey: "poiFileId", sourceKey: "id" });
+POIFile.hasMany(POI, { 
+	as: "pois", 
+	foreignKey: "poiFileId", 
+	sourceKey: "id",
+	onDelete: 'SET NULL',
+	onUpdate: 'CASCADE'
+});
 
 // Associations POI ↔ City
 POI.belongsTo(City, {
     as: "city",
     foreignKey: "cityId", 
-    targetKey: "id",      
+    targetKey: "id",
+	onDelete: 'RESTRICT',
+	onUpdate: 'CASCADE'
 });
 
 City.hasMany(POI, {
     as: "pois",
     foreignKey: "cityId",
+	onDelete: 'RESTRICT',
+	onUpdate: 'CASCADE'
 });
 
 
@@ -134,47 +170,63 @@ City.hasMany(POI, {
 User.hasMany(PointsTransaction, {
     foreignKey: "userId",
     as: "pointsTransactions",
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
 });
 PointsTransaction.belongsTo(User, {
     foreignKey: "userId",
     as: "users",
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
 });
 
 // Associations PointsTransaction ↔ GamificationRule (1.1)
 PointsTransaction.belongsTo(GamificationRule, {
     foreignKey: "gamificationRuleId",
     as: "rule",
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
 });
 GamificationRule.hasMany(PointsTransaction, {
     foreignKey: "gamificationRuleId",
     as: "pointsTransactions",
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
 });
 Circuit.hasMany(Review, {
     foreignKey: 'targetId',
     scope: {
         targetType: 'CIRCUIT'
     },
-    as: 'reviews'
+    as: 'reviews',
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
 });
 
 Review.belongsTo(Circuit, {
     foreignKey: 'targetId',
-    constraints: false 
+    constraints: false,
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
 });
 
 POI.hasMany(Review, { 
     foreignKey: 'poiId', 
-    as: 'reviews' 
+    as: 'reviews',
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
 });
 POI.belongsTo(User, {
     foreignKey: 'ownerId',
-    as: 'ownerInfo' 
+    as: 'ownerInfo',
+	onDelete: 'SET NULL',
+	onUpdate: 'CASCADE'
 });
 
-POI.hasOne(UserSpace, { foreignKey: 'poi_id', as: 'spaceDetails' }); 
-UserSpace.belongsTo(POI, { foreignKey: 'poi_id' });
+POI.hasOne(UserSpace, { foreignKey: 'poi_id', as: 'spaceDetails', onDelete: 'CASCADE', onUpdate: 'CASCADE' }); 
+UserSpace.belongsTo(POI, { foreignKey: 'poi_id', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 
-UserSpace.belongsTo(User, { foreignKey: 'user_id', as: 'spaceOwner' }); 
-User.hasMany(UserSpace, { foreignKey: 'user_id' });
+UserSpace.belongsTo(User, { foreignKey: 'user_id', as: 'spaceOwner', onDelete: 'CASCADE', onUpdate: 'CASCADE' }); 
+User.hasMany(UserSpace, { foreignKey: 'user_id', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 
 module.exports = models;

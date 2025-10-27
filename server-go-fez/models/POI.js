@@ -42,13 +42,7 @@ const POI = sequelize.define('POI', {
     category: {
         type: DataTypes.UUID,
         allowNull: true,
-        comment: 'ID de la catégorie du POI',
-        references: {
-            model: 'categories',  
-            key: 'id'             
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
+        comment: 'ID de la catégorie du POI'
     },
     practicalInfo: {
         type: DataTypes.JSON,

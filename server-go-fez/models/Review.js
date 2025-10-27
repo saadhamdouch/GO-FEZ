@@ -11,21 +11,22 @@ const Review = sequelize.define('Review', {
         allowNull: false,
     },
     userId: {
-        type: DataTypes.UUID,
+        type: DataTypes.INTEGER,
         allowNull: false,
-        // references: {
-        //     model: 'Users', // Assurez-vous d'utiliser le nom exact de votre table User
-        //     key: 'id',
-        // },
+    },
+    poiId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        comment: 'ID du POI si targetType est POI',
     },
     targetId: {
         type: DataTypes.UUID,
-        allowNull: false,
-        // Note: La référence réelle est gérée par la relation polymorphique
+        allowNull: true,
+        comment: 'ID générique pour relation polymorphique',
     },
     targetType: {
         type: DataTypes.ENUM('POI', 'CIRCUIT', 'SPACE'),
-        allowNull: false,
+        allowNull: true, // Peut être null si poiId est utilisé
         comment: 'Type de l\'objet évalué (POI, CIRCUIT, ou SPACE)',
     },
     rating: {
@@ -71,10 +72,10 @@ const Review = sequelize.define('Review', {
         comment: 'Nombre de personnes ayant trouvé l\'avis utile',
     },
 }, {
-    tableName: 'Reviews',
+    tableName: 'reviews',
     timestamps: true,
-    createdAt: 'createdAt',
-    updatedAt: 'updatedAt',
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
 });
 
 module.exports = Review;

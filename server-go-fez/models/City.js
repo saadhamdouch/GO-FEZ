@@ -48,7 +48,10 @@ const City = sequelize.define('City', {
         defaultValue: false,
     },
 }, {
-    tableName: 'Cities',
+    tableName: 'cities',
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
     indexes: [
         {
             unique: true,
