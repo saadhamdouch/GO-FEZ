@@ -27,9 +27,8 @@ const uploadMultipleFiles = (req, res, next) => {
   });
 
   const fields = [
-    { name: 'image', maxCount: 1 },
-    { name: 'video', maxCount: 1 },
-    { name: 'virtualTour360', maxCount: 1 },
+    { name: 'image', maxCount: 10 }, // Autoriser plusieurs images
+    { name: 'video', maxCount: 10 }, // Autoriser plusieurs vidéos
     { name: 'fr_audio', maxCount: 1 },
     { name: 'ar_audio', maxCount: 1 },
     { name: 'en_audio', maxCount: 1 }
