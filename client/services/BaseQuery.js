@@ -15,8 +15,9 @@ const baseQuery = fetchBaseQuery({
       headers.set('authorization', `Bearer ${token}`);
     }
     
-    // Ne pas ajouter Content-Type pour FormData (laisser le navigateur le gérer)
-    if (headers.get('content-type')?.includes('multipart/form-data')) {
+    // Gérer le content-type pour les formulaires multipart/form-data
+    const contentType = headers.get('content-type');
+    if (contentType && contentType.includes('multipart/form-data')) {
       headers.delete('content-type');
     }
     
@@ -74,4 +75,3 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 };
 
 export default baseQueryWithReauth;
-

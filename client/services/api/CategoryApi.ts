@@ -3,9 +3,9 @@ import baseQuery from "../BaseQuery";
 
 export interface Category {
   id: string;
-  ar: string;
-  fr: string;
-  en: string;
+  ar: string | { name?: string };
+  fr: string | { name?: string };
+  en: string | { name?: string };
   isActive: boolean;
   isDeleted: boolean;
   nbPois?: number;
@@ -32,7 +32,6 @@ export const categoryApi = createApi({
   baseQuery: baseQuery,
   tagTypes: ['Category', 'Categories'],
   endpoints: (builder) => ({
-    // Récupérer toutes les catégories
     getAllCategories: builder.query<{ status: string; data: Category[] }, void>({
       query: () => ({
         url: "/api/categorys/",
@@ -41,7 +40,6 @@ export const categoryApi = createApi({
       providesTags: ['Categories'],
     }),
 
-    // Récupérer une catégorie par ID
     getCategoryById: builder.query<{ status: string; data: Category }, string>({
       query: (id) => ({
         url: `/api/categorys/${id}`,
@@ -50,7 +48,6 @@ export const categoryApi = createApi({
       providesTags: (result, error, id) => [{ type: 'Category', id }],
     }),
 
-    // Créer une catégorie
     createCategory: builder.mutation<{ status: string; data: Category }, CreateCategoryData>({
       query: (data) => ({
         url: "/api/categorys/",
@@ -60,7 +57,6 @@ export const categoryApi = createApi({
       invalidatesTags: ['Categories'],
     }),
 
-    // Mettre à jour une catégorie
     updateCategory: builder.mutation<{ status: string; data: Category }, { id: string; data: UpdateCategoryData }>({
       query: ({ id, data }) => ({
         url: `/api/categorys/${id}`,
@@ -73,7 +69,6 @@ export const categoryApi = createApi({
       ],
     }),
 
-    // Supprimer une catégorie (logique)
     deleteCategory: builder.mutation<{ status: string; message: string }, string>({
       query: (id) => ({
         url: `/api/categorys/${id}`,

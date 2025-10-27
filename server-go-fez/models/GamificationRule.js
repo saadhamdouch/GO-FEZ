@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const db = require("../Config/db");
+const { GAMIFICATIONS_ENUM } = require("../constants/gamifications");
 const sequelize = db.getSequelize();
 
 const GamificationRule = sequelize.define(
@@ -11,14 +12,7 @@ const GamificationRule = sequelize.define(
 			primaryKey: true,
 		},
 		activity: {
-			type: DataTypes.ENUM(
-				"COMPLETE_REGISTRATION",
-				"COMPLETE_CIRCUIT",
-				"COMPLETE_PREMIUM_CIRCUIT",
-			"SHARE_WITH_FRIEND",
-				"LEAVE_REVIEW",
-				"VISIT_POI"
-			),
+			type: DataTypes.ENUM(...GAMIFICATIONS_ENUM),
 			allowNull: false,
 		},
 		points: {

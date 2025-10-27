@@ -13,7 +13,7 @@ const PointsTransaction = sequelize.define(
             allowNull: false,
         },
         userId: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.UUID,
             allowNull: false,
             field: "user_id",
             comment: "Clé étrangère vers l'utilisateur (User)",

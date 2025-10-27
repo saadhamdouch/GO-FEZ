@@ -1,13 +1,12 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { 
-    handleValidationErrors,
-    createPOI,
-    createPOIWithFiles,
-    findAllPOIs,
-    findOnePOI,
-    updatePOI,
-    deletePOI,
+const {
+  handleValidationErrors,
+  createPOIWithFiles,
+  findAllPOIs,
+  findOnePOI,
+  updatePOI,
+  deletePOI,
     getPOIsForParcoursLibre,
     getTravelTime
 } = require('../controllers/POIController.js');
@@ -21,33 +20,31 @@ const { POI } = require('../models/index.js');
 
 // Middleware personnalisé pour gérer les uploads multiples
 const uploadMultipleFiles = (req, res, next) => {
-    const multer = require('multer');
-    const upload = multer({
-        storage: multer.memoryStorage(),
-        limits: {
-            fileSize: 100 * 1024 * 1024 // 100MB max
-        }
-    });
-    
-    const fields = [
-        { name: 'image', maxCount: 1 },
-        { name: 'video', maxCount: 1 },
-        { name: 'virtualTour360', maxCount: 1 },
-        { name: 'fr_audio', maxCount: 1 },
-        { name: 'ar_audio', maxCount: 1 },
-        { name: 'en_audio', maxCount: 1 }
-    ];
-    
-    upload.fields(fields)(req, res, (err) => {
-        if (err) {
-            return res.status(400).json({
-                success: false,
-                message: 'Erreur lors de l\'upload des fichiers',
-                error: err.message
-            });
-        }
-        next();
-    });
+  const multer = require('multer');
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 100 * 1024 * 1024 } // 100MB max
+  });
+
+  const fields = [
+    { name: 'image', maxCount: 1 },
+    { name: 'video', maxCount: 1 },
+    { name: 'virtualTour360', maxCount: 1 },
+    { name: 'fr_audio', maxCount: 1 },
+    { name: 'ar_audio', maxCount: 1 },
+    { name: 'en_audio', maxCount: 1 }
+  ];
+
+  upload.fields(fields)(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({
+        success: false,
+        message: 'Erreur lors de l\'upload des fichiers',
+        error: err.message
+      });
+    }
+    next();
+  });
 };
 
 const POIRouter = express.Router();
@@ -154,84 +151,71 @@ POIRouter.get('/travel-time', getTravelTime);
 // Routes principales des POI
 POIRouter.get('/', findAllPOIs);
 
-// Route pour créer un POI avec upload de fichiers
-POIRouter.post('/create-with-files', 
-    uploadMultipleFiles,
-    [
-        body('coordinates')
-            .isString()
-            .withMessage('Les coordonnées doivent être une chaîne JSON valide'),
-        body('category')
-            .isInt({ min: 1 })
-            .withMessage('La catégorie doit être un nombre entier positif'),
-        body('cityId')
-            .isUUID()
-            .withMessage('L\'ID de la ville doit être un UUID valide'),
-        body('practicalInfo')
-            .optional()
-            .isString()
-            .withMessage('Les informations pratiques doivent être une chaîne JSON valide'),
-        body('arLocalization')
-            .isString()
-            .withMessage('La localisation arabe doit être une chaîne JSON valide'),
-        body('frLocalization')
-            .isString()
-            .withMessage('La localisation française doit être une chaîne JSON valide'),
-        body('enLocalization')
-            .isString()
-            .withMessage('La localisation anglaise doit être une chaîne JSON valide'),
-        handleValidationErrors
-    ], 
-    createPOIWithFiles
-);
-
-POIRouter.post('/create', [
-    body('coordinates')
-        .isObject()
-        .withMessage('Les coordonnées doivent être un objet'),
-    body('category')
-        .isInt({ min: 1 })
-        .withMessage('La catégorie doit être un nombre entier positif'),
-    body('cityId')
-        .isUUID()
-        .withMessage('L\'ID de la ville doit être un UUID valide'),
-    body('practicalInfo')
-        .optional()
-        .isObject()
-        .withMessage('Les informations pratiques doivent être un objet'),
-    body('arLocalization')
-        .optional()
-        .isObject()
-        .withMessage('La localisation arabe doit être un objet'),
-    body('frLocalization')
-        .optional()
-        .isObject()
-        .withMessage('La localisation française doit être un objet'),
-    body('enLocalization')
-        .optional()
-        .isObject()
-        .withMessage('La localisation anglaise doit être un objet'),
-    handleValidationErrors
-], createPOI);
-
+// Route pour récupérer un POI par ID
 POIRouter.get('/:id', findOnePOI);
 
-POIRouter.put('/:id', [
+// Route pour créer un POI avec upload de fichiers
+POIRouter.post(
+  '/create-with-files',
+  uploadMultipleFiles,
+  [
     body('coordinates')
-        .optional()
-        .isObject()
-        .withMessage('Les coordonnées doivent être un objet'),
+      .isString()
+      .withMessage('Les coordonnées doivent être une chaîne JSON valide'),
     body('category')
-        .optional()
-        .isInt({ min: 1 })
-        .withMessage('La catégorie doit être un nombre entier positif'),
+      .isUUID()
+      .withMessage('La catégorie doit être un UUID valide'),
+    body('cityId')
+      .isUUID()
+      .withMessage('L\'ID de la ville doit être un UUID valide'),
     body('practicalInfo')
-        .optional()
-        .isObject()
-        .withMessage('Les informations pratiques doivent être un objet'),
+      .optional()
+      .isString()
+      .withMessage('Les informations pratiques doivent être une chaîne JSON valide'),
+    body('arLocalization')
+      .optional()
+      .isString()
+      .withMessage('La localisation arabe doit être une chaîne JSON valide'),
+    body('frLocalization')
+      .optional()
+      .isString()
+      .withMessage('La localisation française doit être une chaîne JSON valide'),
+    body('enLocalization')
+      .optional()
+      .isString()
+      .withMessage('La localisation anglaise doit être une chaîne JSON valide'),
     handleValidationErrors
-], updatePOI);
+  ],
+  createPOIWithFiles
+);
 
+// Route pour mettre à jour un POI
+POIRouter.put(
+  '/:id',
+  uploadMultipleFiles,
+  [
+    body('coordinates')
+      .optional()
+      .isString()
+      .withMessage('Les coordonnées doivent être une chaîne JSON valide'),
+    body('category')
+      .optional()
+      .isUUID()
+      .withMessage('La catégorie doit être un UUID valide'),
+    body('cityId')
+      .optional()
+      .isUUID()
+      .withMessage('L\'ID de la ville doit être un UUID valide'),
+    body('practicalInfo')
+      .optional()
+      .isString()
+      .withMessage('Les informations pratiques doivent être une chaîne JSON valide'),
+    handleValidationErrors
+  ],
+  updatePOI
+);
+
+// Route pour supprimer un POI (suppression logique)
 POIRouter.delete('/:id', deletePOI);
 
 
