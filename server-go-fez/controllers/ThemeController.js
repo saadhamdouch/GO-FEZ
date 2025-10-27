@@ -1,6 +1,6 @@
 const { Theme, Circuit } = require('../models');
 const xss = require('xss');
-const { uploadImage, uploadThemeFiles, deleteFile } = require("../config/cloudinary");
+const { uploadImage, uploadThemeFiles, deleteFile } = require("../Config/cloudinary");
 
 
 const sanitizeThemeLocalizations = (localizations) => {
@@ -115,7 +115,15 @@ exports.getAllThemes = async (req, res) => {
 exports.getThemeById = async (req, res) => {
   try {
     const theme = await Theme.findOne({
-      where: { id: req.params.id, isDeleted: false }
+      where: { id: req.params.id, isDeleted: false },
+      include: [
+        {
+          model: Circuit,
+          as: 'circuitsFromThemes',
+          through: { attributes: [] },
+          attributes: ['id']
+        }
+      ]
     });
 
     if (!theme) {

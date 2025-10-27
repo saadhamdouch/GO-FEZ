@@ -1,6 +1,7 @@
-const { Circuit, Theme, POI, ThemeCircuit, CircuitPOI, City, POILocalization } = require('../models');
+const { Sequelize } = require('sequelize');
+const { Circuit, Theme, POI, ThemeCircuit, CircuitPOI, City, Review, POILocalization } = require('../models');
 const xss = require('xss');
-const { deleteFile } = require("../config/cloudinary");
+const { deleteFile } = require("../Config/cloudinary");
 
 // Créer un circuit avec upload d'image
 exports.createCircuitWithImage = async (req, res) => {
@@ -90,11 +91,11 @@ exports.createCircuitWithImage = async (req, res) => {
           isDeleted: false
         }
       });
-      
+
       if (themes.length !== themeIds.length) {
         console.warn('⚠️ Certains thèmes n\'ont pas été trouvés');
       }
-      
+
       await circuit.setThemes(themes);
     }
 
@@ -167,7 +168,7 @@ exports.createCircuitWithImage = async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Erreur création circuit avec image:', error);
-    
+
     // Supprimer l'image uploadée en cas d'erreur
     if (req.file) {
       await deleteFile(req.file.filename).catch(err =>
@@ -183,52 +184,44 @@ exports.createCircuitWithImage = async (req, res) => {
   }
 };
 
-// Récupérer tous les circuits
+exports.rateCircuit = async (req, res) => {
+  try {
+    const userId = req.user.userId; // Récupérer l'ID de l'utilisateur authentifié
+    const { circuitId, rating } = req.body;
+
+  } catch (error) {
+    console.error('❌ Erreur notation circuit :', error);
+    return res.status(500).json({ status: 'error', message: 'Erreur serveur', error });
+  }
+};
+
+// Récupérer tous les circuits avec notes moyennes et nombre d'avis
 exports.getAllCircuits = async (req, res) => {
   try {
     const circuits = await Circuit.findAll({
       where: { isDeleted: false },
+      attributes: {
+        include: [
+          [Sequelize.fn('AVG', Sequelize.col('reviews.rating')), 'rating'],
+          [Sequelize.fn('COUNT', Sequelize.col('reviews.id')), 'reviewCount']
+        ]
+      },
+      // 🚨 Ajout de la jointure Review et du filtre isAccepted
       include: [
         {
-          model: City,
-          as: 'city',
-          attributes: ['id', 'name', 'nameAr', 'nameEn']
+          model: Review,
+          as: 'reviews',
+          attributes: [], // N'inclut pas les champs Review dans l'objet final
+          required: false, // Utilise LEFT JOIN pour inclure les circuits sans avis
+          where: { isAccepted: true }
         },
-        {
-          model: Theme,
-          as: 'themes',
-          through: { attributes: [] },
-          where: { isDeleted: false },
-          required: false
-        },
-        {
-          model: POI,
-          as: 'pois',
-          through: {
-            attributes: ['order', 'estimatedTime']
-          },
-          where: { isDeleted: false },
-          required: false,
-          include: [
-            {
-              model: POILocalization,
-              as: 'frLocalization',
-              attributes: ['name', 'address']
-            },
-            {
-              model: POILocalization,
-              as: 'arLocalization',
-              attributes: ['name', 'address']
-            },
-            {
-              model: POILocalization,
-              as: 'enLocalization',
-              attributes: ['name', 'address']
-            }
-          ]
-        }
+        { model: City, as: 'city' },
+        { model: Theme, as: 'themes', through: ThemeCircuit },
+        { model: POI, as: 'pois' }
       ],
-      order: [['createdAt', 'DESC']]
+      // 🚨 Ajout du GROUP BY nécessaire pour les agrégations sur les relations
+      group: ['Circuit.id', 'city.id', 'themes.id', 'pois.id', 'themes->ThemeCircuit.circuitId', 'pois->CircuitPOI.circuitId']
+      // Vous pourriez avoir besoin d'ajuster la liste `group` si vous avez des clés composites
     });
 
     return res.status(200).json({
@@ -249,21 +242,19 @@ exports.getAllCircuits = async (req, res) => {
 exports.getCircuitById = async (req, res) => {
   try {
     const { id } = req.params;
-
     const circuit = await Circuit.findOne({
       where: { id, isDeleted: false },
+      // 🚨 Ajout de la jointure Review et du filtre isAccepted
       include: [
         {
-          model: City,
-          as: 'city'
+          model: Review,
+          as: 'reviews',
+          attributes: [],
+          required: false,
+          where: { isAccepted: true }
         },
-        {
-          model: Theme,
-          as: 'themes',
-          through: { attributes: [] },
-          where: { isDeleted: false },
-          required: false
-        },
+        { model: City, as: 'city' },
+        { model: Theme, as: 'themes', through: ThemeCircuit },
         {
           model: POI,
           as: 'pois',
@@ -278,7 +269,9 @@ exports.getCircuitById = async (req, res) => {
             { model: POILocalization, as: 'enLocalization' }
           ]
         }
-      ]
+      ],
+      // 🚨 Ajout du GROUP BY (nécessaire même pour findOne avec des includes d'agrégation)
+      group: ['Circuit.id', 'city.id', 'themes.id', 'pois.id', 'themes->ThemeCircuit.circuitId', 'pois->CircuitPOI.circuitId']
     });
 
     if (!circuit) {
@@ -509,14 +502,14 @@ exports.updateCircuit = async (req, res) => {
         const finalThemeIds = themeIds
           .map(t => (typeof t === 'object' && t !== null) ? t.id : t)
           .filter(Boolean);
-        
+
         const themes = await Theme.findAll({
           where: {
             id: finalThemeIds,
             isDeleted: false
           }
         });
-        
+
         await circuit.setThemes(themes);
       } else {
         await circuit.setThemes([]);
@@ -541,7 +534,7 @@ exports.updateCircuit = async (req, res) => {
         for (let i = 0; i < poiIds.length; i++) {
           const poiId = typeof poiIds[i] === 'object' ? poiIds[i].poiId || poiIds[i].id : poiIds[i];
           const poiExists = pois.find(p => p.id === poiId);
-          
+
           if (poiExists) {
             await CircuitPOI.create({
               circuitId: id,
@@ -591,7 +584,7 @@ exports.updateCircuit = async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Erreur mise à jour circuit:', error);
-    
+
     // Supprimer l'image uploadée en cas d'erreur
     if (req.file) {
       await deleteFile(req.file.filename).catch(err =>

@@ -4,16 +4,16 @@ const multer = require("multer");
 const path = require('path');
 const router = express.Router();
 const CityController = require('../controllers/CityController');
-
+const { uploadImage, uploadCityFiles } = require("../config/cloudinary");
 // middleware/auth.js 
 // const authenticateJWT = (req, res, next) => {
 //     next(); 
 // };
 
-router.post('/', CityController.createCity);
+router.post('/',uploadCityFiles.single('image') ,CityController.createCity);
 
 router.get('/', CityController.getAllCities);
 
-router.put('/:id', CityController.updateCity);
-
+router.put('/:id',uploadCityFiles.single('image') , CityController.updateCity);
+router.delete('/:id', CityController.deleteCity);
 module.exports = router;

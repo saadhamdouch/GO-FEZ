@@ -2,10 +2,10 @@ const jwt = require('jsonwebtoken');
 const { User } = require('../models/User.js');
 // const logger = require('../utils/logger.js'); // Remplacé par console.log
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../../.env') });
+require('dotenv').config();
 
 // Configuration JWT (alignée sur authService avec fallback)
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 /**
  * 🔐 Middleware d'authentification JWT amélioré
@@ -75,15 +75,15 @@ const authenticateToken = async (req, res, next) => {
 
         // Ajout des informations utilisateur à la requête
         req.user = {
-            userId: decoded.userId,
-            email: decoded.email,
-            phone: decoded.phone,
-            role: decoded.role,
-            primaryIdentifier: decoded.primaryIdentifier,
-            authProvider: decoded.authProvider
+            userId: user.id,
+            email: user.email,
+            phone: user.phone,
+            role: user.role,
+            primaryIdentifier: user.primaryIdentifier,
+            authProvider: user.authProvider
         };
 
-        console.log('Authentification réussie', { userId: decoded.userId });
+        console.log('Authentification réussie', { userId: user.id });
         next();
 
     } catch (error) {

@@ -6,8 +6,17 @@ const {
   findAllPOIs,
   findOnePOI,
   updatePOI,
-  deletePOI
+  deletePOI,
+    getPOIsForParcoursLibre,
+    getTravelTime
 } = require('../controllers/POIController.js');
+const { 
+    uploadImage, 
+    uploadAudio, 
+    uploadVideo, 
+    uploadVirtualTour 
+} = require('../config/cloudinary.js');
+const { POI } = require('../models/index.js');
 
 // Middleware personnalisé pour gérer les uploads multiples
 const uploadMultipleFiles = (req, res, next) => {
@@ -40,7 +49,106 @@ const uploadMultipleFiles = (req, res, next) => {
 
 const POIRouter = express.Router();
 
-// Route pour récupérer tous les POIs
+// Routes d'upload Cloudinary
+POIRouter.post('/upload/image', uploadImage.single('image'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'Aucun fichier image fourni'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Image uploadée avec succès',
+            imageUrl: req.file.path,
+            publicId: req.file.filename
+        });
+    } catch (error) {
+        console.error('Erreur lors de l\'upload de l\'image:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur lors de l\'upload de l\'image'
+        });
+    }
+});
+
+POIRouter.post('/upload/audio', uploadAudio.single('audio'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'Aucun fichier audio fourni'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Audio uploadé avec succès',
+            audioUrl: req.file.path,
+            publicId: req.file.filename
+        });
+    } catch (error) {
+        console.error('Erreur lors de l\'upload de l\'audio:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur lors de l\'upload de l\'audio'
+        });
+    }
+});
+
+POIRouter.post('/upload/video', uploadVideo.single('video'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'Aucun fichier vidéo fourni'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Vidéo uploadée avec succès',
+            videoUrl: req.file.path,
+            publicId: req.file.filename
+        });
+    } catch (error) {
+        console.error('Erreur lors de l\'upload de la vidéo:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur lors de l\'upload de la vidéo'
+        });
+    }
+});
+
+POIRouter.post('/upload/virtual-tour', uploadVirtualTour.single('virtualTour'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'Aucun fichier de visite virtuelle fourni'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Visite virtuelle uploadée avec succès',
+            virtualTourUrl: req.file.path,
+            publicId: req.file.filename
+        });
+    } catch (error) {
+        console.error('Erreur lors de l\'upload de la visite virtuelle:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur lors de l\'upload de la visite virtuelle'
+        });
+    }
+});
+
+POIRouter.get('/parcours-libre', getPOIsForParcoursLibre);
+POIRouter.get('/travel-time', getTravelTime);
+// Routes principales des POI
 POIRouter.get('/', findAllPOIs);
 
 // Route pour récupérer un POI par ID
@@ -109,5 +217,6 @@ POIRouter.put(
 
 // Route pour supprimer un POI (suppression logique)
 POIRouter.delete('/:id', deletePOI);
+
 
 module.exports = { POIRouter };
