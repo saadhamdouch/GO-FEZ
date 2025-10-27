@@ -1,4 +1,8 @@
 import * as Yup from 'yup';
+// Schéma de validation pour l'email
+export const emailSchema = Yup.string()
+  .email("Format d'email invalide")
+  .required("L'email est obligatoire");
 
 // Schéma de validation pour le mot de passe (8 caractères minimum avec des chiffres)
 export const passwordSchema = Yup.string()
@@ -23,11 +27,11 @@ export const nameSchema = Yup.string()
   .max(50, 'Le nom ne peut pas dépasser 50 caractères')
   .required('Ce champ est obligatoire');
 
-// Schéma de validation pour l'étape 1 du SignUp
+// Schéma de validation pour l'étape 1 du SignUp (avec email)
 export const signUpStep1Schema = Yup.object({
   firstName: nameSchema,
   lastName: nameSchema,
-  phoneNumber: phoneSchema,
+  email: emailSchema,
 });
 
 // Schéma de validation pour l'étape 2 du SignUp
@@ -43,9 +47,9 @@ export const signUpStep3Schema = Yup.object({
   otpCode: otpSchema,
 });
 
-// Schéma de validation pour l'étape 1 du Login
+// Schéma de validation pour l'étape 1 du Login (avec email)
 export const loginStep1Schema = Yup.object({
-  phoneNumber: phoneSchema,
+  email: emailSchema,
   password: Yup.string().required('Le mot de passe est obligatoire'),
 });
 

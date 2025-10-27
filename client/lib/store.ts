@@ -1,4 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
+import authReducer from '../services/slices/authSlice';
 import userApi from '../services/api/UserApi';
 import themeApi from '../services/api/ThemeApi';
 import circuitApi from '../services/api/CircuitApi';
@@ -8,6 +9,7 @@ import cityApi from '../services/api/CityApi';
 
 const configurestore = configureStore({
   reducer: {
+    auth: authReducer,
     [userApi.reducerPath]: userApi.reducer,
     [themeApi.reducerPath]: themeApi.reducer,
     [circuitApi.reducerPath]: circuitApi.reducer,

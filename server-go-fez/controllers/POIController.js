@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator');
 const { Op, Sequelize } = require('sequelize');
-const { POI, POILocalization, POIFile, Category, City, Category,User, UserSpace, TransportMode} = require('../models');
+const { POI, POILocalization, POIFile, City, Category,User, UserSpace, TransportMode} = require('../models');
 const EARTH_RADIUS_KM = 6371;
 const { uploadFromBuffer, deleteFile } = require('../config/cloudinary');
 const xss = require('xss');
