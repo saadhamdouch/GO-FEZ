@@ -1,11 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { FormField } from '../shared/FormField';
 import { LocalizedInputs } from '../shared/LocalizedInputs';
 import { FileUpload } from '../shared/FileUpload';
 import { Checkbox } from '../shared/Checkbox';
 import { FormActions } from '../shared/FormActions';
-import { ImageIcon, Video,  Map as Map360, Music, Info } from 'lucide-react';
+import MapSelector from './MapSelector';
+import { ImageIcon, Video,  Map as Map360, Music, Info, MapPin } from 'lucide-react';
 
 interface POIFormProps {
   formData: any;
@@ -30,6 +32,8 @@ export function POIForm({
   isSubmitting,
   selectedPOI,
 }: POIFormProps) {
+  const [showMap, setShowMap] = useState(true);
+
   const handleLocalizationChange = (lang: 'fr' | 'ar' | 'en', field: string, value: string) => {
     onFormDataChange({
       ...formData,
@@ -39,6 +43,19 @@ export function POIForm({
       },
     });
   };
+
+  const handleLocationSelect = (location: { lat: number; lng: number; address?: string }) => {
+    onFormDataChange({
+      ...formData,
+      latitude: location.lat.toString(),
+      longitude: location.lng.toString(),
+      address: location.address || formData.address,
+    });
+  };
+
+  const currentLocation = formData.latitude && formData.longitude
+    ? { lat: parseFloat(formData.latitude), lng: parseFloat(formData.longitude) }
+    : null;
 
   const localizationFields = [
     { key: 'name', label: 'Nom', type: 'input' as const, required: true },
@@ -107,41 +124,73 @@ export function POIForm({
         </FormField>
       </div>
 
-      {/* Coordinates */}
-      <div className="grid grid-cols-3 gap-4">
-        <FormField label="Latitude" required>
-          <input
-            type="number"
-            step="any"
-            value={formData.latitude}
-            onChange={(e) => onFormDataChange({ ...formData, latitude: e.target.value })}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            required
-            placeholder="34.0626"
-          />
-        </FormField>
+      {/* Coordinates Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <MapPin className="w-5 h-5" />
+            Position (Latitude, Longitude)
+            <span className="text-red-500">*</span>
+          </label>
+          <button
+            type="button"
+            onClick={() => setShowMap(!showMap)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm"
+          >
+            <MapPin className="w-4 h-4" />
+            {showMap ? 'Masquer la carte' : 'Afficher la carte'}
+          </button>
+        </div>
 
-        <FormField label="Longitude" required>
-          <input
-            type="number"
-            step="any"
-            value={formData.longitude}
-            onChange={(e) => onFormDataChange({ ...formData, longitude: e.target.value })}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            required
-            placeholder="-5.0077"
-          />
-        </FormField>
+        {/* Carte interactive */}
+        {showMap && (
+          <div className="border-2 border-gray-200 rounded-xl overflow-hidden">
+            <MapSelector
+              onLocationSelect={handleLocationSelect}
+              selectedLocation={currentLocation}
+              height="400px"
+            />
+          </div>
+        )}
 
-        <FormField label="Adresse">
-          <input
-            type="text"
-            value={formData.address}
-            onChange={(e) => onFormDataChange({ ...formData, address: e.target.value })}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            placeholder="Rue principale"
-          />
-        </FormField>
+        {/* Champs de coordonnées (manuel) */}
+        <div className="grid grid-cols-3 gap-4">
+          <FormField label="Latitude" required>
+            <input
+              type="number"
+              step="any"
+              value={formData.latitude}
+              onChange={(e) => onFormDataChange({ ...formData, latitude: e.target.value })}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              required
+              placeholder="34.0626"
+              readOnly={showMap}
+            />
+          </FormField>
+
+          <FormField label="Longitude" required>
+            <input
+              type="number"
+              step="any"
+              value={formData.longitude}
+              onChange={(e) => onFormDataChange({ ...formData, longitude: e.target.value })}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              required
+              placeholder="-5.0077"
+              readOnly={showMap}
+            />
+          </FormField>
+
+          <FormField label="Adresse">
+            <input
+              type="text"
+              value={formData.address}
+              onChange={(e) => onFormDataChange({ ...formData, address: e.target.value })}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="Rue principale"
+            />
+          </FormField>
+        </div>
       </div>
 
       {/* Localized Inputs */}
