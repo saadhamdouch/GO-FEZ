@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MapPin, Route, Palette } from 'lucide-react';
+import { MapPin, Route, Palette, Folder } from 'lucide-react';
 
 interface AdminHeaderProps {
   locale?: string;
@@ -11,11 +11,12 @@ interface AdminHeaderProps {
 
 export default function AdminHeader({ locale = 'fr' }: AdminHeaderProps) {
   const pathname = usePathname();
-  
+
   const navItems = [
     { href: `/${locale}/admin/pois`, label: 'POIs', icon: MapPin },
     { href: `/${locale}/admin/circuits`, label: 'Circuits', icon: Route },
-    { href: `/${locale}/admin/themes`, label: 'Thèmes', icon: Palette }
+    { href: `/${locale}/admin/themes`, label: 'Thèmes', icon: Palette },
+    { href: `/${locale}/admin/categories`, label: 'Catégories', icon: Folder }
   ];
 
   return (
@@ -33,7 +34,7 @@ export default function AdminHeader({ locale = 'fr' }: AdminHeaderProps) {
               <p className="text-xs text-gray-500">Dashboard de gestion</p>
             </div>
           </Link>
-          
+
           <nav className="flex space-x-1">
             {navItems.map(({ href, label, icon: Icon }) => {
               const isActive = pathname === href;
