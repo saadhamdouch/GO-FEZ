@@ -129,9 +129,21 @@ const User = sequelize.define('User', {
     updatedAt: 'updated_at',
     indexes: [
         // Index essentiels seulement - MySQL limite à 64 index par table
-        
-        
-        
+        {
+            unique: true,
+            fields: ['primary_identifier'],
+            name: 'unique_primary_identifier'
+        },
+        {
+            unique: true,
+            fields: ['phone'],
+            name: 'unique_phone'
+        },
+        {
+            unique: true,
+            fields: ['email'],
+            name: 'unique_email'
+        },
         {
             fields: ['auth_provider'],
             name: 'idx_auth_provider'

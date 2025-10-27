@@ -60,15 +60,6 @@ export default function AppDownload({ isRTL }: AppDownloadProps) {
                 className="absolute top-0 left-0  w-full h-auto object-cover lg:object-top"
               />
             </div>
-
-            {/* Full image for small screens */}
-            <div className="lg:hidden mt-4">
-              <img
-                src="/images/mobile-app-photo.png"
-                alt="Mobile App Screenshots"
-                className="w-full h-auto object-contain"
-              />
-            </div>
           </div>
 
         </div>
