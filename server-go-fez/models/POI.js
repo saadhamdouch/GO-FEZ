@@ -93,12 +93,6 @@ const POI = sequelize.define('POI', {
         },
         comment: 'Nombre d\'avis'
     },
-    poiFileId: {
-        type: DataTypes.UUID,
-        allowNull: true,
-        field: 'poi_file_id',
-        comment: 'Foreign key vers POIFile'
-    },
 
     isDeleted: {
         type: DataTypes.BOOLEAN,
@@ -157,10 +151,6 @@ const POI = sequelize.define('POI', {
         {
             fields: ['en_localization_id'],
             name: 'idx_poi_en_localization'
-        },
-        {
-            fields: ['poi_file_id'],
-            name: 'idx_poi_file'
         }
     ]
 });

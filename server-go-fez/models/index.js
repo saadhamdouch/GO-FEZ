@@ -134,18 +134,18 @@ POILocalization.hasMany(POI, {
 });
 
 //  Associations POI ↔ POIFile
-POI.belongsTo(POIFile, {
-	as: "poiFile",
-	foreignKey: "poiFileId",
-	targetKey: "id",
-	onDelete: 'SET NULL',
+POI.hasMany(POIFile, {
+	as: "files",
+	foreignKey: "poiId",
+	sourceKey: "id",
+	onDelete: 'CASCADE',
 	onUpdate: 'CASCADE'
 });
-POIFile.hasMany(POI, { 
-	as: "pois", 
-	foreignKey: "poiFileId", 
-	sourceKey: "id",
-	onDelete: 'SET NULL',
+POIFile.belongsTo(POI, {
+	as: "poi",
+	foreignKey: "poiId",
+	targetKey: "id",
+	onDelete: 'CASCADE',
 	onUpdate: 'CASCADE'
 });
 

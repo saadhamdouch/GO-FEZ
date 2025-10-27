@@ -9,42 +9,23 @@ const POIFile = sequelize.define('POIFile', {
     primaryKey: true,
     allowNull: false
   },
-  image: {
-    type: DataTypes.STRING(500),
-    allowNull: true,
+  poiId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    field: 'poi_id',
+    comment: 'ID du POI propriétaire'
+  },
+  fileUrl: {
+    type: DataTypes.STRING(1000),
+    allowNull: false,
+    field: 'file_url',
     validate: { isUrl: true },
-    comment: 'URL de l\'image principale du POI'
+    comment: 'URL du fichier sur Cloudinary'
   },
-  imagePublicId: {
-    type: DataTypes.STRING(255),
-    allowNull: true,
-    field: 'image_public_id',
-    comment: 'Public ID Cloudinary pour l\'image'
-  },
-  video: {
-    type: DataTypes.STRING(500),
-    allowNull: true,
-    validate: { isUrl: true },
-    comment: 'URL de la vidéo du POI'
-  },
-  videoPublicId: {
-    type: DataTypes.STRING(255),
-    allowNull: true,
-    field: 'video_public_id',
-    comment: 'Public ID Cloudinary pour la vidéo'
-  },
-  virtualTour360: {
-    type: DataTypes.STRING(500),
-    allowNull: true,
-    field: 'virtual_tour_360',
-    validate: { isUrl: true },
-    comment: 'URL de la visite virtuelle 360°'
-  },
-  virtualTourPublicId: {
-    type: DataTypes.STRING(255),
-    allowNull: true,
-    field: 'virtual_tour_public_id',
-    comment: 'Public ID Cloudinary pour la visite virtuelle'
+  type: {
+    type: DataTypes.ENUM('image', 'video', 'virtualtour'),
+    allowNull: false,
+    comment: 'Type de fichier : image, video ou virtualtour'
   },
   createdAt: {
     type: DataTypes.DATE,
@@ -64,10 +45,8 @@ const POIFile = sequelize.define('POIFile', {
   createdAt: 'created_at',
   updatedAt: 'updated_at',
   indexes: [
-    { fields: ['image'], name: 'idx_poi_file_image' },
-    { fields: ['video'], name: 'idx_poi_file_video' },
-    { fields: ['image_public_id'], name: 'idx_poi_file_image_public_id' },
-    { fields: ['video_public_id'], name: 'idx_poi_file_video_public_id' }
+    { fields: ['poi_id'], name: 'idx_poi_file_poi' },
+    { fields: ['type'], name: 'idx_poi_file_type' }
   ]
 });
 
