@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const circuitController = require('../controllers/circuitController');
-const { uploadCircuitImage } = require("../config/cloudinary");
+const { uploadCircuitImage } = require("../Config/cloudinary");
 
 // Routes principales des circuits
 router.post('/create-with-image', uploadCircuitImage.single('image'), circuitController.createCircuitWithImage);

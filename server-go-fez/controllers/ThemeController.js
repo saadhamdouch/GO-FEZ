@@ -1,6 +1,6 @@
 const { Theme, Circuit } = require('../models');
 const xss = require('xss');
-const { uploadImage, uploadThemeFiles, deleteFile } = require("../config/cloudinary");
+const { uploadImage, uploadThemeFiles, deleteFile } = require("../Config/cloudinary");
 
 
 const sanitizeThemeLocalizations = (localizations) => {
