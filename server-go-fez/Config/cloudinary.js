@@ -48,7 +48,6 @@ const circuitImageStorage = new CloudinaryStorage({
 });
 
 // Configuration pour les images de Thèmes
-// (utilise la même configuration que les images générales)
 const themeImageStorage = new CloudinaryStorage({ 
   cloudinary: cloudinary,
   params: {
@@ -61,7 +60,22 @@ const themeImageStorage = new CloudinaryStorage({
       { bytes: 400000 } // Taille maximale de 400ko ( 400 * 1024 bytes)
     ]
   }
-});   
+}); 
+// Configuration pour les images de Villes
+const cityImageStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'go-fez/cities',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    transformation: [
+      { width: 1200, height: 800, crop: 'limit' },
+      { quality: 'auto:best', fetch_format: 'auto' }, // Compression AI optimale
+      { flags: 'lossy' }, // Compression avec perte
+      { bytes: 400000 } // Taille maximale de 400ko (400 * 1024 bytes)
+    ]
+  }
+}); 
+
 
 // Configuration pour les fichiers audio
 const audioStorage = new CloudinaryStorage({
@@ -117,6 +131,12 @@ uploadThemeFiles = multer({
   storage: themeImageStorage,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB max per file           
 });
+
+uploadCityFiles = multer({
+  storage: cityImageStorage,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB max per file
+});
+
 
 const uploadAudio = multer({ 
   storage: audioStorage,
@@ -249,6 +269,7 @@ module.exports = {
   uploadImage,
   uploadCircuitImage,
   uploadThemeFiles,
+  uploadCityFiles,
   uploadAudio,
   uploadVideo,
   uploadVirtualTour,

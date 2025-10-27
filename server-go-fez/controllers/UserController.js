@@ -2,7 +2,60 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 const { User } = require("../models/User");
+require('dotenv').config();
 
+const JWT_SECRET = process.env.JWT_SECRET
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+
+const generateTokens = (user) => {
+	console.log('🔑 Génération des tokens JWT', {
+		userId: user.id,
+		jwtSecretLength: JWT_SECRET.length,
+		jwtSecretStart: JWT_SECRET.substring(0, 10) + '...',
+		expiresIn: JWT_EXPIRES_IN
+	});
+
+	const token = jwt.sign(
+		{
+			userId: user.id,
+		},
+		JWT_SECRET,
+		{ expiresIn: JWT_EXPIRES_IN }
+	);
+
+	const refreshToken = jwt.sign(
+		{ userId: user.id },
+		JWT_SECRET,
+		{ expiresIn: JWT_REFRESH_EXPIRES_IN }
+	);
+
+
+	return { token, refreshToken };
+}
+const generateAndSetTokens = (user, res) => {
+	const tokens = generateTokens(user);
+
+	// Cookie pour le token d'accès (tk)
+	res.cookie("tk", tokens.token, {
+		httpOnly: true,
+		secure: process.env.NODE_ENV === 'production', // HTTPS en production
+		sameSite: "Lax",
+		maxAge: 24 * 60 * 60 * 1000, // 24 heures
+		path: "/",
+	});
+
+	// Cookie pour le refresh token
+	res.cookie("refreshToken", tokens.refreshToken, {
+		httpOnly: true,
+		secure: process.env.NODE_ENV === 'production', // HTTPS en production
+		sameSite: "Lax",
+		maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours
+		path: "/",
+	});
+
+	return tokens;
+}
 // Middleware pour vérifier les erreurs de validation
 const handleValidationErrors = (req, res, next) => {
 	const errors = validationResult(req);
@@ -150,16 +203,7 @@ const loginUser = async (req, res) => {
 		}
 
 		// Générer le token JWT
-		const token = jwt.sign(
-			{
-				userId: user.id,
-				email: user.email,
-				role: user.role,
-			},
-			process.env.JWT_SECRET || "your-secret-key",
-			{ expiresIn: "24h" }
-		);
-
+		const tokens = generateAndSetTokens(user, res);
 		// Retourner la réponse sans le mot de passe
 		const userResponse = {
 			id: user.id,
@@ -177,7 +221,7 @@ const loginUser = async (req, res) => {
 			success: true,
 			message: "Connexion réussie",
 			user: userResponse,
-			token,
+			tokens,
 		});
 	} catch (error) {
 		console.error("Erreur lors de la connexion:", error);

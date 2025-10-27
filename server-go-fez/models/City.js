@@ -32,17 +32,13 @@ const City = sequelize.define('City', {
     },
     coordinates: {
         type: DataTypes.JSON,
-        allowNull: false,
+        allowNull: true,
     },
     radius: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
     },
-        image: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
-        comment: 'Image du thème (URL ou nom de fichier)',
-    },
+        
     isActive: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
