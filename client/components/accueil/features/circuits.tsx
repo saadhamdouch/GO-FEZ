@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useGetAllCircuitsQuery } from "@/services/api/CircuitApi";
+import { useRouter } from "@/i18n/navigation";
 import ExploreCard from "./ExploreCard";
 
 interface CircuitsProps {
@@ -13,8 +14,13 @@ interface CircuitsProps {
 
 export default function Circuits({ locale, isRTL }: CircuitsProps) {
   const t = useTranslations();
-  const [selectedCircuit, setSelectedCircuit] = useState<string | null>(null);
   const { data: circuitsData, isLoading, error } = useGetAllCircuitsQuery();
+  const router = useRouter();
+
+  // 🔹 Handle navigation to the circuit detail page
+  const handleCircuitClick = (id: string) => {
+    router.push(`/circuits/${id}`);
+  };
 
   const circuits = circuitsData?.data || [];
 
@@ -34,7 +40,7 @@ export default function Circuits({ locale, isRTL }: CircuitsProps) {
       });
     } else {
       scrollRef.current.scrollTo({
-        left: isRTL ? scrollLeft - scrollAmount : scrollLeft + scrollAmount,
+        left: isRTL ? scrollLeft - amount : scrollLeft + scrollAmount,
         behavior: "smooth",
       });
     }
@@ -95,8 +101,8 @@ export default function Circuits({ locale, isRTL }: CircuitsProps) {
                   <ExploreCard
                     key={item.id}
                     item={item}
-                    selected={selectedCircuit}
-                    onSelect={setSelectedCircuit}
+                    selected={null} // No selection state needed
+                    onSelect={handleCircuitClick} // Navigate on click
                     currentLocale={locale}
                   />
                 ))}

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useGetCircuitByIdQuery } from '@/services/api/CircuitApi';
 import { useStartCircuitMutation } from '@/services/api/CircuitProgressApi';
-import { useRouter } from 'next/navigation'; // Utiliser next/navigation
+import { useRouter } from '@/i18n/navigation'; // FIX: Utiliser la navigation i18n
 
 // Importer les composants
 import POITimeline from '@/components/circuits/POITimeline';
@@ -43,6 +43,7 @@ export default function CircuitDetailPage({
 		if (!circuit) return;
 
 		try {
+			// L'appel est correct et correspond à votre CircuitProgressApi
 			await startCircuit({ circuitId: circuit.id }).unwrap();
 			toast.success(t('startSuccess'));
 			// Rediriger vers la page de navigation
@@ -77,10 +78,10 @@ export default function CircuitDetailPage({
 				<Image
 					loader={cloudinaryLoader}
 					src={imageUrl}
-					alt={name}
 					layout="fill"
 					objectFit="cover"
 					priority
+					alt={name || t('circuitImageAlt')} // FIX: Ajout d'un fallback pour 'alt'
 				/>
 				<div className="absolute inset-0 bg-black/50" />
 				<div className="container absolute inset-0 mx-auto flex max-w-7xl flex-col justify-end px-4 py-8 text-white">
