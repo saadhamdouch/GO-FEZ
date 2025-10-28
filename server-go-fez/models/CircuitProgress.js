@@ -1,0 +1,67 @@
+// server-go-fez/models/CircuitProgress.js
+const { DataTypes } = require("sequelize");
+const db = require('../Config/db');
+
+const sequelize = db.getSequelize();
+
+const CircuitProgress = sequelize.define(
+	"CircuitProgress",
+	{
+		id: {
+			type: DataTypes.UUID,
+			defaultValue: DataTypes.UUIDV4,
+			primaryKey: true,
+			allowNull: false,
+		},
+		userId: {
+			type: DataTypes.UUID,
+			allowNull: false,
+			references: {
+				model: "Users", // Nom de la table des utilisateurs
+				key: "id",
+			},
+		},
+		circuitId: {
+			type: DataTypes.UUID,
+			allowNull: false,
+			references: {
+				model: "Circuits", // Nom de la table des circuits
+				key: "id",
+			},
+		},
+		currentPOIIndex: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			defaultValue: 0,
+		},
+		completedPOIs: {
+			type: DataTypes.JSON, // Stockera un tableau d'IDs de POI
+			allowNull: true,
+			defaultValue: [],
+		},
+		status: {
+			type: DataTypes.ENUM("STARTED", "IN_PROGRESS", "COMPLETED"),
+			defaultValue: "STARTED",
+			allowNull: false,
+		},
+		startedAt: {
+			type: DataTypes.DATE,
+			defaultValue: DataTypes.NOW,
+			allowNull: false,
+		},
+		completedAt: {
+			type: DataTypes.DATE,
+			allowNull: true,
+		},
+		totalTime: {
+			type: DataTypes.INTEGER, // en minutes
+			allowNull: true,
+		},
+	},
+	{
+		tableName: "CircuitProgress",
+		timestamps: true,
+	}
+);
+
+module.exports = { CircuitProgress };
