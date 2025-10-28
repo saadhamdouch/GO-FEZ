@@ -102,7 +102,7 @@ app.use((err, req, res, next) => {
 // Fonction pour démarrer le serveur
 function startServer() {
 	app.listen(PORT, () => {
-		logger.info(`Server is running on port ${port}`);
+		logger.info(`Server is running on port ${PORT}`);
 	});
 }
 
