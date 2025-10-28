@@ -13,7 +13,6 @@ const POIFile = sequelize.define('POIFile', {
     type: DataTypes.UUID,
     allowNull: false,
     field: 'poi_id',
-    comment: 'ID du POI propriétaire'
   },
   fileUrl: {
     type: DataTypes.STRING(1000),
@@ -22,10 +21,14 @@ const POIFile = sequelize.define('POIFile', {
     validate: { isUrl: true },
     comment: 'URL du fichier sur Cloudinary'
   },
+  filePublicId: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    field: 'file_public_id',
+  },
   type: {
     type: DataTypes.ENUM('image', 'video', 'virtualtour'),
     allowNull: false,
-    comment: 'Type de fichier : image, video ou virtualtour'
   },
   createdAt: {
     type: DataTypes.DATE,
@@ -46,7 +49,8 @@ const POIFile = sequelize.define('POIFile', {
   updatedAt: 'updated_at',
   indexes: [
     { fields: ['poi_id'], name: 'idx_poi_file_poi' },
-    { fields: ['type'], name: 'idx_poi_file_type' }
+    { fields: ['type'], name: 'idx_poi_file_type' },
+    { fields: ['file_public_id'], name: 'idx_poi_file_public_id' }
   ]
 });
 

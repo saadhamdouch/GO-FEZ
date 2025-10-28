@@ -30,6 +30,8 @@ export default function POIManagement() {
     isUpdating,
     isDeleting,
     handleFileChange,
+    handleRemoveFile,
+    files,
     handleSubmit,
     handleDelete,
     handleEdit,
@@ -116,6 +118,8 @@ const getCityName = (cityId: string) => {
           formData={formData}
           onFormDataChange={setFormData}
           onFileChange={handleFileChange}
+          onRemoveFile={handleRemoveFile}
+          files={files}
           categories={categories}
           cities={cities}
           onSubmit={handleSubmit}

@@ -20,6 +20,7 @@ interface POIFormData {
   longitude: string;
   address: string;
   practicalInfo: string;
+  virtualTourUrl: string;
   isActive: boolean;
   isVerified: boolean;
   isPremium: boolean;
@@ -47,6 +48,7 @@ const initialFormData: POIFormData = {
   longitude: '',
   address: '',
   practicalInfo: '{}',
+  virtualTourUrl: '',
   isActive: true,
   isVerified: false,
   isPremium: false,
@@ -68,7 +70,7 @@ export function usePOIManagement() {
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<POIFormData>(initialFormData);
-  const [files, setFiles] = useState<Record<string, File>>({});
+  const [files, setFiles] = useState<Record<string, File[]>>({});
 
   const pois = poisData?.pois || [];
   const categories = categoriesData?.data || [];
@@ -106,21 +108,37 @@ export function usePOIManagement() {
     return city?.name || 'Inconnue';
   };
 
-  // Gestion des fichiers avec compression
+  // Gestion des fichiers multiples avec compression
   const handleFileChange = async (file: File, key: string) => {
     try {
+      let processedFile = file;
+      
       // Compresser les images uniquement
       if (key === 'image' && file.type.startsWith('image/')) {
         const compressed = await compressImageByType(file);
-        setFiles((prev) => ({ ...prev, [key]: compressed.file }));
+        processedFile = compressed.file;
         toast.success('Image compressée avec succès');
       } else {
-        setFiles((prev) => ({ ...prev, [key]: file }));
         toast.success('Fichier chargé avec succès');
       }
+
+      // Ajouter le fichier au tableau existant ou créer un nouveau tableau
+      setFiles((prev) => ({
+        ...prev,
+        [key]: prev[key] ? [...prev[key], processedFile] : [processedFile],
+      }));
     } catch (error) {
       toast.error('Erreur lors du chargement du fichier');
     }
+  };
+
+  // Supprimer un fichier spécifique
+  const handleRemoveFile = (key: string, index: number) => {
+    setFiles((prev) => ({
+      ...prev,
+      [key]: prev[key].filter((_, i) => i !== index),
+    }));
+    toast.success('Fichier supprimé');
   };
 
   // Soumission du formulaire
@@ -175,6 +193,11 @@ export function usePOIManagement() {
         apiFormData.append('practicalInfo', formData.practicalInfo);
       }
 
+      // Lien de visite virtuelle
+      if (formData.virtualTourUrl) {
+        apiFormData.append('virtualTourUrl', formData.virtualTourUrl);
+      }
+
       // Localisations (envoyer même si vides pour que le backend les gère)
       apiFormData.append('arLocalization', JSON.stringify(formData.arLocalization));
       apiFormData.append('frLocalization', JSON.stringify(formData.frLocalization));
@@ -185,9 +208,11 @@ export function usePOIManagement() {
       apiFormData.append('isVerified', String(formData.isVerified));
       apiFormData.append('isPremium', String(formData.isPremium));
 
-      // Fichiers
-      Object.entries(files).forEach(([key, file]) => {
-        apiFormData.append(key, file);
+      // Fichiers multiples
+      Object.entries(files).forEach(([key, fileArray]) => {
+        fileArray.forEach((file) => {
+          apiFormData.append(key, file);
+        });
       });
 
       if (selectedPOI) {
@@ -238,6 +263,10 @@ export function usePOIManagement() {
   // Éditer un POI
   const handleEdit = (poi: POI) => {
     setSelectedPOI(poi);
+    // Trouver le lien de visite virtuelle dans les fichiers
+    const virtualTourFile = poi.files?.find((f: any) => f.type === 'virtualtour');
+    const virtualTourUrl = virtualTourFile?.fileUrl || '';
+
     setFormData({
       category: poi.category,
       cityId: poi.cityId,
@@ -245,6 +274,7 @@ export function usePOIManagement() {
       longitude: String(poi.coordinates.longitude),
       address: poi.coordinates.address || '',
       practicalInfo: JSON.stringify(poi.practicalInfo || {}, null, 2),
+      virtualTourUrl,
       isActive: poi.isActive,
       isVerified: poi.isVerified,
       isPremium: poi.isPremium,
@@ -284,6 +314,8 @@ export function usePOIManagement() {
     isUpdating,
     isDeleting,
     handleFileChange,
+    handleRemoveFile,
+    files,
     handleSubmit,
     handleDelete,
     handleEdit,
