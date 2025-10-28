@@ -24,6 +24,61 @@ export const userApi = createApi({
         body: credentials,
       }),
     }),
+
+    // OTP - envoyer un code (email ou téléphone)
+    sendOTP: builder.mutation({
+      query: (payload) => ({
+        url: "/api/auth/otp/send",
+        method: "POST",
+        body: payload, // { email? phone? country?, purpose }
+      }),
+    }),
+
+    // OTP - vérifier le code
+    verifyOTP: builder.mutation({
+      query: (payload) => ({
+        url: "/api/auth/otp/verify",
+        method: "POST",
+        body: payload, // { email? phone? country?, otpCode, purpose }
+      }),
+    }),
+
+    // Mettre à jour la vérification de l'utilisateur
+    updateVerificationStatus: builder.mutation({
+      query: (payload) => ({
+        url: "/api/auth/verify",
+        method: "POST",
+        body: payload, // { email? phone? country?, isVerified }
+      }),
+      invalidatesTags: ['User'],
+    }),
+
+    // Mot de passe oublié - démarrer (envoi OTP)
+    forgotPasswordStart: builder.mutation({
+      query: (payload) => ({
+        url: "/api/auth/forgot/start",
+        method: "POST",
+        body: payload, // { email }
+      }),
+    }),
+
+    // Mot de passe oublié - vérifier OTP
+    forgotPasswordVerify: builder.mutation({
+      query: (payload) => ({
+        url: "/api/auth/forgot/verify",
+        method: "POST",
+        body: payload, // { email, otpCode }
+      }),
+    }),
+
+    // Mot de passe oublié - réinitialiser
+    resetPassword: builder.mutation({
+      query: (payload) => ({
+        url: "/api/auth/forgot/reset",
+        method: "POST",
+        body: payload, // { email, newPassword }
+      }),
+    }),
   }),
 });
 
@@ -32,6 +87,12 @@ export const {
   // Authentification
   useRegisterUserMutation,
   useLoginUserMutation,
+  useSendOTPMutation,
+  useVerifyOTPMutation,
+  useUpdateVerificationStatusMutation,
+  useForgotPasswordStartMutation,
+  useForgotPasswordVerifyMutation,
+  useResetPasswordMutation,
 } = userApi;
 
 // Export de l'API pour l'utiliser dans le store

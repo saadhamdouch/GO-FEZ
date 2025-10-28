@@ -1,10 +1,8 @@
+// client/app/[locale]/layout.tsx
 import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-//import '@fortawesome/fontawesome-free/css/all.min.css';
-
-// Les polices et les styles globaux sont gérés dans le root layout.
 
 const locales = ['fr', 'ar', 'en'];
 
@@ -42,9 +40,9 @@ export default async function LocaleLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>; 
 }) {
-  const { locale } = params;
+  const { locale } = await params;  
 
   if (!locales.includes(locale)) {
     notFound();

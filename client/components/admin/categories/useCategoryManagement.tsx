@@ -9,7 +9,7 @@ import {
   useDeleteCategoryMutation,
   type Category,
 } from '@/services/api/CategoryApi';
-
+import { logError } from "@/lib/logger";
 interface CategoryFormData {
   localizations: {
     fr: { name: string; desc: string };
@@ -118,7 +118,7 @@ const parseLoc = (loc: string | any): { name: string; desc: string } => {
       setIsModalOpen(false);
       resetForm();
     } catch (error: any) {
-      console.error('Error saving category:', error);
+      logError("Failed to save category", error);
       toast.error(error?.data?.message || "Erreur lors de l'enregistrement");
     }
   };

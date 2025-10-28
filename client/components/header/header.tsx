@@ -7,6 +7,7 @@ import Image from 'next/image';
 import LanguageSelector from './LanguageSelector';
 import Login from '../auth/Login';
 import SignUp from '../auth/SignUp';
+import ForgotPassword from '../auth/ForgotPassword';
 
 interface HeaderProps {
   locale: string;
@@ -21,6 +22,7 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
   const [isScrolled, setIsScrolled] = useState(false); // ✨ 1. Add new state for scroll effect
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignUpOpen, setIsSignUpOpen] = useState(false);
+  const [isForgotOpen, setIsForgotOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -197,7 +199,10 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
           setIsLoginOpen(false);
           setIsSignUpOpen(true);
         }}
-        onSwitchToForgotPassword={() => setIsLoginOpen(false)}
+        onSwitchToForgotPassword={() => {
+          setIsLoginOpen(false);
+          setIsForgotOpen(true);
+        }}
       />
     )}
     {isSignUpOpen && (
@@ -205,6 +210,15 @@ export default function Header({ locale, isRTL, onLanguageChange }: HeaderProps)
         onClose={() => setIsSignUpOpen(false)}
         onSwitchToLogin={() => {
           setIsSignUpOpen(false);
+          setIsLoginOpen(true);
+        }}
+      />
+    )}
+    {isForgotOpen && (
+      <ForgotPassword
+        onClose={() => setIsForgotOpen(false)}
+        onSwitchToLogin={() => {
+          setIsForgotOpen(false);
           setIsLoginOpen(true);
         }}
       />

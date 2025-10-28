@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const morgan = require('morgan'); 
+const logger = require('./Config/logger'); 
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
@@ -63,6 +65,7 @@ app.use(helmet()); // Ajouter des en-têtes de sécurité
 
 // Middleware pour parser les cookies
 app.use(cookieParser());
+app.use(morgan('combined', { stream: logger.stream }));
 
 // Limiter les requêtes à 100 par heure par IP
 const limiter = rateLimit({
@@ -102,7 +105,7 @@ app.use((err, req, res, next) => {
 // Fonction pour démarrer le serveur
 function startServer() {
 	app.listen(PORT, () => {
-		console.log(`Server is running on port ${PORT}`);
+		logger.info(`Server is running on port ${PORT}`);
 	});
 }
 
@@ -116,10 +119,9 @@ db.initializeDatabase()
 		console.log('✅ Job CRON de nettoyage des OTP expirés démarré');
 	})
 	.catch((error) => {
-		console.error(
-			"Erreur lors de l'initialisation de l'application :",
-			error
-		);
+
+        logger.error(`Erreur lors de l'initialisation de l'application :
+			${error}`);
 		process.exit(1); // Arrêter l'application en cas d'échec critique
 	});
 
