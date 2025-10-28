@@ -7,6 +7,7 @@ dotenv.config();
 
 const db = require("./Config/db.js"); // Importer l'instance Singleton de la base de données
 const models = require("./models/index.js");
+const { cleanupExpiredOTPs } = require("./services/cronJobs.js");
 
 const { UserRouter } = require("./routes/UserRoute.js"); // Importer les routes utilisateur
 const CityRoute = require("./routes/CityRoute.js");
@@ -17,6 +18,7 @@ const { POIRouter } = require("./routes/POIRoute.js"); // Importer les routes PO
 const { ConfigRouter } = require("./routes/ConfigRoute.js");
 const { GamificationRouter } = require("./routes/gamificationRouter.js");
 const pointsTransactionRoutes = require('./routes/pointsTransactionRoutes.js');
+const savePOIRoutes = require('./routes/SavePOIRoutes.js');
 
 
 const app = express();
@@ -85,6 +87,7 @@ app.use('/api/categorys', jsonMiddleware, categoryRoutes);
 app.use('/api/config', jsonMiddleware, ConfigRouter);
 app.use('/api/gamification', jsonMiddleware, GamificationRouter);
 app.use('/api/pointsTransaction', jsonMiddleware, pointsTransactionRoutes);
+app.use('/api/save-poi', jsonMiddleware, savePOIRoutes);
 
 // Middleware de gestion d'erreurs global
 app.use((err, req, res, next) => {
@@ -104,7 +107,14 @@ function startServer() {
 }
 
 db.initializeDatabase()
-	.then(() => startServer())
+	.then(() => {
+		// Démarrer le serveur
+		startServer();
+		
+		// Démarrer le job CRON pour nettoyer les OTP expirés
+		cleanupExpiredOTPs.start();
+		console.log('✅ Job CRON de nettoyage des OTP expirés démarré');
+	})
 	.catch((error) => {
 		console.error(
 			"Erreur lors de l'initialisation de l'application :",

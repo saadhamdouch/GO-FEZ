@@ -6,6 +6,8 @@ export interface Category {
   ar: string | { name?: string };
   fr: string | { name?: string };
   en: string | { name?: string };
+  icon?: string;
+  iconPublicId?: string;
   isActive: boolean;
   isDeleted: boolean;
   nbPois?: number;
@@ -48,20 +50,20 @@ export const categoryApi = createApi({
       providesTags: (result, error, id) => [{ type: 'Category', id }],
     }),
 
-    createCategory: builder.mutation<{ status: string; data: Category }, CreateCategoryData>({
-      query: (data) => ({
+    createCategory: builder.mutation<{ status: string; data: Category }, FormData>({
+      query: (formData) => ({
         url: "/api/categorys/",
         method: "POST",
-        body: data,
+        body: formData,
       }),
       invalidatesTags: ['Categories'],
     }),
 
-    updateCategory: builder.mutation<{ status: string; data: Category }, { id: string; data: UpdateCategoryData }>({
-      query: ({ id, data }) => ({
+    updateCategory: builder.mutation<{ status: string; data: Category }, { id: string; formData: FormData }>({
+      query: ({ id, formData }) => ({
         url: `/api/categorys/${id}`,
         method: "PUT",
-        body: data,
+        body: formData,
       }),
       invalidatesTags: (result, error, { id }) => [
         { type: 'Category', id },

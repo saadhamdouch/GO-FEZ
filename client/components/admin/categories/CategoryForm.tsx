@@ -3,7 +3,8 @@
 import { LocalizedInputs } from '../shared/LocalizedInputs';
 import { Checkbox } from '../shared/Checkbox';
 import { FormActions } from '../shared/FormActions';
-import { Info } from 'lucide-react';
+import { FileUpload } from '../shared/FileUpload';
+import { Info, ImageIcon } from 'lucide-react';
 
 interface CategoryFormProps {
   formData: {
@@ -15,6 +16,8 @@ interface CategoryFormProps {
     isActive: boolean;
   };
   onFormDataChange: (data: any) => void;
+  onIconChange: (file: File) => void;
+  iconPreview?: string;
   selectedCategory: any;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
@@ -25,6 +28,8 @@ interface CategoryFormProps {
 export function CategoryForm({
   formData,
   onFormDataChange,
+  onIconChange,
+  iconPreview,
   selectedCategory,
   onSubmit,
   onCancel,
@@ -72,6 +77,17 @@ export function CategoryForm({
         onChange={handleLocalizationChange}
         fields={localizationFields}
       />
+
+      {/* Icon Upload */}
+      <div className="border-t pt-6">
+        <FileUpload
+          label="Icône de la catégorie"
+          accept="image/*"
+          preview={iconPreview || selectedCategory?.icon}
+          onChange={onIconChange}
+          icon={<ImageIcon className="w-4 h-4" />}
+        />
+      </div>
 
       {/* Status Checkbox */}
       <div className="flex items-center space-x-6 pt-4 border-t">

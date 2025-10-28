@@ -38,7 +38,6 @@ const City = sequelize.define('City', {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
     },
-
     isActive: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
