@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { View, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
+import React, { useRef } from 'react';
+import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Text } from './ui/text';
 
@@ -13,6 +13,8 @@ interface Monument {
 
 interface MapViewerProps {
   monuments?: Monument[];
+  maptilerApiKey?: string; // Optional: defaults to the key in styleUrl
+  styleUrl?: string; // Optional: custom MapTiler style URL
 }
 
 const { height } = Dimensions.get('window');
@@ -51,6 +53,8 @@ const LOCATIONS: Monument[] = [
 
 export default function MonumentsMapViewer({
   monuments = LOCATIONS,
+  maptilerApiKey = 'cKuGgc1qdSgluaz2JWLK',
+  styleUrl = 'https://api.maptiler.com/maps/019a213d-06f4-7ef2-be61-48b4b8fb7e56/style.json?key=cKuGgc1qdSgluaz2JWLK',
 }: MapViewerProps) {
   const webViewRef = useRef<WebView>(null);
 
@@ -67,8 +71,8 @@ export default function MonumentsMapViewer({
     <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+        <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
         <style>
             body { 
                 margin: 0; 
@@ -78,12 +82,13 @@ export default function MonumentsMapViewer({
                 width: 100%; 
                 height: 100vh; 
             }
-            .custom-marker {
-                background: none;
-                border: none;
+            .monument-marker {
+                cursor: pointer;
+                font-size: 32px;
             }
-            .monument-popup {
+            .maplibregl-popup-content {
                 font-family: Arial, sans-serif;
+                padding: 12px;
             }
             .monument-popup .title {
                 font-weight: bold;
@@ -104,6 +109,7 @@ export default function MonumentsMapViewer({
                 border-radius: 50% 50% 50% 0;
                 transform: rotate(-45deg);
                 box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                cursor: pointer;
             }
             .user-pin-inner {
                 width: 10px;
@@ -138,11 +144,12 @@ export default function MonumentsMapViewer({
         <div id="map"></div>
         <div id="pathInfo" class="path-info"></div>
         <script>
-            const map = L.map('map').setView([${defaultCoordinates.latitude}, ${defaultCoordinates.longitude}], 14);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
+            const map = new maplibregl.Map({
+                container: 'map',
+                style: '${styleUrl}',
+                center: [${defaultCoordinates.longitude}, ${defaultCoordinates.latitude}],
+                zoom: 14
+            });
             
             const monuments = ${monumentsData};
             
@@ -159,68 +166,106 @@ export default function MonumentsMapViewer({
             // Add monument markers
             monuments.forEach(monument => {
                 const icon = iconMap[monument.type] || iconMap['default'];
-                const marker = L.marker([monument.latitude, monument.longitude], {
-                    icon: L.divIcon({
-                        className: 'custom-marker',
-                        html: '<div style="font-size: 32px;">' + icon + '</div>',
-                        iconSize: [32, 32],
-                        iconAnchor: [16, 16]
-                    })
-                }).addTo(map);
                 
-                marker.bindPopup(
-                    '<div class="monument-popup">' +
-                    '<div class="title">' + monument.title + '</div>' +
-                    '<div class="type">' + monument.type + '</div>' +
-                    '</div>'
-                );
+                const el = document.createElement('div');
+                el.className = 'monument-marker';
+                el.innerHTML = icon;
+                
+                const popup = new maplibregl.Popup({ offset: 25 })
+                    .setHTML(
+                        '<div class="monument-popup">' +
+                        '<div class="title">' + monument.title + '</div>' +
+                        '<div class="type">' + monument.type + '</div>' +
+                        '</div>'
+                    );
+                
+                new maplibregl.Marker({ element: el })
+                    .setLngLat([monument.longitude, monument.latitude])
+                    .setPopup(popup)
+                    .addTo(map);
             });
             
             // User pins and path functionality
             let userPins = [];
             let userMarkers = [];
-            let pathPolyline = null;
+            let pathSourceId = 'path-source';
+            let pathLayerId = 'path-layer';
+            
+            // Add path source and layer
+            map.on('load', function() {
+                map.addSource(pathSourceId, {
+                    type: 'geojson',
+                    data: {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: []
+                        }
+                    }
+                });
+                
+                map.addLayer({
+                    id: pathLayerId,
+                    type: 'line',
+                    source: pathSourceId,
+                    layout: {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    paint: {
+                        'line-color': '#3b82f6',
+                        'line-width': 4,
+                        'line-opacity': 0.7,
+                        'line-dasharray': [2, 2]
+                    }
+                });
+            });
             
             // Handle map clicks for pinning
             map.on('click', function(e) {
-                const lat = e.latlng.lat;
-                const lng = e.latlng.lng;
+                const lng = e.lngLat.lng;
+                const lat = e.lngLat.lat;
                 
-                // Add user pin
-                const pinMarker = L.marker([lat, lng], {
-                    icon: L.divIcon({
-                        className: 'custom-marker',
-                        html: '<div class="user-pin"><div class="user-pin-inner"></div></div>',
-                        iconSize: [30, 30],
-                        iconAnchor: [15, 30]
-                    })
-                }).addTo(map);
+                // Create user pin element
+                const pinEl = document.createElement('div');
+                pinEl.innerHTML = '<div class="user-pin"><div class="user-pin-inner"></div></div>';
                 
-                userPins.push({ lat, lng });
+                // Add user pin marker
+                const pinMarker = new maplibregl.Marker({ element: pinEl })
+                    .setLngLat([lng, lat])
+                    .addTo(map);
+                
+                userPins.push({ lng, lat });
                 userMarkers.push(pinMarker);
                 
                 // If we have 2 pins, create a path
                 if (userPins.length === 2) {
-                    // Remove old polyline if exists
-                    if (pathPolyline) {
-                        map.removeLayer(pathPolyline);
-                    }
+                    // Update path
+                    const coordinates = [
+                        [userPins[0].lng, userPins[0].lat],
+                        [userPins[1].lng, userPins[1].lat]
+                    ];
                     
-                    // Create new polyline
-                    pathPolyline = L.polyline(
-                        [[userPins[0].lat, userPins[0].lng], [userPins[1].lat, userPins[1].lng]],
-                        {
-                            color: '#3b82f6',
-                            weight: 4,
-                            opacity: 0.7,
-                            dashArray: '10, 10'
+                    map.getSource(pathSourceId).setData({
+                        type: 'Feature',
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: coordinates
                         }
-                    ).addTo(map);
+                    });
                     
-                    // Calculate distance
-                    const from = L.latLng(userPins[0].lat, userPins[0].lng);
-                    const to = L.latLng(userPins[1].lat, userPins[1].lng);
-                    const distance = (from.distanceTo(to) / 1000).toFixed(2);
+                    // Calculate distance (Haversine formula)
+                    const R = 6371; // Earth's radius in km
+                    const lat1 = userPins[0].lat * Math.PI / 180;
+                    const lat2 = userPins[1].lat * Math.PI / 180;
+                    const dLat = (userPins[1].lat - userPins[0].lat) * Math.PI / 180;
+                    const dLng = (userPins[1].lng - userPins[0].lng) * Math.PI / 180;
+                    
+                    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                            Math.cos(lat1) * Math.cos(lat2) *
+                            Math.sin(dLng/2) * Math.sin(dLng/2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                    const distance = (R * c).toFixed(2);
                     
                     // Show path info
                     const pathInfo = document.getElementById('pathInfo');
@@ -228,45 +273,54 @@ export default function MonumentsMapViewer({
                     pathInfo.className = 'path-info active';
                     
                     // Fit bounds to show the path
-                    map.fitBounds(pathPolyline.getBounds(), { padding: [50, 50] });
+                    const bounds = new maplibregl.LngLatBounds();
+                    bounds.extend([userPins[0].lng, userPins[0].lat]);
+                    bounds.extend([userPins[1].lng, userPins[1].lat]);
+                    map.fitBounds(bounds, { padding: 50 });
                 }
                 
                 // If we have more than 2 pins, reset
                 if (userPins.length > 2) {
                     // Clear all user markers and path
-                    userMarkers.forEach(marker => map.removeLayer(marker));
-                    if (pathPolyline) {
-                        map.removeLayer(pathPolyline);
-                    }
+                    userMarkers.forEach(marker => marker.remove());
+                    
+                    // Clear path
+                    map.getSource(pathSourceId).setData({
+                        type: 'Feature',
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: []
+                        }
+                    });
+                    
                     userPins = [];
                     userMarkers = [];
-                    pathPolyline = null;
                     
                     // Hide path info
                     const pathInfo = document.getElementById('pathInfo');
                     pathInfo.className = 'path-info';
                     
                     // Add the current pin as the first one
-                    const newPinMarker = L.marker([lat, lng], {
-                        icon: L.divIcon({
-                            className: 'custom-marker',
-                            html: '<div class="user-pin"><div class="user-pin-inner"></div></div>',
-                            iconSize: [30, 30],
-                            iconAnchor: [15, 30]
-                        })
-                    }).addTo(map);
+                    const newPinEl = document.createElement('div');
+                    newPinEl.innerHTML = '<div class="user-pin"><div class="user-pin-inner"></div></div>';
                     
-                    userPins.push({ lat, lng });
+                    const newPinMarker = new maplibregl.Marker({ element: newPinEl })
+                        .setLngLat([lng, lat])
+                        .addTo(map);
+                    
+                    userPins.push({ lng, lat });
                     userMarkers.push(newPinMarker);
                 }
                 
                 // Send message to React Native
-                window.ReactNativeWebView.postMessage(JSON.stringify({
-                    type: 'pin_added',
-                    latitude: lat,
-                    longitude: lng,
-                    totalPins: userPins.length
-                }));
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage(JSON.stringify({
+                        type: 'pin_added',
+                        latitude: lat,
+                        longitude: lng,
+                        totalPins: userPins.length
+                    }));
+                }
             });
             
             // Add current location if available
@@ -275,13 +329,14 @@ export default function MonumentsMapViewer({
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
                     
-                    L.marker([lat, lng], {
-                        icon: L.divIcon({
-                            className: 'custom-marker',
-                            html: '<div style="font-size: 24px;">📍</div>',
-                            iconSize: [24, 24]
-                        })
-                    }).addTo(map).bindPopup('Your Location');
+                    const locationEl = document.createElement('div');
+                    locationEl.style.fontSize = '24px';
+                    locationEl.innerHTML = '📍';
+                    
+                    new maplibregl.Marker({ element: locationEl })
+                        .setLngLat([lng, lat])
+                        .setPopup(new maplibregl.Popup().setHTML('Your Location'))
+                        .addTo(map);
                 }, function(error) {
                     console.log('Geolocation error:', error);
                 });
@@ -300,6 +355,7 @@ export default function MonumentsMapViewer({
           style={styles.map}
           javaScriptEnabled={true}
           domStorageEnabled={true}
+          geolocationEnabled={true}
           startInLoadingState={true}
           renderLoading={() => (
             <View style={styles.mapLoading}>
