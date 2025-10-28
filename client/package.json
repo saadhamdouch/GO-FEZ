@@ -39,8 +39,10 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/redux-logger": "^3.0.13",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
+    "redux-logger": "^3.0.6",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
   }

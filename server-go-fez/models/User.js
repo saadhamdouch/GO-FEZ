@@ -38,7 +38,7 @@ const User = sequelize.define('User', {
     phone: {
         type: DataTypes.STRING(20),
         allowNull: true,
-        unique: true,
+        unique: false, // Temporairement false pour la synchronisation
         validate: {
             len: [10, 20]
         }
@@ -60,7 +60,7 @@ const User = sequelize.define('User', {
     primaryIdentifier: {
         type: DataTypes.STRING(255),
         allowNull: true, // Temporairement true pour la synchronisation
-        unique: true,
+        unique: false, // Temporairement false pour la synchronisation
         field: 'primary_identifier',
         comment: 'Phone pour phone, Email pour google, Facebook ID pour facebook'
     },
@@ -68,13 +68,13 @@ const User = sequelize.define('User', {
     googleId: {
         type: DataTypes.STRING(255),
         allowNull: true,
-        unique: true,
+        unique: false, // Temporairement false pour la synchronisation
         field: 'google_id'
     },
     facebookId: {
         type: DataTypes.STRING(255),
         allowNull: true,
-        unique: true,
+        unique: false, // Temporairement false pour la synchronisation
         field: 'facebook_id'
     },
     // Champs optionnels pour Facebook (peuvent être phone ou email)

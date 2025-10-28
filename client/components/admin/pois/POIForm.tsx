@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { FormField } from '../shared/FormField';
 import { LocalizedInputs } from '../shared/LocalizedInputs';
-import { FileUpload } from '../shared/FileUpload';
+import { MultipleFileUpload } from '../shared/MultipleFileUpload';
 import { Checkbox } from '../shared/Checkbox';
 import { FormActions } from '../shared/FormActions';
 import MapSelector from './MapSelector';
@@ -13,6 +13,8 @@ interface POIFormProps {
   formData: any;
   onFormDataChange: (data: any) => void;
   onFileChange: (file: File, key: string) => void;
+  onRemoveFile?: (key: string, index: number) => void;
+  files?: Record<string, File[]>;
   categories: any[];
   cities: any[];
   onSubmit: (e: React.FormEvent) => void;
@@ -25,6 +27,8 @@ export function POIForm({
   formData,
   onFormDataChange,
   onFileChange,
+  onRemoveFile,
+  files = {},
   categories,
   cities,
   onSubmit,
@@ -209,26 +213,40 @@ export function POIForm({
         <h3 className="text-lg font-semibold text-gray-900">Fichiers multimédias</h3>
         
         <div className="grid grid-cols-3 gap-4">
-          <FileUpload
-            label="Image principale"
+          <MultipleFileUpload
+            label="Images"
             accept="image/*"
+            files={files.image || []}
             onChange={(file) => onFileChange(file, 'image')}
+            onRemove={(index) => onRemoveFile && onRemoveFile('image', index)}
             icon={<ImageIcon className="w-4 h-4" />}
           />
 
-          <FileUpload
-            label="Vidéo"
+          <MultipleFileUpload
+            label="Vidéos"
             accept="video/*"
+            files={files.video || []}
             onChange={(file) => onFileChange(file, 'video')}
+            onRemove={(index) => onRemoveFile && onRemoveFile('video', index)}
             icon={<Video className="w-4 h-4" />}
           />
 
-          <FileUpload
-            label="Visite 360°"
-            accept="video/*"
-            onChange={(file) => onFileChange(file, 'virtualTour360')}
-            icon={<Map360 className="w-4 h-4" />}
-          />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 flex items-center space-x-2">
+              <Map360 className="w-4 h-4" />
+              <span>Lien Visite 360°</span>
+            </label>
+            <input
+              type="url"
+              placeholder="https://example.com/360tour"
+              value={formData.virtualTourUrl || ''}
+              onChange={(e) => onFormDataChange({ ...formData, virtualTourUrl: e.target.value })}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+            <p className="text-xs text-gray-500">
+              Entrez un lien vers une visite virtuelle 360° (iframe)
+            </p>
+          </div>
         </div>
       </div>
 
@@ -240,25 +258,34 @@ export function POIForm({
         </h3>
         
         <div className="grid grid-cols-3 gap-4">
-          <FileUpload
+          <MultipleFileUpload
             label="Audio Français"
             accept="audio/*"
+            files={files.fr_audio || []}
             onChange={(file) => onFileChange(file, 'fr_audio')}
+            onRemove={(index) => onRemoveFile && onRemoveFile('fr_audio', index)}
             icon={<Music className="w-4 h-4" />}
+            maxFiles={1}
           />
 
-          <FileUpload
+          <MultipleFileUpload
             label="Audio Arabe"
             accept="audio/*"
+            files={files.ar_audio || []}
             onChange={(file) => onFileChange(file, 'ar_audio')}
+            onRemove={(index) => onRemoveFile && onRemoveFile('ar_audio', index)}
             icon={<Music className="w-4 h-4" />}
+            maxFiles={1}
           />
 
-          <FileUpload
+          <MultipleFileUpload
             label="Audio Anglais"
             accept="audio/*"
+            files={files.en_audio || []}
             onChange={(file) => onFileChange(file, 'en_audio')}
+            onRemove={(index) => onRemoveFile && onRemoveFile('en_audio', index)}
             icon={<Music className="w-4 h-4" />}
+            maxFiles={1}
           />
         </div>
       </div>

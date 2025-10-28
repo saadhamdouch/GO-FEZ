@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const morgan = require('morgan'); 
+const logger = require('./Config/logger'); 
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
@@ -25,13 +27,9 @@ const rateLimit = require("express-rate-limit");
 
 // Charger les variables sensibles depuis le fichier .env
 const PORT = process.env.PORT || 8080;
-
-// Middlewares globaux
-app.use(express.json());
-
 const ALLOWED_ORIGINS = [
     process.env.CLIENT_URL,
-    'http://localhost:3000', 
+    'http://localhost:3000',
     'null'
 ];
 
@@ -65,6 +63,7 @@ app.use(helmet()); // Ajouter des en-têtes de sécurité
 
 // Middleware pour parser les cookies
 app.use(cookieParser());
+app.use(morgan('combined', { stream: logger.stream }));
 
 // Limiter les requêtes à 100 par heure par IP
 const limiter = rateLimit({
@@ -75,32 +74,44 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
-// Routes
-app.use('/api/users', UserRouter);
-app.use('/api/city', CityRoute);
+const jsonMiddleware = express.json({ limit: '50mb' });
+
+// Routes avec files (multer)
 app.use('/api/themes/', ThemeRoute);
 app.use('/api/circuits', CircuitRoutes);
-app.use('/api/categorys', categoryRoutes);
+app.use('/api/city', CityRoute);
 app.use('/api/pois', POIRouter);
-app.use('/api/config', ConfigRouter);
-app.use('/api/gamification', GamificationRouter);
-app.use('/api/pointsTransaction', pointsTransactionRoutes);
 
+// Routes sans files
+app.use('/api/users', jsonMiddleware, UserRouter);
+app.use('/api/categorys', jsonMiddleware, categoryRoutes);
+app.use('/api/config', jsonMiddleware, ConfigRouter);
+app.use('/api/gamification', jsonMiddleware, GamificationRouter);
+app.use('/api/pointsTransaction', jsonMiddleware, pointsTransactionRoutes);
+
+// Middleware de gestion d'erreurs global
+app.use((err, req, res, next) => {
+    console.error('❌ Erreur:', err.message);
+    
+    res.status(err.status || 500).json({
+        status: 'error',
+        message: err.message || 'Erreur serveur'
+    });
+});
 
 // Fonction pour démarrer le serveur
 function startServer() {
 	app.listen(PORT, () => {
-		console.log(`Server is running on port ${PORT}`);
+		logger.info(`Server is running on port ${PORT}`);
 	});
 }
 
 db.initializeDatabase()
 	.then(() => startServer())
 	.catch((error) => {
-		console.error(
-			"Erreur lors de l'initialisation de l'application :",
-			error
-		);
+
+        logger.error(`Erreur lors de l'initialisation de l'application :
+			${error}`);
 		process.exit(1); // Arrêter l'application en cas d'échec critique
 	});
 

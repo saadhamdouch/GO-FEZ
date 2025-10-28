@@ -13,30 +13,16 @@ const PointsTransaction = sequelize.define(
             allowNull: false,
         },
         userId: {
-            type: DataTypes.UUID,
+            type: DataTypes.INTEGER,
             allowNull: false,
             field: "user_id",
-            comment: "Clé étrangère vers l'utilisateur (User)",
-            // Ajout des références pour l'association
-            references: {
-                model: 'users', // Nom de la table User
-                key: 'id'
-            },
-            onUpdate: 'CASCADE',
-            onDelete: 'CASCADE'
+            comment: "Clé étrangère vers l'utilisateur (User)"
         },
         gamificationRuleId: {
             type: DataTypes.UUID,
             allowNull: true, // Peut être null si la transaction n'est pas liée à une règle spécifique (ex: correction manuelle)
             field: "gamification_rule_id",
-            comment: "Clé étrangère vers la règle de gamification (GamificationRule)",
-            // Ajout des références pour l'association
-            references: {
-                model: 'gamification_rules', // Nom de la table GamificationRule
-                key: 'id'
-            },
-            onUpdate: 'CASCADE',
-            onDelete: 'SET NULL' // Si la règle est supprimée, la transaction existe toujours mais gamificationRuleId devient null
+            comment: "Clé étrangère vers la règle de gamification (GamificationRule)"
         },
         points: {
             type: DataTypes.INTEGER,

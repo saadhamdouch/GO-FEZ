@@ -7,6 +7,27 @@ import poiApi from '../services/api/PoiApi';
 import categoryApi from '../services/api/CategoryApi';
 import cityApi from '../services/api/CityApi';
 
+// 1. Import the logger
+import logger from 'redux-logger';
+
+// 2. Check for development environment
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+// 3. Create a middleware array
+const middleware = [
+  userApi.middleware,
+  themeApi.middleware,
+  circuitApi.middleware,
+  poiApi.middleware,
+  categoryApi.middleware,
+  cityApi.middleware,
+];
+
+// 4. Conditionally add the logger
+if (isDevelopment) {
+  middleware.push(logger as any);
+}
+
 const configurestore = configureStore({
   reducer: {
     auth: authReducer,
@@ -38,12 +59,11 @@ const configurestore = configureStore({
         ],
       },
     })
-      .concat(userApi.middleware)
-      .concat(themeApi.middleware)
-      .concat(circuitApi.middleware)
-      .concat(poiApi.middleware)
-      .concat(categoryApi.middleware)
-      .concat(cityApi.middleware),
+      // 5. Concat the middleware array
+      .concat(middleware),
+  
+  // Enable Redux DevTools only in development
+  devTools: isDevelopment,
 });
 
 export default configurestore;

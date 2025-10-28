@@ -14,25 +14,13 @@ const UserSpace = sequelize.define('UserSpace', {
     userId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        field: 'user_id',
-        references: {
-            model: 'users', 
-            key: 'id'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
+        field: 'user_id'
     },
     
     poiId: {
         type: DataTypes.UUID,
         allowNull: false,
-        field: 'poi_id',
-        references: {
-            model: 'pois', 
-            key: 'id'
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
+        field: 'poi_id'
     },
     
     createdAt: {

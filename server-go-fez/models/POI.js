@@ -42,13 +42,7 @@ const POI = sequelize.define('POI', {
     category: {
         type: DataTypes.UUID,
         allowNull: true,
-        comment: 'ID de la catégorie du POI',
-        references: {
-            model: 'categories',  
-            key: 'id'             
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
+        comment: 'ID de la catégorie du POI'
     },
     practicalInfo: {
         type: DataTypes.JSON,
@@ -98,12 +92,6 @@ const POI = sequelize.define('POI', {
             min: 0
         },
         comment: 'Nombre d\'avis'
-    },
-    poiFileId: {
-        type: DataTypes.UUID,
-        allowNull: true,
-        field: 'poi_file_id',
-        comment: 'Foreign key vers POIFile'
     },
 
     isDeleted: {
@@ -163,10 +151,6 @@ const POI = sequelize.define('POI', {
         {
             fields: ['en_localization_id'],
             name: 'idx_poi_en_localization'
-        },
-        {
-            fields: ['poi_file_id'],
-            name: 'idx_poi_file'
         }
     ]
 });

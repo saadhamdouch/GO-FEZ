@@ -6,20 +6,12 @@ export const SERVER_GATEWAY_DOMAIN =
 const baseQuery = fetchBaseQuery({
   baseUrl: SERVER_GATEWAY_DOMAIN,
   credentials: 'include',
-  prepareHeaders: async (headers, { getState, endpoint }) => {
-    // Récupérer le token depuis le localStorage
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    
-    // Ajouter le token d'authentification si disponible
-    if (token) {
-      headers.set('authorization', `Bearer ${token}`);
-    }
-    
+  prepareHeaders: async (headers, { getState, endpoint }) => {  
     // Gérer le content-type pour les formulaires multipart/form-data
-    const contentType = headers.get('content-type');
-    if (contentType && contentType.includes('multipart/form-data')) {
-      headers.delete('content-type');
-    }
+    // const contentType = headers.get('content-type');
+    // if (contentType && contentType.includes('multipart/form-data')) {
+    //   headers.delete('content-type');
+    // }
     
     return headers;
   },

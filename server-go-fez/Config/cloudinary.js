@@ -22,7 +22,7 @@ const imageStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'go-fez/images',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg'],
     transformation: [
       { width: 1200, height: 800, crop: 'limit' },
       { quality: 'auto:best', fetch_format: 'auto' }, // Compression AI optimale
@@ -37,7 +37,7 @@ const circuitImageStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'go-fez/circuits',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg'],
     transformation: [
       { width: 1200, height: 800, crop: 'limit' },
       { quality: 'auto:best', fetch_format: 'auto' }, // Compression AI optimale
@@ -52,7 +52,7 @@ const themeImageStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'go-fez/themes',  
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg'],
     transformation: [ 
       { width: 1200, height: 800, crop: 'limit' },
       { quality: 'auto:best', fetch_format: 'auto' }, // Compression AI optimale
@@ -66,7 +66,7 @@ const cityImageStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'go-fez/cities',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg'],
     transformation: [
       { width: 1200, height: 800, crop: 'limit' },
       { quality: 'auto:best', fetch_format: 'auto' }, // Compression AI optimale
@@ -127,12 +127,12 @@ const uploadCircuitImage = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
 });
 
-uploadThemeFiles = multer({
+const uploadThemeFiles = multer({
   storage: themeImageStorage,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB max per file           
 });
 
-uploadCityFiles = multer({
+const uploadCityFiles = multer({
   storage: cityImageStorage,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB max per file
 });
@@ -264,6 +264,66 @@ const uploadMultipleFiles = async (files, folder = "", options = {}) => {
   }
 };
 
+// Fonction pour uploader un fichier POI
+const uploadPoiFile = async (fileBuffer, fileType, folder = "go-fez") => {
+  try {
+    let cloudinaryFolder = `${folder}/images`;
+    let resourceType = 'image';
+    
+    if (fileType === 'video') {
+      cloudinaryFolder = `${folder}/videos`;
+      resourceType = 'video';
+    } else if (fileType === 'virtualtour') {
+      cloudinaryFolder = `${folder}/virtual-tours`;
+      resourceType = 'video';
+    }
+    
+    const result = await uploadFromBuffer(fileBuffer, cloudinaryFolder, { resource_type: resourceType });
+    
+    return {
+      fileUrl: result.secure_url,
+      filePublicId: result.public_id
+    };
+  } catch (error) {
+    console.error('❌ Erreur upload fichier POI:', error);
+    throw new Error(`Erreur upload fichier Cloudinary: ${error.message}`);
+  }
+};
+
+// Fonction pour uploader plusieurs fichiers POI en une fois
+const uploadMultiplePoiFiles = async (files, fileType, folder = "go-fez/poi") => {
+  try {
+    let cloudinaryFolder = `${folder}/images`;
+    let resourceType = 'image';
+    
+    if (fileType === 'video') {
+      cloudinaryFolder = `${folder}/videos`;
+      resourceType = 'video';
+    } else if (fileType === 'virtualtour') {
+      cloudinaryFolder = `${folder}/virtual-tours`;
+      resourceType = 'video';
+    }
+    
+    console.log(`🔄 Upload de ${files.length} fichier(s) de type ${fileType}...`);
+    
+    const uploadPromises = files.map(file => 
+      uploadFromBuffer(file.buffer, cloudinaryFolder, { resource_type: resourceType })
+    );
+    
+    const results = await Promise.all(uploadPromises);
+    console.log(`✅ ${results.length} fichier(s) uploadé(s) avec succès`);
+    
+    // Retourner les résultats formatés pour POIFile
+    return results.map(result => ({
+      fileUrl: result.secure_url,
+      filePublicId: result.public_id
+    }));
+  } catch (error) {
+    console.error('❌ Erreur upload multiple fichiers POI:', error);
+    throw new Error(`Erreur upload multiple Cloudinary: ${error.message}`);
+  }
+};
+
 module.exports = {
   cloudinary,
   uploadImage,
@@ -278,5 +338,7 @@ module.exports = {
   deleteFile,
   deleteMultipleFiles,
   getTransformedUrl,
-  uploadMultipleFiles
+  uploadMultipleFiles,
+  uploadPoiFile,
+  uploadMultiplePoiFiles
 };
