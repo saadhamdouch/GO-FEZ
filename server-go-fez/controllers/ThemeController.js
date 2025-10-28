@@ -132,6 +132,8 @@ exports.getAllThemes = async (req, res) => {
   }
 };
 
+// TODO : get paginated themes 10 per view
+
 exports.getThemeById = async (req, res) => {
   try {
     const theme = await Theme.findOne({

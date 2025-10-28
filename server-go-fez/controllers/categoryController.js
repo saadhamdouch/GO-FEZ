@@ -82,6 +82,8 @@ exports.getAllCategories = async (req, res) => {
   }
 };
 
+// TODO : get paginated categories 10 per view
+
 //  Récupérer une catégorie par ID
 exports.getCategoryById = async (req, res) => {
   try {

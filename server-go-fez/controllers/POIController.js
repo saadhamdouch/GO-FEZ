@@ -699,6 +699,24 @@ const getPOIsForParcoursLibre = async (req, res) => {
   }
 };
 
+// methode fetch pois zone = 10 km
+
+// methode . search poi with searchTerm in name or description, filter with category, city, isVerified, isPremium, isActive, theme
+/**
+ * 
+ * @body {
+ *  conditions : {
+ *   searchTerm: string,
+ *   categoryIds: [uuid],
+ *   cityIds: [int],
+ *   isVerified: boolean,
+ *   isPremium: boolean,
+ *  isActive: boolean,
+ *  themeIds: [uuid]
+ * }
+ * @returns pois matching the conditions
+ */
+
 const getTravelTime = async (req, res) => {
 
   const { distanceKm, mode } = req.query;

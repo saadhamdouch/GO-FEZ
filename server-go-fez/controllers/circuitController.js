@@ -255,6 +255,8 @@ exports.getAllCircuits = async (req, res) => {
   }
 };
 
+// TODO : get CIRCUITS filtered by theme (max 10 par theme, so 30 max), with possibility to filter by popular, rating, city, nearest (2 km max) and newest
+
 // Récupérer un circuit par ID
 exports.getCircuitById = async (req, res) => {
   try {
