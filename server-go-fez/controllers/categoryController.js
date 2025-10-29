@@ -54,36 +54,72 @@ exports.createCategory = async (req, res) => {
 
 //  Récupérer toutes les catégories
 exports.getAllCategories = async (req, res) => {
-  try {
-    const categories = await Category.findAll({
-      where: { isDeleted: false },
-      include: [
-        {
-          model: POI,
-          as: 'pois',
-          attributes: [],
-          where: { isDeleted: false },
-          required: false
-        }
-      ],
-      attributes: {
-        include: [
-          [Category.sequelize.fn("COUNT", Category.sequelize.col("pois.id")), "nbPois"]
-        ]
-      },
-      group: ['Category.id'],
-      order: [['id', 'ASC']]
-    });
 
-    res.json({ status: 'success', data: categories });
-  } catch (error) {
-    console.error('❌ Erreur getAllCategories:', error);
-    res.status(500).json({ status: 'fail', message: 'Erreur serveur' });
-  }
+  const page = parseInt(req.query.page) || 1; 
+    const limit = 10; 
+    const offset = (page - 1) * limit; 
+
+    try {
+
+        const totalItems = await Category.count({
+            where: { isDeleted: false }
+        });
+
+        const categories = await Category.findAll({
+            where: { isDeleted: false },
+            
+            subQuery: false, 
+            
+            limit: limit,
+            offset: offset,
+            
+            include: [
+                {
+                    model: POI,
+                    as: 'pois',
+                    attributes: [],
+                    where: { isDeleted: false },
+                    required: false // LEFT JOIN
+                }
+            ],
+            attributes: {
+
+                include: [
+                    [Category.sequelize.fn("COUNT", Category.sequelize.col("pois.id")), "nbPois"]
+                ]
+            },
+            
+           group: [
+        'Category.id', 
+        'Category.fr', 
+        'Category.ar', 
+        'Category.en', 
+        'Category.isActive', 
+        'Category.isDeleted', 
+        'Category.created_at', 
+        'Category.updated_at'
+    ],
+    order: [['id', 'ASC']]
+        });
+
+        const totalPages = Math.ceil(totalItems / limit);
+
+        res.json({
+            status: 'success',
+            data: categories,
+            meta: {
+                currentPage: page,
+                perPage: limit,
+                totalItems: totalItems,
+                totalPages: totalPages,
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Erreur getPaginatedCategories:', error);
+        res.status(500).json({ status: 'fail', message: 'Erreur serveur' });
+    }
 };
-
-// TODO : get paginated categories 10 per view
-
 //  Récupérer une catégorie par ID
 exports.getCategoryById = async (req, res) => {
   try {
