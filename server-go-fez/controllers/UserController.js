@@ -71,105 +71,94 @@ const handleValidationErrors = (req, res, next) => {
 
 // Méthode d'inscription (SignUp)
 const registerUser = async (req, res) => {
-	try {
-		const { firstName, lastName, email, phone, password } = req.body;
+  try {
+    const { firstName, lastName, email, phone, password } = req.body;
 
-		// Vérifier qu'au moins un identifiant est fourni
-		if (!email && !phone) {
-			return res.status(400).json({
-				success: false,
-				message: "Email ou numéro de téléphone requis",
-			});
-		}
+    if (!email && !phone) {
+      return res.status(400).json({
+        success: false,
+        message: "Email ou numéro de téléphone requis",
+      });
+    }
 
-		// Vérifier si l'utilisateur existe déjà
-		const existingUser = await User.findOne({
-			where: {
-				[User.sequelize.Sequelize.Op.or]: [
-					email ? { email } : null,
-					phone ? { phone } : null,
-				].filter(Boolean),
-			},
-		});
+    const whereClause = [];
+    if (email) whereClause.push({ email });
+    if (phone) whereClause.push({ phone });
 
-		if (existingUser) {
-			return res.status(409).json({
-				success: false,
-				message:
-					"Un utilisateur avec cet email ou numéro de téléphone existe déjà",
-			});
-		}
+    const existingUser = await User.findOne({
+      where: {
+        [User.sequelize.Sequelize.Op.or]: whereClause,
+      },
+    });
 
-		// Hacher le mot de passe
-		const saltRounds = 12;
-		const hashedPassword = await bcrypt.hash(password, saltRounds);
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: "Un utilisateur avec cet email ou numéro de téléphone existe déjà",
+      });
+    }
 
-		// Déterminer l'identifiant principal
-		let primaryIdentifier = null;
-		let authProvider = null;
-		if (email === null || email === undefined) {
-			primaryIdentifier = phone;
-			authProvider = "phone";
-		} else if (phone === null || phone === undefined) {
-			primaryIdentifier = email;
-			authProvider = "email";
-		}
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-		// Créer l'utilisateur
-		const newUser = await User.create({
-			firstName,
-			lastName,
-			email: email || null,
-			phone: phone || null,
-			password: hashedPassword,
-			authProvider: authProvider,
-			primaryIdentifier,
-			isVerified: false,
-			role: "user",
-		});
+    let authProvider = null;
+    if (email && !phone) authProvider = 'google';
+    else if (phone && !email) authProvider = 'phone';
+    else if (email && phone) authProvider = 'phone';
 
-		// Générer le token JWT
-		const token = jwt.sign(
-			{
-				userId: newUser.id,
-				email: newUser.email,
-				role: newUser.role,
-			},
-			process.env.JWT_SECRET,
-			{ expiresIn: "24h" }
-		);
+    const primaryIdentifier = email || phone;
 
-		// Retourner la réponse sans le mot de passe
-		const userResponse = {
-			id: newUser.id,
-			firstName: newUser.firstName,
-			lastName: newUser.lastName,
-			email: newUser.email,
-			phone: newUser.phone,
-			authProvider: newUser.authProvider,
-			isVerified: newUser.isVerified,
-			role: newUser.role,
-			createdAt: newUser.createdAt,
-		};
+    const newUser = await User.create({
+      firstName,
+      lastName,
+      email: email || null,
+      phone: phone || null,
+      password: hashedPassword,
+      authProvider,
+      primaryIdentifier,
+      isVerified: false,
+      role: "user",
+      profileImage: null,
+    });
 
-		res.status(201).json({
-			success: true,
-			message: "Utilisateur créé avec succès",
-			user: userResponse,
-			token,
-		});
-	} catch (error) {
-		console.error("Erreur lors de l'inscription:", error);
-		res.status(500).json({
-			success: false,
-			message: "Erreur interne du serveur",
-			error:
-				process.env.NODE_ENV === "development"
-					? error.message
-					: undefined,
-		});
-	}
+    const token = jwt.sign(
+      {
+        userId: newUser.id,
+        email: newUser.email,
+        role: newUser.role,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "24h" }
+    );
+
+    const userResponse = {
+      id: newUser.id,
+      firstName: newUser.firstName,
+      lastName: newUser.lastName,
+      email: newUser.email,
+      phone: newUser.phone,
+      authProvider: newUser.authProvider,
+      primaryIdentifier: newUser.primaryIdentifier,
+      isVerified: newUser.isVerified,
+      role: newUser.role,
+      createdAt: newUser.createdAt,
+    };
+
+    res.status(201).json({
+      success: true,
+      message: "Utilisateur créé avec succès",
+      user: userResponse,
+      token,
+    });
+  } catch (error) {
+    console.error("Erreur lors de l'inscription:", error);
+    res.status(500).json({
+      success: false,
+      message: "Erreur interne du serveur",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
 };
+
 
 // Méthode de connexion (Login)
 const loginUser = async (req, res) => {
