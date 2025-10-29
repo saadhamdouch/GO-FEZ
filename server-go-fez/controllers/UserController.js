@@ -8,6 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 
+const otpStore = new Map();
 const generateTokens = (user) => {
 	console.log('🔑 Génération des tokens JWT', {
 		userId: user.id,
@@ -71,94 +72,105 @@ const handleValidationErrors = (req, res, next) => {
 
 // Méthode d'inscription (SignUp)
 const registerUser = async (req, res) => {
-  try {
-    const { firstName, lastName, email, phone, password } = req.body;
+	try {
+		const { firstName, lastName, email, phone, password } = req.body;
 
-    if (!email && !phone) {
-      return res.status(400).json({
-        success: false,
-        message: "Email ou numéro de téléphone requis",
-      });
-    }
+		// Vérifier qu'au moins un identifiant est fourni
+		if (!email && !phone) {
+			return res.status(400).json({
+				success: false,
+				message: "Email ou numéro de téléphone requis",
+			});
+		}
 
-    const whereClause = [];
-    if (email) whereClause.push({ email });
-    if (phone) whereClause.push({ phone });
+		// Vérifier si l'utilisateur existe déjà
+		const existingUser = await User.findOne({
+			where: {
+				[User.sequelize.Sequelize.Op.or]: [
+					email ? { email } : null,
+					phone ? { phone } : null,
+				].filter(Boolean),
+			},
+		});
 
-    const existingUser = await User.findOne({
-      where: {
-        [User.sequelize.Sequelize.Op.or]: whereClause,
-      },
-    });
+		if (existingUser) {
+			return res.status(409).json({
+				success: false,
+				message:
+					"Un utilisateur avec cet email ou numéro de téléphone existe déjà",
+			});
+		}
 
-    if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: "Un utilisateur avec cet email ou numéro de téléphone existe déjà",
-      });
-    }
+		// Hacher le mot de passe
+		const saltRounds = 12;
+		const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+		// Déterminer l'identifiant principal
+		let primaryIdentifier = null;
+		let authProvider = null;
+		if (email === null || email === undefined) {
+			primaryIdentifier = phone;
+			authProvider = "phone";
+		} else if (phone === null || phone === undefined) {
+			primaryIdentifier = email;
+			authProvider = "email";
+		}
 
-    let authProvider = null;
-    if (email && !phone) authProvider = 'google';
-    else if (phone && !email) authProvider = 'phone';
-    else if (email && phone) authProvider = 'phone';
+		// Créer l'utilisateur
+		const newUser = await User.create({
+			firstName,
+			lastName,
+			email: email || null,
+			phone: phone || null,
+			password: hashedPassword,
+			authProvider: authProvider,
+			primaryIdentifier,
+			isVerified: false,
+			role: "user",
+		});
 
-    const primaryIdentifier = email || phone;
+		// Générer le token JWT
+		const token = jwt.sign(
+			{
+				userId: newUser.id,
+				email: newUser.email,
+				role: newUser.role,
+			},
+			process.env.JWT_SECRET,
+			{ expiresIn: "24h" }
+		);
 
-    const newUser = await User.create({
-      firstName,
-      lastName,
-      email: email || null,
-      phone: phone || null,
-      password: hashedPassword,
-      authProvider,
-      primaryIdentifier,
-      isVerified: false,
-      role: "user",
-      profileImage: null,
-    });
+		// Retourner la réponse sans le mot de passe
+		const userResponse = {
+			id: newUser.id,
+			firstName: newUser.firstName,
+			lastName: newUser.lastName,
+			email: newUser.email,
+			phone: newUser.phone,
+			authProvider: newUser.authProvider,
+			isVerified: newUser.isVerified,
+			role: newUser.role,
+			createdAt: newUser.createdAt,
+		};
 
-    const token = jwt.sign(
-      {
-        userId: newUser.id,
-        email: newUser.email,
-        role: newUser.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" }
-    );
-
-    const userResponse = {
-      id: newUser.id,
-      firstName: newUser.firstName,
-      lastName: newUser.lastName,
-      email: newUser.email,
-      phone: newUser.phone,
-      authProvider: newUser.authProvider,
-      primaryIdentifier: newUser.primaryIdentifier,
-      isVerified: newUser.isVerified,
-      role: newUser.role,
-      createdAt: newUser.createdAt,
-    };
-
-    res.status(201).json({
-      success: true,
-      message: "Utilisateur créé avec succès",
-      user: userResponse,
-      token,
-    });
-  } catch (error) {
-    console.error("Erreur lors de l'inscription:", error);
-    res.status(500).json({
-      success: false,
-      message: "Erreur interne du serveur",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
-  }
+		res.status(201).json({
+			success: true,
+			message: "Utilisateur créé avec succès",
+			user: userResponse,
+			token,
+		});
+	} catch (error) {
+		console.error("Erreur lors de l'inscription:", error);
+		res.status(500).json({
+			success: false,
+			message: "Erreur interne du serveur",
+			error:
+				process.env.NODE_ENV === "development"
+					? error.message
+					: undefined,
+		});
+	}
 };
-
 
 // Méthode de connexion (Login)
 const loginUser = async (req, res) => {
@@ -223,86 +235,6 @@ const loginUser = async (req, res) => {
 					: undefined,
 		});
 	}
-};
-const registerWithProvider = async (req, res) => {
-  try {
-    const { provider, id, firstName, lastName, email, phone } = req.body;
-
-    if (!provider || !['google', 'facebook'].includes(provider)) {
-      return res.status(400).json({ success: false, message: "Provider invalide" });
-    }
-
-    const primaryIdentifier = provider === 'google' ? email : id;
-
-    const existingUser = await User.findOne({
-      where: {
-        [User.sequelize.Sequelize.Op.or]: [
-          { primaryIdentifier },
-          ...(email ? [{ email }] : []),
-          ...(phone ? [{ phone }] : []),
-        ],
-      },
-    });
-
-    if (existingUser) {
-      const tokens = generateAndSetTokens(existingUser, res);
-      return res.status(200).json({
-        success: true,
-        message: "Connexion réussie",
-        user: {
-          id: existingUser.id,
-          firstName: existingUser.firstName,
-          lastName: existingUser.lastName,
-          email: existingUser.email,
-          phone: existingUser.phone,
-          authProvider: existingUser.authProvider,
-          primaryIdentifier: existingUser.primaryIdentifier,
-          role: existingUser.role,
-        },
-        tokens,
-      });
-    }
-
-    const newUser = await User.create({
-      firstName,
-      lastName,
-      email: email || null,
-      phone: phone || null,
-      authProvider: provider,
-      primaryIdentifier,
-      googleId: provider === 'google' ? id : null,
-      facebookId: provider === 'facebook' ? id : null,
-      facebookEmail: provider === 'facebook' ? email : null,
-      facebookPhone: provider === 'facebook' ? phone : null,
-      isVerified: true,
-      role: "user",
-    });
-
-    const tokens = generateAndSetTokens(newUser, res);
-
-    res.status(201).json({
-      success: true,
-      message: "Utilisateur créé avec succès",
-      user: {
-        id: newUser.id,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-        email: newUser.email,
-        phone: newUser.phone,
-        authProvider: newUser.authProvider,
-        primaryIdentifier: newUser.primaryIdentifier,
-        role: newUser.role,
-      },
-      tokens,
-    });
-  } catch (error) {
-    console.error("Erreur provider signup:", error);
-    res.status(500).json({
-      success: false,
-      message: "Erreur interne du serveur",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
-  }
 };
 
 // Méthode pour obtenir le profil utilisateur
@@ -458,6 +390,48 @@ const findOneUser = async (req, res) => {
 		});
 	}
 };
+const sendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email requis' });
+
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    otpStore.set(email, otp);
+
+    console.log(`OTP for ${email}: ${otp}`); // For dev only
+
+    return res.status(200).json({
+      success: true,
+      message: 'OTP envoyé avec succès',
+    });
+  } catch (err) {
+    console.error('Error sending OTP:', err);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+};
+const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp)
+      return res.status(400).json({ message: 'Email et OTP requis' });
+
+    const storedOtp = otpStore.get(email);
+    if (!storedOtp)
+      return res.status(400).json({ message: 'Aucun OTP trouvé pour cet email' });
+
+    if (parseInt(otp) !== storedOtp)
+      return res.status(400).json({ message: 'OTP invalide' });
+
+    // Remove OTP after successful verification
+    otpStore.delete(email);
+
+    return res.status(200).json({ success: true, message: 'OTP vérifié avec succès' });
+  } catch (err) {
+    console.error('Error verifying OTP:', err);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+};
 
 // Méthode pour mettre à jour le mot de passe
 const updatePassword = async (req, res) => {
@@ -506,7 +480,8 @@ const updatePassword = async (req, res) => {
 };
 
 module.exports = {
-	registerWithProvider,
+	verifyOtp,
+	sendOtp,
 	handleValidationErrors,
 	registerUser,
 	loginUser,

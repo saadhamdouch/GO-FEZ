@@ -3,7 +3,8 @@ const { body } = require('express-validator');
 const multer = require("multer");
 const path = require('path');
 const { 
-   registerWithProvider,
+    verifyOtp,
+    sendOtp,
     handleValidationErrors,
     registerUser,
     loginUser,
@@ -45,26 +46,56 @@ const UserRouter = express.Router();
 
 // Routes
 UserRouter.get('/', findAllUsers);
+UserRouter.post('/register', [
+    body('firstName')
+        .trim()
+        .isLength({ min: 2, max: 100 })
+        .withMessage('Le prénom doit contenir entre 2 et 100 caractères'),
+    body('lastName')
+        .trim()
+        .isLength({ min: 2, max: 100 })
+        .withMessage('Le nom doit contenir entre 2 et 100 caractères'),
+    body('email')
+        .optional()
+        .isEmail()
+        .normalizeEmail()
+        .withMessage('Email invalide'),
+    body('phone')
+        .optional()
+        .isMobilePhone('fr-FR')
+        .withMessage('Numéro de téléphone invalide'),
+    body('password')
+        .isLength({ min: 8 })
+        .withMessage('Le mot de passe doit contenir au moins 8 caractères')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+        .withMessage('Le mot de passe doit contenir au moins une minuscule, une majuscule et un chiffre'),
+    handleValidationErrors
+], registerUser);
 UserRouter.post(
-  "/register",
+  '/otp/verify',
   [
-    body("firstName").trim().isLength({ min: 2, max: 100 }).withMessage("Le prénom est requis"),
-    body("lastName").trim().isLength({ min: 2, max: 100 }).withMessage("Le nom est requis"),
-    body("email").optional().isEmail().withMessage("Email invalide"),
-    body("phone").optional().isMobilePhone("fr-FR").withMessage("Téléphone invalide"),
-    body("password").isLength({ min: 8 }).withMessage("Mot de passe trop court"),
+    body('email').isEmail().withMessage('Email invalide'),
+    body('otpCode').isLength({ min: 6, max: 6 }).withMessage('Code OTP invalide'),
     handleValidationErrors,
   ],
-  registerUser
+  verifyOtp
 );
-
-
-UserRouter.post("/login", loginUser);
-UserRouter.post("/provider-register", registerWithProvider);
+UserRouter.post('/login', [
+    body('identifier')
+        .notEmpty()
+        .withMessage('Email ou numéro de téléphone requis'),
+    body('password')
+        .notEmpty()
+        .withMessage('Mot de passe requis'),
+    handleValidationErrors
+], loginUser);
+UserRouter.post('/otp/send', [
+  body('email').isEmail().withMessage('Email invalide'),
+  handleValidationErrors,
+], sendOtp);
 UserRouter.get('/profile', getUserProfile);
 UserRouter.put('/profile', upload.single("profileImage"), updateUserProfile);
 UserRouter.get('/:id', findOneUser);
 UserRouter.put('/update-password/:id', updatePassword);
 
-module.exports = UserRouter;
-
+module.exports = { UserRouter };

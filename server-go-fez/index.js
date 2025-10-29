@@ -10,7 +10,7 @@ dotenv.config();
 const db = require("./Config/db.js"); // Importer l'instance Singleton de la base de données
 const models = require("./models/index.js");
 
-const UserRoutes = require("./routes/UserRoute");
+const { UserRouter } = require("./routes/UserRoute.js"); // Importer les routes utilisateur
 const CityRoute = require("./routes/CityRoute.js");
 const ThemeRoute = require("./routes/ThemeRoute.js");
 const CircuitRoutes = require("./routes/CircuitRoutes.js");
@@ -19,13 +19,12 @@ const { POIRouter } = require("./routes/POIRoute.js"); // Importer les routes PO
 const { ConfigRouter } = require("./routes/ConfigRoute.js");
 const { GamificationRouter } = require("./routes/gamificationRouter.js");
 const pointsTransactionRoutes = require('./routes/pointsTransactionRoutes.js');
-const circuitProgressRoutes = require('./routes/CircuitProgressRoutes');
+
 
 const app = express();
 const { header } = require("express-validator");
 const rateLimit = require("express-rate-limit");
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
 // Charger les variables sensibles depuis le fichier .env
 const PORT = process.env.PORT || 8080;
 const ALLOWED_ORIGINS = [
@@ -79,17 +78,17 @@ const jsonMiddleware = express.json({ limit: '50mb' });
 
 // Routes avec files (multer)
 app.use('/api/themes/', ThemeRoute);
-app.use('/api/circuits', CircuitRoutes);
+app.use('/api/circuits',jsonMiddleware, CircuitRoutes);
 app.use('/api/city', CityRoute);
-app.use('/api/pois', POIRouter);
+app.use('/api/pois',jsonMiddleware, POIRouter);
 
 // Routes sans files
-app.use("/api/auth", UserRoutes);
+app.use('/api/auth', jsonMiddleware, UserRouter);
 app.use('/api/categorys', jsonMiddleware, categoryRoutes);
 app.use('/api/config', jsonMiddleware, ConfigRouter);
 app.use('/api/gamification', jsonMiddleware, GamificationRouter);
 app.use('/api/pointsTransaction', jsonMiddleware, pointsTransactionRoutes);
-app.use('/progress', circuitProgressRoutes);
+
 // Middleware de gestion d'erreurs global
 app.use((err, req, res, next) => {
     console.error('❌ Erreur:', err.message);
