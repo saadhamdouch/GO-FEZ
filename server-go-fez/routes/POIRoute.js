@@ -17,7 +17,7 @@ const {
     uploadAudio, 
     uploadVideo, 
     uploadVirtualTour 
-} = require('../config/cloudinary');
+} = require('../Config/cloudinary');
 const { POI } = require('../models/index.js');
 
 // Middleware personnalisé pour gérer les uploads multiples

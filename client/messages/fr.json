@@ -89,5 +89,109 @@
     "about": "À propos",
     "language": "Langue",
     "copyright": "© 2025 - Go Fez. Tous droits réservés"
+  },
+  "ThemePage": {
+    "errorTitle": "Erreur de chargement",
+    "errorMessage": "Impossible de charger les détails pour ce thème.",
+    "goBack": "Retour",
+    "themeTitle": "Thème",
+    "duration": "{minutes} min",
+    "pois": "{count} POIs",
+    "difficulty": "Difficulté : {value}",
+    "viewCircuitDetails": "Voir les détails du circuit",
+    "noPoisForCircuit": "Aucun point d'intérêt trouvé pour ce circuit.",
+    "noCircuitsTitle": "Aucun circuit trouvé",
+    "noCircuitsMessage": "Il n'y a actuellement aucun circuit actif associé à ce thème."
+  },
+  "header": {
+    "circuits": "Circuits",
+    "pois": "Points d'intérêt",
+    "admin": "Admin",
+    "profile": "Profil",
+    "login": "Connexion",
+    "logout": "Déconnexion"
+  },
+  "exploreCard": {
+    "circuits": "{count, plural, =0 {Aucun circuit} one {# circuit} other {# circuits}}",
+    "pois": "{count, plural, =0 {Aucun POI} one {# POI} other {# POIs}}",
+    "km": "{distance} km",
+    "min": "{duration} min",
+    "premium": "Premium"
+  },
+
+  "appDownload": {
+    "title": "Téléchargez l'application dès maintenant!",
+    "description": "Améliorez votre expérience à Fès avec notre application mobile. Accédez à des fonctionnalités exclusives, des cartes hors ligne et des récompenses.",
+    "soon": "Bientôt disponible sur"
+  },
+  "CircuitListPage": {
+    "title": "Circuits Touristiques à Fès",
+    "description": "Découvrez les meilleurs itinéraires pour explorer Fès.",
+    "filterAll": "Tous",
+    "loading": "Chargement des circuits...",
+    "error": "Erreur lors du chargement des circuits.",
+    "noCircuits": "Aucun circuit trouvé correspondant à vos critères.",
+    "themes": "Thèmes",
+    "duration": "Durée",
+    "distance": "Distance",
+    "clearFilters": "Effacer les filtres",
+    "applyFilters": "Appliquer les filtres",
+    "min": "min",
+    "max": "max",
+    "minutes": "Minutes",
+    "kilometers": "Kilomètres"
+  },
+  "POIListPage": {
+    "title": "Points d'Intérêt à Fès",
+    "description": "Explorez les sites incontournables de Fès.",
+    "filterAll": "Tous",
+    "loading": "Chargement des points d'intérêt...",
+    "error": "Erreur lors du chargement des points d'intérêt.",
+    "noPOIs": "Aucun point d'intérêt trouvé.",
+    "categories": "Catégories",
+    "rating": "Note",
+    "clearFilters": "Effacer les filtres",
+    "applyFilters": "Appliquer les filtres",
+    "stars": "{count} étoiles et plus"
+  },
+  "PoiDetailPage": {
+    "loading": "Chargement du point d'intérêt...",
+    "error": "Impossible de charger les détails.",
+    "notAvailable": "Non disponible",
+    "premium": "Contenu Premium",
+    "audioGuide": "Guide Audio"
+  },
+  "POICard": {
+    "premium": "Premium"
+  },
+  "ReviewSection": {
+    "reviewsTitle": "Avis",
+    "rating": "{rating}/5",
+    "outOf": "sur {count, plural, one {# avis} other {# avis}}",
+    "leaveReview": "Laisser un avis",
+    "yourRating": "Votre note",
+    "yourComment": "Votre commentaire",
+    "submitReview": "Soumettre l'avis",
+    "loginToReview": "Connectez-vous pour laisser un avis.",
+    "reviewSubmitted": "Avis soumis avec succès !",
+    "reviewError": "Erreur lors de la soumission de l'avis."
+  },
+
+  "CircuitDetailPage": {
+    "loading": "Chargement du circuit...",
+    "error": "Impossible de charger les détails du circuit.",
+    "startSuccess": "Circuit démarré avec succès !",
+    "startError": "Erreur lors du démarrage du circuit.",
+    "aboutTitle": "À propos de ce circuit",
+    "stopsTitle": "Les étapes du circuit",
+    "infoTitle": "Informations clés",
+    "km": "km",
+    "min": "min",
+    "stops": "arrêts",
+    "premium": "Circuit Premium",
+    "starting": "Démarrage...",
+    "startButton": "Démarrer ce circuit",
+    "circuitImageAlt": "Image de couverture du circuit"
   }
+
 }

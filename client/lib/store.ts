@@ -6,6 +6,31 @@ import circuitApi from '../services/api/CircuitApi';
 import poiApi from '../services/api/PoiApi';
 import categoryApi from '../services/api/CategoryApi';
 import cityApi from '../services/api/CityApi';
+// 1. Import the new API
+import {circuitProgressApi} from '../services/api/CircuitProgressApi'; 
+
+// 2. Import the logger
+import logger from 'redux-logger';
+
+// 3. Check for development environment
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+// 4. Create a middleware array
+const middleware = [
+  userApi.middleware,
+  themeApi.middleware,
+  circuitApi.middleware,
+  poiApi.middleware,
+  categoryApi.middleware,
+  cityApi.middleware,
+  // 5. Add the new middleware
+  circuitProgressApi.middleware,
+];
+
+// 6. Conditionally add the logger
+if (isDevelopment) {
+  middleware.push(logger as any);
+}
 
 const configurestore = configureStore({
   reducer: {
@@ -16,6 +41,8 @@ const configurestore = configureStore({
     [poiApi.reducerPath]: poiApi.reducer,
     [categoryApi.reducerPath]: categoryApi.reducer,
     [cityApi.reducerPath]: cityApi.reducer,
+    // 7. Add the new reducer
+    [circuitProgressApi.reducerPath]: circuitProgressApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -35,15 +62,17 @@ const configurestore = configureStore({
           'categoryApi/mutations/removeMutationResult',
           'cityApi/subscriptions/unsubscribeQueryResult',
           'cityApi/mutations/removeMutationResult',
+          // 8. Add ignored actions for the new API
+          'circuitProgressApi/subscriptions/unsubscribeQueryResult',
+          'circuitProgressApi/mutations/removeMutationResult',
         ],
       },
     })
-      .concat(userApi.middleware)
-      .concat(themeApi.middleware)
-      .concat(circuitApi.middleware)
-      .concat(poiApi.middleware)
-      .concat(categoryApi.middleware)
-      .concat(cityApi.middleware),
+      // 9. Concat the middleware array
+      .concat(middleware),
+  
+  // Enable Redux DevTools only in development
+  devTools: isDevelopment,
 });
 
 export default configurestore;

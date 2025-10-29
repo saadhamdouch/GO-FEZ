@@ -3,7 +3,7 @@ const { Op,literal } = require('sequelize');
 const { POI, POILocalization, POIFile, City, Category, User, UserSpace, TransportMode } = require('../models');
 const sequelize = City.sequelize;
 const EARTH_RADIUS_KM = 6371;
-const { uploadFromBuffer, deleteFile, uploadPoiFile, uploadMultiplePoiFiles } = require('../config/cloudinary');
+const { uploadFromBuffer, deleteFile, uploadPoiFile, uploadMultiplePoiFiles } = require('../Config/cloudinary');
 const xss = require('xss');
 
 // Middleware pour vérifier les erreurs de validation
