@@ -3,6 +3,7 @@ const { body } = require('express-validator');
 const multer = require("multer");
 const path = require('path');
 const { 
+  registerWithProvider,
     verifyOtp,
     sendOtp,
     handleValidationErrors,
@@ -97,5 +98,5 @@ UserRouter.get('/profile', getUserProfile);
 UserRouter.put('/profile', upload.single("profileImage"), updateUserProfile);
 UserRouter.get('/:id', findOneUser);
 UserRouter.put('/update-password/:id', updatePassword);
-
+UserRouter.post("/provider-register", registerWithProvider);
 module.exports = { UserRouter };

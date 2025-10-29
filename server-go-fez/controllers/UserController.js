@@ -432,7 +432,86 @@ const verifyOtp = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
+const registerWithProvider = async (req, res) => {
+  try {
+    const { provider, id, firstName, lastName, email, phone } = req.body;
 
+    if (!provider || !['google', 'facebook'].includes(provider)) {
+      return res.status(400).json({ success: false, message: "Provider invalide" });
+    }
+
+    const primaryIdentifier = provider === 'google' ? email : id;
+
+    const existingUser = await User.findOne({
+      where: {
+        [User.sequelize.Sequelize.Op.or]: [
+          { primaryIdentifier },
+          ...(email ? [{ email }] : []),
+          ...(phone ? [{ phone }] : []),
+        ],
+      },
+    });
+
+    if (existingUser) {
+      const tokens = generateAndSetTokens(existingUser, res);
+      return res.status(200).json({
+        success: true,
+        message: "Connexion réussie",
+        user: {
+          id: existingUser.id,
+          firstName: existingUser.firstName,
+          lastName: existingUser.lastName,
+          email: existingUser.email,
+          phone: existingUser.phone,
+          authProvider: existingUser.authProvider,
+          primaryIdentifier: existingUser.primaryIdentifier,
+          role: existingUser.role,
+        },
+        tokens,
+      });
+    }
+
+    const newUser = await User.create({
+      firstName,
+      lastName,
+      email: email || null,
+      phone: phone || null,
+      authProvider: provider,
+      primaryIdentifier,
+      googleId: provider === 'google' ? id : null,
+      facebookId: provider === 'facebook' ? id : null,
+      facebookEmail: provider === 'facebook' ? email : null,
+      facebookPhone: provider === 'facebook' ? phone : null,
+      isVerified: true,
+      role: "user",
+    });
+
+    const tokens = generateAndSetTokens(newUser, res);
+
+    res.status(201).json({
+      success: true,
+      message: "Utilisateur créé avec succès",
+      user: {
+        id: newUser.id,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email,
+        phone: newUser.phone,
+        authProvider: newUser.authProvider,
+        primaryIdentifier: newUser.primaryIdentifier,
+        role: newUser.role,
+      },
+      tokens,
+    });
+  } catch (error) {
+    console.error("Erreur provider signup:", error);
+    res.status(500).json({
+      success: false,
+      message: "Erreur interne du serveur",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
 // Méthode pour mettre à jour le mot de passe
 const updatePassword = async (req, res) => {
 	try {
@@ -480,6 +559,7 @@ const updatePassword = async (req, res) => {
 };
 
 module.exports = {
+	registerWithProvider,
 	verifyOtp,
 	sendOtp,
 	handleValidationErrors,

@@ -19,7 +19,7 @@ const { POIRouter } = require("./routes/POIRoute.js"); // Importer les routes PO
 const { ConfigRouter } = require("./routes/ConfigRoute.js");
 const { GamificationRouter } = require("./routes/gamificationRouter.js");
 const pointsTransactionRoutes = require('./routes/pointsTransactionRoutes.js');
-
+const circuitProgressRoutes = require('./routes/CircuitProgressRoutes');
 
 const app = express();
 const { header } = require("express-validator");
@@ -81,7 +81,7 @@ app.use('/api/themes/', ThemeRoute);
 app.use('/api/circuits',jsonMiddleware, CircuitRoutes);
 app.use('/api/city', CityRoute);
 app.use('/api/pois',jsonMiddleware, POIRouter);
-
+app.use('/progress', circuitProgressRoutes);
 // Routes sans files
 app.use('/api/auth', jsonMiddleware, UserRouter);
 app.use('/api/categorys', jsonMiddleware, categoryRoutes);
