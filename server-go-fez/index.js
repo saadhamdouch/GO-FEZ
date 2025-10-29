@@ -78,7 +78,7 @@ const jsonMiddleware = express.json({ limit: '50mb' });
 
 // Routes avec files (multer)
 app.use('/api/themes/', ThemeRoute);
-app.use('/api/circuits', CircuitRoutes);
+app.use('/api/circuits',jsonMiddleware, CircuitRoutes);
 app.use('/api/city', CityRoute);
 app.use('/api/pois',jsonMiddleware, POIRouter);
 

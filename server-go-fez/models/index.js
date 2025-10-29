@@ -55,6 +55,16 @@ POI.belongsToMany(Circuit, {
 	onDelete: 'CASCADE',
 	onUpdate: 'CASCADE'
 });
+Circuit.belongsTo(models.POI, {
+        foreignKey: 'startPoint',
+        as: 'startPoi', // L'alias 'startPoi' doit correspondre à celui utilisé dans le Controller
+    });
+
+    // ✅ NOUVELLE ASSOCIATION: Relation Circuit -> POI pour le point d'arrivée (Optionnel, mais bonne pratique)
+    Circuit.belongsTo(models.POI, {
+        foreignKey: 'endPoint',
+        as: 'endPoi',
+    });
 
 //  Associations Circuit ↔ Theme via ThemeCircuit
 Circuit.belongsToMany(Theme, {
