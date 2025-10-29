@@ -7,7 +7,7 @@ import { MultipleFileUpload } from '../shared/MultipleFileUpload';
 import { Checkbox } from '../shared/Checkbox';
 import { FormActions } from '../shared/FormActions';
 import MapSelector from './MapSelector';
-import { ImageIcon, Video,  Map as Map360, Music, Info, MapPin } from 'lucide-react';
+import { ImageIcon, Video, Map as Map360, Music, Info, MapPin, Plus, ChevronRight, ChevronLeft } from 'lucide-react';
 
 interface POIFormProps {
   formData: any;
@@ -37,6 +37,72 @@ export function POIForm({
   selectedPOI,
 }: POIFormProps) {
   const [showMap, setShowMap] = useState(true);
+  const [showPracticalInfo, setShowPracticalInfo] = useState(false);
+  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+  const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
+
+  const practicalInfoTemplate = {
+    horaires: { checkin: '', checkout: '', reception: '' },
+    prix: { chambre_simple: '', chambre_double: '', suite: '', petit_dejeuner: '' },
+    services: [''],
+    contact: { telephone: '', email: '', site_web: '' },
+    equipements: [''],
+    politiques: { annulation: '', animaux: '', fumeurs: '' },
+    localisation: { proche: [''] },
+    langues: [''],
+    paiement: [''],
+    capacite: { chambres: '', personnes_max: '' },
+  };
+
+  const categoriesKeys = Object.keys(practicalInfoTemplate);
+  const getCurrentCategoryKey = () => categoriesKeys[currentCategoryIndex];
+  const getCurrentFields = () => practicalInfoTemplate[getCurrentCategoryKey()];
+
+  const getParsedPracticalInfo = () => {
+    try {
+      return JSON.parse(formData.practicalInfo || '{}');
+    } catch {
+      return {};
+    }
+  };
+
+  const handleFieldChange = (categoryKey: string, fieldKey: string, value: any, index?: number) => {
+    const parsed = getParsedPracticalInfo();
+    if (!parsed[categoryKey]) parsed[categoryKey] = practicalInfoTemplate[categoryKey];
+
+    if (Array.isArray(parsed[categoryKey][fieldKey])) {
+      if (index !== undefined) {
+        parsed[categoryKey][fieldKey][index] = value;
+      }
+    } else {
+      parsed[categoryKey][fieldKey] = value;
+    }
+
+    onFormDataChange({
+      ...formData,
+      practicalInfo: JSON.stringify(parsed),
+    });
+  };
+
+  const addNextField = () => {
+    const fields = Object.keys(getCurrentFields());
+    if (currentFieldIndex < fields.length - 1) {
+      setCurrentFieldIndex(currentFieldIndex + 1);
+    } else if (currentCategoryIndex < categoriesKeys.length - 1) {
+      setCurrentCategoryIndex(currentCategoryIndex + 1);
+      setCurrentFieldIndex(0);
+    }
+  };
+
+  const goBackField = () => {
+    if (currentFieldIndex > 0) {
+      setCurrentFieldIndex(currentFieldIndex - 1);
+    } else if (currentCategoryIndex > 0) {
+      const prevFields = Object.keys(practicalInfoTemplate[categoriesKeys[currentCategoryIndex - 1]]);
+      setCurrentCategoryIndex(currentCategoryIndex - 1);
+      setCurrentFieldIndex(prevFields.length - 1);
+    }
+  };
 
   const handleLocalizationChange = (lang: 'fr' | 'ar' | 'en', field: string, value: string) => {
     onFormDataChange({
@@ -89,7 +155,6 @@ export function POIForm({
           >
             <option value="">Sélectionner</option>
             {categories.map((cat: any) => {
-              // Parse category localization
               let categoryName = 'Sans nom';
               try {
                 if (typeof cat.fr === 'string') {
@@ -98,10 +163,9 @@ export function POIForm({
                 } else if (cat.fr?.name) {
                   categoryName = cat.fr.name;
                 }
-              } catch (e) {
+              } catch {
                 categoryName = cat.fr || 'Sans nom';
               }
-              
               return (
                 <option key={cat.id} value={cat.id}>
                   {categoryName}
@@ -128,7 +192,7 @@ export function POIForm({
         </FormField>
       </div>
 
-      {/* Coordinates Section */}
+      {/* Coordinates */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <label className="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -146,7 +210,6 @@ export function POIForm({
           </button>
         </div>
 
-        {/* Carte interactive */}
         {showMap && (
           <div className="border-2 border-gray-200 rounded-xl overflow-hidden">
             <MapSelector
@@ -157,7 +220,6 @@ export function POIForm({
           </div>
         )}
 
-        {/* Champs de coordonnées (manuel) */}
         <div className="grid grid-cols-3 gap-4">
           <FormField label="Latitude" required>
             <input
@@ -165,7 +227,7 @@ export function POIForm({
               step="any"
               value={formData.latitude}
               onChange={(e) => onFormDataChange({ ...formData, latitude: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               required
               placeholder="34.0626"
               readOnly={showMap}
@@ -211,7 +273,6 @@ export function POIForm({
       {/* Media Files */}
       <div className="space-y-3">
         <h3 className="text-lg font-semibold text-gray-900">Fichiers multimédias</h3>
-        
         <div className="grid grid-cols-3 gap-4">
           <MultipleFileUpload
             label="Images"
@@ -221,7 +282,6 @@ export function POIForm({
             onRemove={(index) => onRemoveFile && onRemoveFile('image', index)}
             icon={<ImageIcon className="w-4 h-4" />}
           />
-
           <MultipleFileUpload
             label="Vidéos"
             accept="video/*"
@@ -230,7 +290,6 @@ export function POIForm({
             onRemove={(index) => onRemoveFile && onRemoveFile('video', index)}
             icon={<Video className="w-4 h-4" />}
           />
-
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700 flex items-center space-x-2">
               <Map360 className="w-4 h-4" />
@@ -256,7 +315,6 @@ export function POIForm({
           <Music className="w-5 h-5" />
           Guides audio (optionnel)
         </h3>
-        
         <div className="grid grid-cols-3 gap-4">
           <MultipleFileUpload
             label="Audio Français"
@@ -267,7 +325,6 @@ export function POIForm({
             icon={<Music className="w-4 h-4" />}
             maxFiles={1}
           />
-
           <MultipleFileUpload
             label="Audio Arabe"
             accept="audio/*"
@@ -277,7 +334,6 @@ export function POIForm({
             icon={<Music className="w-4 h-4" />}
             maxFiles={1}
           />
-
           <MultipleFileUpload
             label="Audio Anglais"
             accept="audio/*"
@@ -290,17 +346,58 @@ export function POIForm({
         </div>
       </div>
 
-      {/* Practical Info (Optional) */}
-      <FormField label="Informations pratiques (JSON)">
-        <textarea
-          value={formData.practicalInfo}
-          onChange={(e) => onFormDataChange({ ...formData, practicalInfo: e.target.value })}
-          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono text-sm"
-          rows={3}
-          placeholder='{"horaires": "9h-18h", "tarif": "50 MAD"}'
-        />
-        <p className="text-xs text-gray-500 mt-1">Format JSON - Exemple: {`{"horaires": "9h-18h", "prix": "gratuit"}`}</p>
-      </FormField>
+      {/* Practical Info Progressive */}
+      <div className="space-y-4">
+        <button
+          type="button"
+          onClick={() => setShowPracticalInfo(!showPracticalInfo)}
+          className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg flex items-center gap-2 hover:from-indigo-600 hover:to-purple-600 transition-all"
+        >
+          <Plus className="w-4 h-4" />
+          {showPracticalInfo ? 'Masquer Infos pratiques' : 'Ajouter Infos pratiques'}
+        </button>
+
+        {showPracticalInfo && (
+          <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 space-y-4">
+            <h4 className="font-bold text-sm uppercase text-indigo-700">{getCurrentCategoryKey()}</h4>
+            {Object.keys(getCurrentFields()).map((fieldKey, idx) => {
+              if (idx > currentFieldIndex) return null;
+              const parsed = getParsedPracticalInfo();
+              const value = parsed?.[getCurrentCategoryKey()]?.[fieldKey] || '';
+              return (
+                <div key={fieldKey} className="flex items-center gap-2">
+                  <label className="text-xs w-32">{fieldKey}</label>
+                  <input
+                    type="text"
+                    value={value}
+                    onChange={(e) =>
+                      handleFieldChange(getCurrentCategoryKey(), fieldKey, e.target.value)
+                    }
+                    className="flex-1 px-2 py-1 border rounded-lg text-sm focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
+                  />
+                </div>
+              );
+            })}
+
+            <div className="flex gap-2 mt-2">
+              <button
+                type="button"
+                onClick={goBackField}
+                className="px-3 py-1 bg-gray-200 rounded-lg text-xs flex items-center gap-1 hover:bg-gray-300"
+              >
+                <ChevronLeft className="w-3 h-3" /> Retour
+              </button>
+              <button
+                type="button"
+                onClick={addNextField}
+                className="px-3 py-1 bg-indigo-500 text-white rounded-lg text-xs flex items-center gap-1 hover:bg-indigo-600"
+              >
+                Suivant <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Status Checkboxes */}
       <div className="flex items-center space-x-6 pt-4 border-t">
