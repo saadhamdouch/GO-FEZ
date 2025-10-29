@@ -3,6 +3,7 @@ const { body } = require('express-validator');
 const multer = require("multer");
 const path = require('path');
 const { 
+   registerWithProvider,
     handleValidationErrors,
     registerUser,
     loginUser,
@@ -59,7 +60,7 @@ UserRouter.post(
 
 
 UserRouter.post("/login", loginUser);
-
+UserRouter.post("/provider-register", registerWithProvider);
 UserRouter.get('/profile', getUserProfile);
 UserRouter.put('/profile', upload.single("profileImage"), updateUserProfile);
 UserRouter.get('/:id', findOneUser);

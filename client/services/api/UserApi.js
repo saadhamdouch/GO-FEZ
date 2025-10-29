@@ -15,6 +15,14 @@ export const userApi = createApi({
       }),
       invalidatesTags: ['Users'],
     }),
+providerRegister: builder.mutation({
+  query: (providerData) => ({
+    url: "/api/auth/provider-register",
+    method: "POST",
+    body: providerData,
+  }),
+  invalidatesTags: ['Users'],
+}),
 
     // Connexion d'un utilisateur par téléphone
     loginUser: builder.mutation({
@@ -32,6 +40,7 @@ export const {
   // Authentification
   useRegisterUserMutation,
   useLoginUserMutation,
+  useProviderRegisterMutation,
 } = userApi;
 
 // Export de l'API pour l'utiliser dans le store
