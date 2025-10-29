@@ -13,17 +13,19 @@ interface Review {
 }
 
 interface ReviewListProps {
-  reviews: Review[];
+  reviews: Review[]; // This prop is causing the error
   isLoading: boolean;
 }
 
-const ReviewList = ({ reviews, isLoading }: ReviewListProps) => {
+// --- FIX: Added default value 'reviews = []' ---
+const ReviewList = ({ reviews = [], isLoading }: ReviewListProps) => {
   const t = useTranslations("ReviewList");
 
   if (isLoading) {
     return <div>{t("loading")}</div>;
   }
 
+  // This line will no longer crash
   if (reviews.length === 0) {
     return <div className="text-gray-500">{t("noReviews")}</div>;
   }

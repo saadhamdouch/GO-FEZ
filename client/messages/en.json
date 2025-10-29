@@ -89,5 +89,34 @@
     "about": "About",
     "language": "Language",
     "copyright": "© 2025 - Go Fez. All rights reserved"
+  },
+  "PoiDetailPage": {
+    "loading": "Loading Point of Interest...",
+    "error": "Error loading data.",
+    "notFound": "Point of Interest not found."
+  },
+  "AudioPlayer": {
+    "title": "Audio Guide",
+    "selectLanguage": "Select language",
+    "noAudio": "No audio available"
+  },
+  "ShareButtons": {
+    "title": "Share this place",
+    "emailBody": "Check out this place:"
+  },
+  "ReviewForm": {
+    "title": "Leave a Review",
+    "yourRating": "Your Rating",
+    "yourComment": "Your Comment",
+    "commentPlaceholder": "Share your experience...",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "ratingRequired": "Please select a rating.",
+    "successTitle": "Review submitted!"
+  },
+  "ReviewList": {
+    "title": "Reviews",
+    "loading": "Loading reviews...",
+    "noReviews": "No reviews yet."
   }
 }

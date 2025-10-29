@@ -89,5 +89,34 @@
     "about": "حول",
     "language": "اللغة",
     "copyright": "© 2025 - جو فاس. جميع الحقوق محفوظة"
+  },
+  "PoiDetailPage": {
+    "loading": "جاري تحميل النقطة...",
+    "error": "خطأ في تحميل البيانات.",
+    "notFound": "النقطة غير موجودة."
+  },
+  "AudioPlayer": {
+    "title": "دليل صوتي",
+    "selectLanguage": "اختر اللغة",
+    "noAudio": "لا يوجد ملف صوتي"
+  },
+  "ShareButtons": {
+    "title": "شارك هذا المكان",
+    "emailBody": "اكتشف هذا المكان:"
+  },
+  "ReviewForm": {
+    "title": "اترك تقييمًا",
+    "yourRating": "تقييمك",
+    "yourComment": "تعليقك",
+    "commentPlaceholder": "شارك تجربتك...",
+    "submit": "إرسال",
+    "submitting": "جاري الإرسال...",
+    "ratingRequired": "الرجاء اختيار تقييم.",
+    "successTitle": "تم إرسال التقييم!"
+  },
+  "ReviewList": {
+    "title": "التقييمات",
+    "loading": "جاري تحميل التقييمات...",
+    "noReviews": "لا توجد تقييمات حتى الآن."
   }
 }

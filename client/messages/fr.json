@@ -159,7 +159,8 @@
     "error": "Impossible de charger les détails.",
     "notAvailable": "Non disponible",
     "premium": "Contenu Premium",
-    "audioGuide": "Guide Audio"
+    "audioGuide": "Guide Audio",
+    "notFound": "Point d'intérêt non trouvé."
   },
   "POICard": {
     "premium": "Premium"
@@ -192,6 +193,31 @@
     "starting": "Démarrage...",
     "startButton": "Démarrer ce circuit",
     "circuitImageAlt": "Image de couverture du circuit"
+  },
+
+  "AudioPlayer": {
+    "title": "Guide Audio",
+    "selectLanguage": "Choisir la langue",
+    "noAudio": "Aucun audio disponible"
+  },
+  "ShareButtons": {
+    "title": "Partager ce lieu",
+    "emailBody": "Découvrez ce lieu :"
+  },
+  "ReviewForm": {
+    "title": "Laissez un avis",
+    "yourRating": "Votre note",
+    "yourComment": "Votre commentaire",
+    "commentPlaceholder": "Partagez votre expérience...",
+    "submit": "Envoyer",
+    "submitting": "Envoi...",
+    "ratingRequired": "Veuillez sélectionner une note.",
+    "successTitle": "Avis envoyé !"
+  },
+  "ReviewList": {
+    "title": "Avis",
+    "loading": "Chargement des avis...",
+    "noReviews": "Aucun avis pour le moment."
   }
 
 }
