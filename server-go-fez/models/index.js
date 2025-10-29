@@ -13,6 +13,9 @@ const  PointsTransaction  = require("./PointsTransaction");
 const  {User}  = require("./User");
 const  {UserSpace}  = require("./UserSpace");
 const { TransportMode } = require("./TransportMode");
+const { Route } = require("./Route");
+const { VisitedTrace } = require("./visitedTrace");
+const {RemovedTrace}= require("./removedTrace")
 
 // Création d’un objet contenant tous les modèles
 const models = {
@@ -30,7 +33,10 @@ const models = {
 	PointsTransaction,
 	User,
 	UserSpace,
-	TransportMode
+	TransportMode,
+	Route,
+	VisitedTrace,
+	RemovedTrace
 };
 
 // Appel automatique de toutes les associations si elles existent

@@ -198,6 +198,7 @@ exports.rateCircuit = async (req, res) => {
 
 
 // Récupérer tous les circuits (filtrés et triés)
+
 exports.getAllCircuits = async (req, res) => {
   
     const {
@@ -216,7 +217,7 @@ exports.getAllCircuits = async (req, res) => {
 
     try {
         if (!themeId) {
-            // S'assurer que le themeId est requis, basé sur votre TODO
+
             return res.status(400).json({ status: 'fail', message: 'Le paramètre themeId est requis pour cette recherche.' });
         }
         
@@ -345,6 +346,7 @@ exports.getAllCircuits = async (req, res) => {
         });
     }
 };
+
 
 
 // Récupérer un circuit par ID
