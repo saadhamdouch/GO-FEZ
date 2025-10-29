@@ -1,6 +1,6 @@
 const { Theme, Circuit } = require('../models');
 const xss = require('xss');
-const { uploadImage, uploadThemeFiles, deleteFile } = require("../config/cloudinary");
+const { uploadImage, uploadThemeFiles, deleteFile } = require("../Config/cloudinary");
 
 
 const sanitizeThemeLocalizations = (localizations) => {
@@ -107,9 +107,20 @@ exports.createTheme = async (req, res) => {
 };
 
 exports.getAllThemes = async (req, res) => {
+
+  const page = parseInt(req.query.page) || 1; 
+  const limit = 10; 
+  const offset = (page - 1) * limit; 
+
   try {
-    const themes = await Theme.findAll({
+
+    const result = await Theme.findAndCountAll({
       where: { isDeleted: false },
+      
+      // AJOUTER LA PAGINATION
+      limit: limit,
+      offset: offset,
+      
       include: [
         {
           model: Circuit,
@@ -117,21 +128,34 @@ exports.getAllThemes = async (req, res) => {
           through: { attributes: [] },
           attributes: ['id']
         }
-      ]
+      ],
+      order: [['id', 'ASC']]
     });
 
-    const data = themes.map(theme => ({
+    const themesWithCount = result.rows.map(theme => ({
       ...theme.toJSON(),
       circuitsCount: theme.circuitsFromThemes?.length || 0
     }));
 
-    res.status(200).json({ status: 'success', data });
+    // 3. Calculer les métadonnées de pagination
+    const totalItems = result.count; 
+    const totalPages = Math.ceil(totalItems / limit);
+
+    res.status(200).json({
+      status: 'success',
+      data: themesWithCount,
+      meta: {
+        currentPage: page,
+        perPage: limit,
+        totalItems: totalItems,
+        totalPages: totalPages
+      }
+    });
   } catch (error) {
-    console.error('Erreur récupération thèmes :', error);
+    console.error('❌ Erreur getPaginatedThemes:', error);
     res.status(500).json({ status: 'error', message: 'Erreur serveur', error: error.message });
   }
 };
-
 exports.getThemeById = async (req, res) => {
   try {
     const theme = await Theme.findOne({

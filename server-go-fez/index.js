@@ -80,7 +80,7 @@ const jsonMiddleware = express.json({ limit: '50mb' });
 app.use('/api/themes/', ThemeRoute);
 app.use('/api/circuits', CircuitRoutes);
 app.use('/api/city', CityRoute);
-app.use('/api/pois', POIRouter);
+app.use('/api/pois',jsonMiddleware, POIRouter);
 
 // Routes sans files
 app.use('/api/users', jsonMiddleware, UserRouter);

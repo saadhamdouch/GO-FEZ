@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useGetAllThemesQuery } from "@/services/api/ThemeApi";
+import { useRouter } from "@/i18n/navigation"; // 1. Import router
 import ExploreCard from "./ExploreCard";
 
 interface ThemesProps {
@@ -13,8 +14,14 @@ interface ThemesProps {
 
 export default function Themes({ locale, isRTL }: ThemesProps) {
   const t = useTranslations();
-  const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+  const router = useRouter(); // 2. Initialize router
+  // const [selectedTheme, setSelectedTheme] = useState<string | null>(null); // No longer needed for navigation
   const { data: themesData, isLoading, error } = useGetAllThemesQuery();
+
+  // 3. Create navigation handler
+  const handleSelectTheme = (id: string) => {
+    router.push(`/themes/${id}`);
+  };
 
   const themes = themesData?.data || [];
 
@@ -95,8 +102,8 @@ export default function Themes({ locale, isRTL }: ThemesProps) {
                   <ExploreCard
                     key={item.id}
                     item={item}
-                    selected={selectedTheme}
-                    onSelect={setSelectedTheme}
+                    selected={null} // 4. Set selected to null
+                    onSelect={handleSelectTheme} // 5. Use navigation handler
                     currentLocale={locale}
                   />
                 ))}
