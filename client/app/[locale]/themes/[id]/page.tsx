@@ -5,12 +5,14 @@ import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { MapPin, Clock, Sprout, AlertTriangle } from "lucide-react";
-import { useGetOneThemeQuery } from "@/services/api/ThemeApi";
+// --- VERIFY THESE IMPORTS ---
+import { useGetOneThemeQuery } from "@/services/api/ThemeApi"; // Should be { ... }
 import { useGetAllCircuitsQuery } from "@/services/api/CircuitApi";
+import { getLocalizedField } from "@/lib/utils"; // Should be { ... }
+// --- END VERIFY ---
 import { Link, useRouter } from "@/i18n/navigation";
 import Header from "@/components/header/header";
 import Footer from "@/components/footer/footer";
-import { getLocalizedField } from "@/lib/utils";
 import { POI, Circuit } from "@/lib/types"; // Make sure this path is correct
 
 // A new, attractive POI card for this page
@@ -24,11 +26,12 @@ const POIGridCard = ({
   const t = useTranslations("POICard");
   const dir = locale === "ar" ? "rtl" : "ltr";
 
+  // Using getLocalizedField here
   const name = getLocalizedField(poi, "name", locale);
   const description = getLocalizedField(poi, "description", locale);
   const primaryImage =
     poi.files?.find((f) => f.type === "image")?.fileUrl ||
-    "https/via.placeholder.com/400x300";
+    "https://via.placeholder.com/400x300"; // Corrected placeholder URL
 
   return (
     <Link
@@ -51,6 +54,7 @@ const POIGridCard = ({
           )}
           {poi.categoryPOI && (
             <span className="bg-emerald-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+              {/* Using getLocalizedField here */}
               {getLocalizedField(poi.categoryPOI, "name", locale)}
             </span>
           )}
@@ -77,6 +81,7 @@ export default function ThemeDetailPage() {
   const t = useTranslations("ThemePage");
   const dir = locale === "ar" ? "rtl" : "ltr";
 
+  // Using useGetOneThemeQuery here
   const {
     data: themeData,
     isLoading: isLoadingTheme,
@@ -127,9 +132,10 @@ export default function ThemeDetailPage() {
     );
   }
 
+  // Using getLocalizedField here
   const themeName = getLocalizedField(theme, "name", locale);
   const themeDescription = getLocalizedField(theme, "description", locale);
-  const themeImage = theme.imageUrl || "https/via.placeholder.com/1600x600";
+  const themeImage = theme.imageUrl || "https://via.placeholder.com/1600x600"; // Corrected placeholder URL
 
   return (
     <div className="min-h-screen bg-gray-50" dir={dir}>
@@ -176,9 +182,11 @@ export default function ThemeDetailPage() {
                   }`}
                 >
                   <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+                    {/* Using getLocalizedField here */}
                     {getLocalizedField(circuit, "name", locale)}
                   </h2>
                   <p className="text-gray-600 mt-2 text-lg">
+                    {/* Using getLocalizedField here */}
                     {getLocalizedField(circuit, "description", locale)}
                   </p>
                   <div className="flex flex-wrap gap-x-6 gap-y-2 text-gray-700 mt-4">
@@ -193,6 +201,7 @@ export default function ThemeDetailPage() {
                     <span className="flex items-center gap-2">
                       <Sprout size={18} className="text-emerald-600" />
                       {t("difficulty", {
+                        // Using getLocalizedField here
                         value: getLocalizedField(
                           circuit,
                           "difficulty",
