@@ -7,6 +7,7 @@ import Image from "next/image";
 import LanguageSelector from "./LanguageSelector";
 import Login from "../auth/Login";
 import SignUp from "../auth/SignUp";
+import ForgotPassword from '../auth/ForgotPassword';
 
 interface HeaderProps {
   locale: string;
@@ -25,6 +26,7 @@ export default function Header({
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignUpOpen, setIsSignUpOpen] = useState(false);
+  const [isForgotOpen, setIsForgotOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -340,7 +342,10 @@ export default function Header({
             setIsLoginOpen(false);
             setIsSignUpOpen(true);
           }}
-          onSwitchToForgotPassword={() => setIsLoginOpen(false)}
+          onSwitchToForgotPassword={() => {
+          setIsLoginOpen(false);
+          setIsForgotOpen(true);
+        }}
         />
       )}
       {isSignUpOpen && (
@@ -352,6 +357,15 @@ export default function Header({
           }}
         />
       )}
+    {isForgotOpen && (
+      <ForgotPassword
+        onClose={() => setIsForgotOpen(false)}
+        onSwitchToLogin={() => {
+          setIsForgotOpen(false);
+          setIsLoginOpen(true);
+        }}
+      />
+    )}
     </>
   );
 }
