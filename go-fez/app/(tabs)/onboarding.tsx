@@ -6,6 +6,7 @@ import zelijBg from '@/assets/images/zelij.png';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { navigate } from 'expo-router/build/global-state/routing';
 import React, { useEffect, useState } from 'react';
 import {
   Dimensions,
@@ -28,7 +29,7 @@ const OnboardingFlow = () => {
       if (completed === 'true') {
         setHasCompletedOnboarding(true);
       }
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       setIsLoading(false);
     } catch (error) {
       console.error('Error checking onboarding status:', error);
@@ -74,7 +75,13 @@ const OnboardingFlow = () => {
   const screens = [
     <Onboarding1 onSkip={handleSkip} onNext={handleGetStarted} />,
     <Onboarding2 onSkip={handleSkip} onNext={handleGetStarted} />,
-    <Onboarding3 onSkip={handleSkip} onNext={handleGetStarted} />,
+    <Onboarding3
+      onSkip={handleSkip}
+      onNext={() => {
+        navigate('/(tabs)/explore');
+        completeOnboarding();
+      }}
+    />,
   ];
 
   if (isLoading) {
@@ -202,15 +209,14 @@ function Onboarding1({
         <Text className='text-gray-600 mb-8 leading-5'>
           Explore routes, find parking, and navigate the city.
         </Text>
-
-        <TouchableOpacity
-          className='bg-green-600 py-4 rounded-full items-center justify-center'
-          onPress={onNext}
-        >
-          <Text className='text-white text-base font-semibold'>
-            Get started
-          </Text>
-        </TouchableOpacity>
+        <View className='w-full h-1/2 flex-row-reverse items-end'>
+          <TouchableOpacity
+            className='bg-green-600 p-2 rounded-lg items-center justify-center w-[150px]'
+            onPress={onNext}
+          >
+            <Text className='text-white text-base font-semibold'>Next</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -266,14 +272,14 @@ function Onboarding2({
           town.
         </Text>
 
-        <TouchableOpacity
-          className='bg-green-600 py-4 rounded-full items-center justify-center'
-          onPress={onNext}
-        >
-          <Text className='text-white text-base font-semibold'>
-            Get started
-          </Text>
-        </TouchableOpacity>
+        <View className='w-full h-1/2 flex-row-reverse items-end'>
+          <TouchableOpacity
+            className='bg-green-600 p-2 rounded-lg items-center justify-center w-[150px]'
+            onPress={onNext}
+          >
+            <Text className='text-white text-base font-semibold'>Next</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -329,14 +335,16 @@ function Onboarding3({
           route.
         </Text>
 
-        <TouchableOpacity
-          className='bg-green-600 py-4 rounded-full items-center justify-center'
-          onPress={onNext}
-        >
-          <Text className='text-white text-base font-semibold'>
-            Get started
-          </Text>
-        </TouchableOpacity>
+        <View className='w-full h-1/2 flex-row-reverse items-end'>
+          <TouchableOpacity
+            className='bg-green-600 p-2 rounded-lg items-center justify-center w-[150px]'
+            onPress={onNext}
+          >
+            <Text className='text-white text-base font-semibold'>
+              Get Started
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
