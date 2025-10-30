@@ -39,6 +39,35 @@
             "backgroundColor": "#023157"
           }
         }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": ["./assets/fonts/MomoTrustDisplay-Regular.ttf"],
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "MainFont",
+                "fontDefinitions": [
+                  {
+                    "path": "./assets/fonts/MomoTrustDisplay-Regular.ttf",
+                    "weight": 700
+                  },
+                  {
+                    "path": "./assets/fonts/MomoTrustDisplay-Regular.ttf",
+                    "weight": 700
+                  }
+                ]
+              }
+            ]
+          },
+          "ios": {
+            "fonts": [
+              "./assets/fonts/MomoTrustDisplay-Regular.ttf",
+              "./assets/fonts/MomoTrustDisplay-Regular.ttf"
+            ]
+          }
+        }
       ]
     ],
     "experiments": {

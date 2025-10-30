@@ -56,6 +56,7 @@ const OnboardingFlow = () => {
 
   const handleSkip = () => {
     completeOnboarding();
+    navigate('/(tabs)/explore');
   };
 
   const resetOnboarding = async () => {
@@ -200,7 +201,10 @@ function Onboarding1({
           height: (4 * height) / 6,
         }}
       >
-        <Text className='text-lg text-green-600 font-bold mb-2'>
+        <Text
+          style={{ fontFamily: 'MainFont' }}
+          className='text-lg text-green-600 font-bold mb-2'
+        >
           Welcome to Go-FEZ
         </Text>
         <Text className='text-3xl font-bold text-gray-900 mb-3'>
@@ -261,7 +265,10 @@ function Onboarding2({
         className='bg-white rounded-t-3xl px-6 pb-12 justify-center'
         style={{ paddingTop: 32, height: (4 * height) / 6 }}
       >
-        <Text className='text-lg text-green-600 font-bold mb-2'>
+        <Text
+          className='text-lg text-green-600 font-bold mb-2'
+          style={{ fontFamily: 'MainFont' }}
+        >
           Smart Navigation
         </Text>
         <Text className='text-3xl font-bold text-gray-900 mb-3'>
@@ -324,7 +331,10 @@ function Onboarding3({
         className='bg-white rounded-t-3xl px-6 pb-12 justify-center'
         style={{ paddingTop: 32, height: (4 * height) / 6 }}
       >
-        <Text className='text-lg text-green-600 font-bold mb-2'>
+        <Text
+          className='text-lg text-green-600 font-bold mb-2'
+          style={{ fontFamily: 'MainFont' }}
+        >
           Explore & Discover
         </Text>
         <Text className='text-3xl font-bold text-gray-900 mb-3'>

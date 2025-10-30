@@ -1,19 +1,24 @@
 import '@/global.css';
 import { PortalHost } from '@rn-primitives/portal';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-
 SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
-  useEffect(() => {
-    async function prepare() {
-      await new Promise((resolve) => setTimeout(resolve, 20000));
-      await SplashScreen.hideAsync();
-    }
+  const [loaded, error] = useFonts({
+    MainFont: require('@/assets/fonts/MomoTrustDisplay-Regular.ttf'),
+  });
 
-    prepare();
-  }, []);
+  useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, error]);
+
+  if (!loaded && !error) {
+    return null;
+  }
   return (
     <>
       <Stack>
