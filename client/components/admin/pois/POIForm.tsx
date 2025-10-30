@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FormField } from '../shared/FormField';
 import { LocalizedInputs } from '../shared/LocalizedInputs';
 import { MultipleFileUpload } from '../shared/MultipleFileUpload';
 import { Checkbox } from '../shared/Checkbox';
 import { FormActions } from '../shared/FormActions';
 import MapSelector from './MapSelector';
-import { ImageIcon, Video, Map as Map360, Music, Info, MapPin, Plus, ChevronRight, ChevronLeft } from 'lucide-react';
+import { ImageIcon, Video, Map as Map360, Music, Info, MapPin, Plus, ChevronRight, ChevronLeft, Trash2 } from 'lucide-react';
 
 interface POIFormProps {
   formData: any;
@@ -38,8 +38,11 @@ export function POIForm({
 }: POIFormProps) {
   const [showMap, setShowMap] = useState(true);
   const [showPracticalInfo, setShowPracticalInfo] = useState(false);
+  const [showSummary, setShowSummary] = useState(true);
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
+  const [newFieldKey, setNewFieldKey] = useState('');
+  const [newFieldValue, setNewFieldValue] = useState('');
 
   const practicalInfoTemplate = {
     horaires: { checkin: '', checkout: '', reception: '' },
@@ -56,11 +59,16 @@ export function POIForm({
 
   const categoriesKeys = Object.keys(practicalInfoTemplate);
   const getCurrentCategoryKey = () => categoriesKeys[currentCategoryIndex];
-  const getCurrentFields = () => practicalInfoTemplate[getCurrentCategoryKey()];
+  const getCurrentFields = () => {
+    const parsed = getParsedPracticalInfo();
+    const categoryKey = getCurrentCategoryKey();
+    return parsed[categoryKey] || practicalInfoTemplate[categoryKey];
+  };
 
   const getParsedPracticalInfo = () => {
     try {
-      return JSON.parse(formData.practicalInfo || '{}');
+      const parsed = JSON.parse(formData.practicalInfo || '{}');
+      return typeof parsed === 'object' ? parsed : {};
     } catch {
       return {};
     }
@@ -68,7 +76,7 @@ export function POIForm({
 
   const handleFieldChange = (categoryKey: string, fieldKey: string, value: any, index?: number) => {
     const parsed = getParsedPracticalInfo();
-    if (!parsed[categoryKey]) parsed[categoryKey] = practicalInfoTemplate[categoryKey];
+    if (!parsed[categoryKey]) parsed[categoryKey] = practicalInfoTemplate[categoryKey] || {};
 
     if (Array.isArray(parsed[categoryKey][fieldKey])) {
       if (index !== undefined) {
@@ -78,6 +86,54 @@ export function POIForm({
       parsed[categoryKey][fieldKey] = value;
     }
 
+    onFormDataChange({
+      ...formData,
+      practicalInfo: JSON.stringify(parsed),
+    });
+  };
+
+  const handleFieldKeyRename = (categoryKey: string, oldKey: string, newKey: string) => {
+    const parsed = getParsedPracticalInfo();
+    if (!parsed[categoryKey]) return;
+
+    const categoryData = parsed[categoryKey];
+    if (!newKey.trim() || newKey === oldKey || categoryData[newKey]) return;
+
+    categoryData[newKey] = categoryData[oldKey];
+    delete categoryData[oldKey];
+
+    onFormDataChange({
+      ...formData,
+      practicalInfo: JSON.stringify(parsed),
+    });
+  };
+
+  const handleAddCustomField = (categoryKey: string, key: string, value: string) => {
+    if (!key.trim()) return;
+
+    const parsed = getParsedPracticalInfo();
+    if (!parsed[categoryKey]) parsed[categoryKey] = {};
+
+    if (parsed[categoryKey][key]) {
+      alert(`La clé "${key}" existe déjà dans ${categoryKey}`);
+      return;
+    }
+
+    parsed[categoryKey][key] = value;
+    onFormDataChange({
+      ...formData,
+      practicalInfo: JSON.stringify(parsed),
+    });
+    setNewFieldKey('');
+    setNewFieldValue('');
+  };
+
+  const handleRemoveField = (categoryKey: string, fieldKey: string) => {
+    const parsed = getParsedPracticalInfo();
+    if (!parsed[categoryKey]) return;
+
+    delete parsed[categoryKey][fieldKey];
+    
     onFormDataChange({
       ...formData,
       practicalInfo: JSON.stringify(parsed),
@@ -98,7 +154,9 @@ export function POIForm({
     if (currentFieldIndex > 0) {
       setCurrentFieldIndex(currentFieldIndex - 1);
     } else if (currentCategoryIndex > 0) {
-      const prevFields = Object.keys(practicalInfoTemplate[categoriesKeys[currentCategoryIndex - 1]]);
+      const parsed = getParsedPracticalInfo();
+      const prevCategoryKey = categoriesKeys[currentCategoryIndex - 1];
+      const prevFields = Object.keys(parsed[prevCategoryKey] || practicalInfoTemplate[prevCategoryKey]);
       setCurrentCategoryIndex(currentCategoryIndex - 1);
       setCurrentFieldIndex(prevFields.length - 1);
     }
@@ -227,7 +285,7 @@ export function POIForm({
               step="any"
               value={formData.latitude}
               onChange={(e) => onFormDataChange({ ...formData, latitude: e.target.value })}
-                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               required
               placeholder="34.0626"
               readOnly={showMap}
@@ -360,13 +418,22 @@ export function POIForm({
         {showPracticalInfo && (
           <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 space-y-4">
             <h4 className="font-bold text-sm uppercase text-indigo-700">{getCurrentCategoryKey()}</h4>
+
             {Object.keys(getCurrentFields()).map((fieldKey, idx) => {
               if (idx > currentFieldIndex) return null;
               const parsed = getParsedPracticalInfo();
               const value = parsed?.[getCurrentCategoryKey()]?.[fieldKey] || '';
+
               return (
                 <div key={fieldKey} className="flex items-center gap-2">
-                  <label className="text-xs w-32">{fieldKey}</label>
+                  <input
+                    type="text"
+                    value={fieldKey}
+                    onChange={(e) =>
+                      handleFieldKeyRename(getCurrentCategoryKey(), fieldKey, e.target.value)
+                    }
+                    className="w-32 px-2 py-1 border rounded-lg text-xs focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
+                  />
                   <input
                     type="text"
                     value={value}
@@ -375,15 +442,48 @@ export function POIForm({
                     }
                     className="flex-1 px-2 py-1 border rounded-lg text-sm focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
                   />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveField(getCurrentCategoryKey(), fieldKey)}
+                    className="px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
                 </div>
               );
             })}
+
+            {/* Add Custom Field */}
+            <div className="flex items-center gap-2 mt-4">
+              <input
+                type="text"
+                placeholder="Nouvelle clé"
+                value={newFieldKey}
+                onChange={(e) => setNewFieldKey(e.target.value)}
+                className="w-32 px-2 py-1 border rounded-lg text-xs focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
+              />
+              <input
+                type="text"
+                placeholder="Nouvelle valeur"
+                value={newFieldValue}
+                onChange={(e) => setNewFieldValue(e.target.value)}
+                className="flex-1 px-2 py-1 border rounded-lg text-sm focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
+              />
+              <button
+                type="button"
+                onClick={() => handleAddCustomField(getCurrentCategoryKey(), newFieldKey, newFieldValue)}
+                className="px-3 py-1 bg-green-500 text-white rounded-lg text-xs hover:bg-green-600"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+            </div>
 
             <div className="flex gap-2 mt-2">
               <button
                 type="button"
                 onClick={goBackField}
                 className="px-3 py-1 bg-gray-200 rounded-lg text-xs flex items-center gap-1 hover:bg-gray-300"
+                disabled={currentCategoryIndex === 0 && currentFieldIndex === 0}
               >
                 <ChevronLeft className="w-3 h-3" /> Retour
               </button>
@@ -398,6 +498,39 @@ export function POIForm({
           </div>
         )}
       </div>
+
+      {/* Summary of Practical Info */}
+      {showPracticalInfo && Object.keys(getParsedPracticalInfo()).length > 0 && (
+        <div className="mt-6 border border-indigo-200 rounded-lg bg-indigo-50 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setShowSummary(!showSummary)}
+            className="w-full px-4 py-3 text-left font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors flex items-center justify-between"
+          >
+            <span className="text-sm">Résumé des infos pratiques</span>
+            <ChevronRight className={`w-4 h-4 transition-transform ${showSummary ? 'rotate-90' : ''}`} />
+          </button>
+          
+          {showSummary && (
+            <div className="px-4 pb-4 text-sm text-gray-800 space-y-3">
+              {Object.entries(getParsedPracticalInfo()).map(([category, fields]) => (
+                <div key={category} className="bg-white p-3 rounded-lg">
+                  <p className="font-medium text-indigo-600 mb-2">{category}</p>
+                  <ul className="ml-4 space-y-1">
+                    {typeof fields === 'object' &&
+                      Object.entries(fields).map(([key, value]) => (
+                        <li key={key} className="text-xs">
+                          <span className="font-semibold">{key}:</span>{' '}
+                          {Array.isArray(value) ? value.join(', ') : value || '—'}
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Status Checkboxes */}
       <div className="flex items-center space-x-6 pt-4 border-t">
