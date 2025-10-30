@@ -7,15 +7,17 @@ const {
   findOnePOI,
   updatePOI,
   deletePOI,
-    getPOIsForParcoursLibre,
-    getTravelTime
+  getPOIsForParcoursLibre,
+  getTravelTime,
+  getPOIsByCity,
+  searchPOIs
 } = require('../controllers/POIController.js');
 const { 
     uploadImage, 
     uploadAudio, 
     uploadVideo, 
     uploadVirtualTour 
-} = require('../config/cloudinary');
+} = require('../Config/cloudinary');
 const { POI } = require('../models/index.js');
 
 // Middleware personnalisé pour gérer les uploads multiples
@@ -147,6 +149,8 @@ POIRouter.post('/upload/virtual-tour', uploadVirtualTour.single('virtualTour'), 
 
 POIRouter.get('/parcours-libre', getPOIsForParcoursLibre);
 POIRouter.get('/travel-time', getTravelTime);
+POIRouter.get('/by-city/:cityId', getPOIsByCity);
+POIRouter.post('/search', searchPOIs);
 // Routes principales des POI
 POIRouter.get('/', findAllPOIs);
 

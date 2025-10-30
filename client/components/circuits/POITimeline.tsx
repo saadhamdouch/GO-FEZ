@@ -59,10 +59,12 @@ const POITimeline: React.FC<POITimelineProps> = ({
 
 							{/* Le contenu de l'étape */}
 							<div className="ml-6 w-full rounded-lg border bg-white p-4 shadow-sm">
-								<Link href={`/${locale}/pois/${poi.id}`} legacyBehavior>
-									<a className="font-semibold text-gray-900 hover:text-blue-600">
-										{name}
-									</a>
+								{/* FIX: Removed 'legacyBehavior' and moved className to Link */}
+								<Link
+									href={`/${locale}/pois/${poi.id}`}
+									className="font-semibold text-gray-900 hover:text-blue-600"
+								>
+									{name}
 								</Link>
 								{address && (
 									<div className="mt-1 flex items-center gap-1.5">

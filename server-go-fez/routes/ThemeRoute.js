@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ThemeController = require('../controllers/ThemeController');
-const { uploadThemeFiles } = require("../config/cloudinary");
+const { uploadThemeFiles } = require("../Config/cloudinary");
 
 
 router.post('/create-with-files', uploadThemeFiles.fields([
