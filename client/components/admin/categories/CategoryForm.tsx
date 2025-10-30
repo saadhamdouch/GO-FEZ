@@ -87,6 +87,7 @@ export function CategoryForm({
           onChange={onIconChange}
           icon={<ImageIcon className="w-4 h-4" />}
         />
+
       </div>
 
       {/* Status Checkbox */}
