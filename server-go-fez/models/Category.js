@@ -20,6 +20,14 @@ const Category = sequelize.define('Category', {
     type: DataTypes.JSON,
     allowNull: false,
   },
+  icon: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  iconPublicId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,

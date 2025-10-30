@@ -3,9 +3,12 @@ const { body } = require('express-validator');
 const multer = require("multer");
 const path = require('path');
 const { 
+  registerWithProvider,
     handleValidationErrors,
     registerUser,
     loginUser,
+    verifyOTP,
+    resendOTP,
     getUserProfile,
     updateUserProfile,
     findAllUsers,
@@ -54,35 +57,52 @@ UserRouter.post('/signup', [
         .isLength({ min: 2, max: 100 })
         .withMessage('Le nom doit contenir entre 2 et 100 caractères'),
     body('email')
-        .optional()
         .isEmail()
         .normalizeEmail()
         .withMessage('Email invalide'),
-    body('phone')
-        .optional()
-        .isMobilePhone('fr-FR')
-        .withMessage('Numéro de téléphone invalide'),
     body('password')
         .isLength({ min: 8 })
         .withMessage('Le mot de passe doit contenir au moins 8 caractères')
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-        .withMessage('Le mot de passe doit contenir au moins une minuscule, une majuscule et un chiffre'),
+        .matches(/^(?=.*[a-zA-Z])(?=.*\d)/)
+        .withMessage('Le mot de passe doit contenir au moins une lettre et un chiffre'),
     handleValidationErrors
 ], registerUser);
 
 UserRouter.post('/login', [
-    body('identifier')
+    body('email')
         .notEmpty()
-        .withMessage('Email ou numéro de téléphone requis'),
+        .isEmail()
+        .normalizeEmail()
+        .withMessage('Email requis et invalide'),
     body('password')
         .notEmpty()
         .withMessage('Mot de passe requis'),
     handleValidationErrors
 ], loginUser);
 
+UserRouter.post('/verify-otp', [
+    body('email')
+        .isEmail()
+        .normalizeEmail()
+        .withMessage('Email invalide'),
+    body('otp')
+        .isLength({ min: 6, max: 6 })
+        .isNumeric()
+        .withMessage('Code OTP invalide (6 chiffres requis)'),
+    handleValidationErrors
+], verifyOTP);
+
+UserRouter.post('/resend-otp', [
+    body('email')
+        .isEmail()
+        .normalizeEmail()
+        .withMessage('Email invalide'),
+    handleValidationErrors
+], resendOTP);
+
 UserRouter.get('/profile', getUserProfile);
 UserRouter.put('/profile', upload.single("profileImage"), updateUserProfile);
 UserRouter.get('/:id', findOneUser);
 UserRouter.put('/update-password/:id', updatePassword);
-
+UserRouter.post("/provider-register", registerWithProvider);
 module.exports = { UserRouter };

@@ -5,9 +5,9 @@ import { Formik, Form, Field, ErrorMessage } from 'formik'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Card } from '../ui/card'
-import { User, Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft } from 'lucide-react'
+import { User, Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft, RefreshCw, UserCheck } from 'lucide-react'
 import { signUpStep1Schema, signUpStep2Schema } from '../../lib/validationSchemas'
-import { useRegisterUserMutation } from '../../services/api/UserApi'
+import { useRegisterUserMutation, useSendOTPMutation, useVerifyOTPMutation, useUpdateVerificationStatusMutation } from '../../services/api/UserApi'
 import GmailLoginButton from '../social/GmailLoginButton'
 import FacebookLoginButton from '../social/FacebookLoginButton'
 
@@ -21,6 +21,9 @@ const SignUp: React.FC<SignUpProps> = ({ onClose, onSwitchToLogin }) => {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [registerUser, { isLoading }]: any = useRegisterUserMutation()
+  const [sendOTP, { isLoading: isSendingOTP }]: any = useSendOTPMutation()
+  const [verifyOTP, { isLoading: isVerifyingOTP }]: any = useVerifyOTPMutation()
+  const [updateVerificationStatus, { isLoading: isUpdatingVerification }]: any = useUpdateVerificationStatusMutation()
 
   const initialValues = {
     firstName: '',
@@ -28,21 +31,38 @@ const SignUp: React.FC<SignUpProps> = ({ onClose, onSwitchToLogin }) => {
     email: '',
     password: '',
     confirmPassword: '',
+    otpCode: '',
   }
 
   const handleStep1Submit = async () => setStep(2)
 
   const handleStep2Submit = async (values: typeof initialValues) => {
     try {
+      // 1) Envoyer l'OTP à l'email
+      await sendOTP({ email: values.email, purpose: 'verification' }).unwrap()
+      // 2) Créer l'utilisateur (non vérifié)
       await registerUser({
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email,
         password: values.password,
       }).unwrap()
+      // 3) Passer à l'étape OTP
+      setStep(3)
+    } catch (e) {
+      // Erreur affichée via mutation (pas de throw ici)
+    }
+  }
+
+  const handleStep3Submit = async (values: typeof initialValues) => {
+    try {
+      // 1) Vérifier OTP
+      await verifyOTP({ email: values.email, otpCode: values.otpCode, purpose: 'verification' }).unwrap()
+      // 2) Mettre à jour le statut vérifié
+      await updateVerificationStatus({ email: values.email, isVerified: true }).unwrap()
       onClose?.()
     } catch (e) {
-      // Erreur affichée par mutation error (non bloquant ici)
+      // Erreur affichée via mutation
     }
   }
 
@@ -66,8 +86,8 @@ const SignUp: React.FC<SignUpProps> = ({ onClose, onSwitchToLogin }) => {
           <div className="px-8 pb-8">
             <Formik
               initialValues={initialValues}
-              validationSchema={step === 1 ? signUpStep1Schema : signUpStep2Schema}
-              onSubmit={step === 1 ? handleStep1Submit : handleStep2Submit}
+              validationSchema={step === 1 ? signUpStep1Schema : step === 2 ? signUpStep2Schema : undefined}
+              onSubmit={step === 1 ? handleStep1Submit : step === 2 ? handleStep2Submit : handleStep3Submit}
               validateOnChange={false}
               validateOnBlur={true}
             >
@@ -162,7 +182,7 @@ const SignUp: React.FC<SignUpProps> = ({ onClose, onSwitchToLogin }) => {
                         <FacebookLoginButton color="blue" />
                       </div>
                     </>
-                  ) : (
+                  ) : step === 2 ? (
                     <>
                       <div className="space-y-1">
                         <label className="text-sm font-medium text-gray-700 flex items-center">
@@ -220,8 +240,8 @@ const SignUp: React.FC<SignUpProps> = ({ onClose, onSwitchToLogin }) => {
                         <ErrorMessage name="confirmPassword" component="p" className="text-xs text-red-500" />
                       </div>
 
-                      <Button type="submit" disabled={isLoading} className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-500 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 mt-6">
-                        {isLoading ? (
+                      <Button type="submit" disabled={isLoading || isSendingOTP} className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-500 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 mt-6">
+                        {isLoading || isSendingOTP ? (
                           <div className="flex items-center">
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
                             Création...
@@ -242,6 +262,50 @@ const SignUp: React.FC<SignUpProps> = ({ onClose, onSwitchToLogin }) => {
                           </button>
                         </p>
                       </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700 text-center block">Code de vérification</label>
+                        <div className="relative">
+                          <Field name="otpCode">
+                            {({ field }: any) => (
+                              <Input
+                                {...field}
+                                type="text"
+                                placeholder="123456"
+                                className={`h-12 text-center text-lg font-mono tracking-widest bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 ${
+                                  (errors as any).otpCode && (touched as any).otpCode ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                                }`}
+                                maxLength={6}
+                              />
+                            )}
+                          </Field>
+                        </div>
+                        <ErrorMessage name="otpCode" component="p" className="text-xs text-red-500 text-center" />
+                      </div>
+
+                      <div className="text-center">
+                        <button type="button" onClick={() => sendOTP({ email: (document.querySelector('input[name="email"]') as HTMLInputElement)?.value, purpose: 'verification' })} disabled={isSendingOTP} className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50">
+                          <RefreshCw className={`w-4 h-4 inline mr-1 ${isSendingOTP ? 'animate-spin' : ''}`} />
+                          Renvoyer le code
+                        </button>
+                      </div>
+
+                      <Button type="submit" disabled={isVerifyingOTP || isUpdatingVerification} className="w-full h-12 bg-gradient-to-r from-green-600 to-green-600 hover:from-green-700 hover:to-green-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 mt-6">
+                        {isVerifyingOTP || isUpdatingVerification ? (
+                          <div className="flex items-center">
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                            Vérification...
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <UserCheck className="w-5 h-5 mr-2" />
+                            Vérifier et finaliser
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </div>
+                        )}
+                      </Button>
                     </>
                   )}
                 </Form>

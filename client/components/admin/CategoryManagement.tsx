@@ -24,6 +24,7 @@ export default function CategoryManagement() {
     setIsModalOpen,
     formData,
     setFormData,
+    iconPreview,
     isCreating,
     isUpdating,
     isDeleting,
@@ -31,6 +32,7 @@ export default function CategoryManagement() {
     handleSubmit,
     handleDelete,
     handleEdit,
+    handleIconChange,
     resetForm,
     refetch,
   } = useCategoryManagement();
@@ -97,6 +99,8 @@ export default function CategoryManagement() {
         <CategoryForm
           formData={formData}
           onFormDataChange={setFormData}
+          onIconChange={handleIconChange}
+          iconPreview={iconPreview}
           selectedCategory={selectedCategory}
           onSubmit={handleSubmit}
           onCancel={() => {

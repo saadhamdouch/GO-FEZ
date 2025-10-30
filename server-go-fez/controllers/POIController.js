@@ -1,7 +1,7 @@
 const { validationResult } = require('express-validator');
-const { Op, Sequelize } = require('sequelize');
-const logger = require('../Config/logger');
+const { Op,literal } = require('sequelize');
 const { POI, POILocalization, POIFile, City, Category, User, UserSpace, TransportMode } = require('../models');
+const sequelize = City.sequelize;
 const EARTH_RADIUS_KM = 6371;
 const { uploadFromBuffer, deleteFile, uploadPoiFile, uploadMultiplePoiFiles } = require('../Config/cloudinary');
 const xss = require('xss');
@@ -700,6 +700,220 @@ const getPOIsForParcoursLibre = async (req, res) => {
   }
 };
 
+// methode (getPOIsByCity) fetch pois zone = radius of city 
+/**
+ * Récupère tous les POI situés dans le rayon de la ville spécifiée.
+ * @param {string} cityId - UUID de la ville.
+ * @returns {Promise<Array<POI>>} Liste des POI dans le rayon.
+ */
+async function getPOIsByCity(req, res) {
+  const cityId = req.params.cityId;
+  if (typeof cityId !== 'string' || cityId.length === 0) {
+        return res.status(400).json({ message: "L'ID de la ville est manquant ou invalide." });
+    }
+  
+    try {
+
+        const city = await City.findByPk(cityId, {
+            attributes: ['coordinates', 'radius']
+        });
+        
+
+        if (!city) {
+            console.warn(`Ville avec l'ID ${cityId} non trouvée.`);
+            return  res.status(404).json({ message: "la ville non trouve" });;
+        }
+        let cityCoords = city.coordinates;
+    if (typeof cityCoords === 'string') {
+    try {
+        cityCoords = JSON.parse(cityCoords);
+    } catch (e) {
+        console.error("Erreur de parsing JSON pour les coordonnées de la ville :", e);
+        return [];
+    }
+}
+
+        const cityLat = cityCoords.latitude;
+        const cityLng = cityCoords.longitude;
+        const cityRadius = city.radius;
+
+        const POI_LAT = 'JSON_EXTRACT(POI.coordinates, "$.latitude")';
+        const POI_LON = 'JSON_EXTRACT(POI.coordinates, "$.longitude")';
+        
+        const haversineDistance = literal(`
+            (
+        ${EARTH_RADIUS_KM} * acos(
+            cos(radians(${cityLat})) * cos(radians(${POI_LAT})) 
+            * cos(radians(${POI_LON}) - radians(${cityLng}))
+            + sin(radians(${cityLat})) * sin(radians(${POI_LAT}))
+        )
+            )
+        `);
+        
+
+        const pois = await POI.findAll({
+            attributes: {
+                include: [
+                    [haversineDistance, 'distance_km']
+                ]
+            },
+            where: {
+                cityId: cityId,
+                [Op.and]: [
+                    literal('POI.coordinates IS NOT NULL'),
+                    sequelize.where(haversineDistance, {
+                        [Op.lte]: cityRadius
+                    })
+                ]
+            },
+            order: [[literal('distance_km'), 'ASC']]
+        });
+
+        return res.status(200).json(pois);
+;
+        
+    } catch (error) {
+        console.error("Erreur lors de la récupération des POI par ville (JSON) :", error);
+        throw new Error("Erreur de base de données.");
+    }
+}
+
+
+// methode . search poi with searchTerm in name or description, filter with category, city, isVerified, isPremium, isActive, theme
+/**
+ * 
+ * @body {
+ *  conditions : {
+ *   searchTerm: string,
+ *   categoryIds: [uuid],
+ *   cityIds: [int],
+ *   isVerified: boolean,
+ *   isPremium: boolean,
+ *  isActive: boolean,
+ *  themeIds: [uuid]
+ * }
+ * @returns pois matching the conditions
+ */
+
+
+
+const searchPOIs = async (req, res) => {
+    try {
+      console.log("LOG 1: Entrée dans le contrôleur.");
+        const conditions = req.body?.conditions || {};
+        console.log("LOG 2: Conditions reçues:", conditions);
+        const { searchTerm, categoryIds, cityIds, isVerified, isPremium, isActive } = conditions;
+console.log("LOG 3: Terme de recherche (searchTerm):", searchTerm);
+        // Le filtre de base est toujours isDeleted
+        const poiWhere = { isDeleted: false };
+        let idsToFilter = null; // Contiendra les IDs des POI trouvés si searchTerm est présent
+
+        if (searchTerm) {
+            const pattern = `%${searchTerm}%`;
+
+            // A. Trouver les IDs des POILocalization qui correspondent au terme
+            const matchingLocalizationIds = await POILocalization.findAll({
+                attributes: ['id'],
+                where: {
+                    [Op.or]: [
+                        { name: { [Op.like]: pattern } },
+                        { description: { [Op.like]: pattern } }
+                    ]
+                },
+                raw: true,
+                logging: console.log
+            });
+
+            const localizationIds = matchingLocalizationIds.map(loc => loc.id);
+            console.log("IDs de POI trouvés (searchTerm:", searchTerm, "):", idsToFilter);
+
+            // B. Si aucun ID de localisation ne correspond :
+            if (localizationIds.length === 0) {
+                // Le filtre sera une liste vide, ce qui garantit 0 résultat
+                idsToFilter = []; 
+            } else {
+                // C. Sinon, trouver les IDs des POI qui possèdent ces localisations (OR sur les FKs)
+                const matchingPOIs = await POI.findAll({
+                    attributes: ['id'],
+                    where: {
+                        [Op.or]: [
+                            { ar: { [Op.in]: localizationIds } },
+                            { fr: { [Op.in]: localizationIds } },
+                            { en: { [Op.in]: localizationIds } }
+                        ],
+                        isDeleted: false 
+                    },
+                    raw: true
+                });
+                
+                idsToFilter = matchingPOIs.map(poi => poi.id);
+                console.log("LOG 4: IDs de POI trouvés:", idsToFilter);
+            }
+            
+            // D. APPLIQUER LE FILTRE DE RECHERCHE TEXTUELLE SUR LE WHERE PRINCIPAL
+            // Tous les POI doivent être dans la liste idsToFilter (AND logique)
+            poiWhere.id = { [Op.in]: idsToFilter };
+        }
+        
+        // --- 2. APPLICATION DES FILTRES STATUTS, CATÉGORIES ET VILLES (AND Logique) ---
+        // Ces filtres s'ajoutent à poiWhere, incluant le filtre d'IDs (poiWhere.id) si searchTerm est présent.
+
+        if (conditions.isActive !== undefined) poiWhere.isActive = conditions.isActive;
+        if (conditions.isVerified !== undefined) poiWhere.isVerified = conditions.isVerified;
+        if (conditions.isPremium !== undefined) poiWhere.isPremium = conditions.isPremium;
+        
+        if (Array.isArray(categoryIds) && categoryIds.length > 0) {
+            poiWhere.category = { [Op.in]: categoryIds };
+        }
+        if (Array.isArray(cityIds) && cityIds.length > 0) {
+            poiWhere.cityId = { [Op.in]: cityIds };
+        }
+
+        const includes = [
+            // Inclure les localisations (LEFT JOIN) pour le retour des données
+            { model: POILocalization, as: 'frLocalization', required: false },
+            { model: POILocalization, as: 'arLocalization', required: false },
+            { model: POILocalization, as: 'enLocalization', required: false },
+            { model: City, as: 'city', attributes: ['id', 'name', 'nameAr'], required: false },
+            { model: Category, as: 'categoryPOI', attributes: ['id', 'fr', 'ar'], required: false }
+        ];
+
+        
+        const pois = await POI.findAll({
+            where: poiWhere,
+            include: includes,
+            order: [['rating', 'DESC']],
+        });
+
+        
+        if (pois.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "Aucun résultat trouvé correspondant aux critères de recherche.",
+                count: 0,
+                pois: []
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Recherche de POI réussie.",
+            count: pois.length,
+            pois
+        });
+
+    } catch (error) {
+      console.error("❌ LOG 5: ERREUR NON CATCHÉE DANS LA FONCTION:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Erreur interne du serveur lors de la recherche des POI.",
+            error: error.message
+        });
+    }
+};
+
+
+
 const getTravelTime = async (req, res) => {
 
   const { distanceKm, mode } = req.query;
@@ -763,5 +977,7 @@ module.exports = {
   updatePOI,
   deletePOI,
   getPOIsForParcoursLibre,
-  getTravelTime
+  getTravelTime,
+  getPOIsByCity,
+  searchPOIs
 };
