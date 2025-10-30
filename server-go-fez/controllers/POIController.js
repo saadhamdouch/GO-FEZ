@@ -55,83 +55,90 @@ const createPOIWithFiles = async (req, res) => {
     let enLocalizationResponse = null;
 
     // Créer la localisation arabe
-    if (arLoc && arLoc.name) {
-      let arabicAudioUrl = null;
-      if (req.files?.ar_audio) {
-        try {
-            console.log('📥 [FR AUDIO] File received:', {
-    originalname: req.files.fr_audio[0].originalname,
-    mimetype: req.files.fr_audio[0].mimetype,
-    size: req.files.fr_audio[0].size,
-    bufferType: typeof req.files.fr_audio[0].buffer,
-    bufferLength: req.files.fr_audio[0].buffer?.length,
+if (arLoc && arLoc.name) {
+  let arabicAudioData = null; // <- Changement
+  if (req.files?.ar_audio) {
+    try {
+      // console.log('📥 [AR AUDIO] File received:', ...);
+      const audioResult = await uploadFromBuffer(
+        req.files.ar_audio[0].buffer,
+        'go-fez/audio/arabic',
+        { resource_type: 'video' }
+      );
+      // ✅ Sauvegarder l'objet complet
+      arabicAudioData = { 
+        url: audioResult.secure_url, 
+        publicId: audioResult.public_id 
+      };
+      // console.log('✅ [AR AUDIO UPLOADED] Cloudinary result:', audioResult);
+    } catch (error) {
+      console.warn('⚠️ Erreur upload audio arabe:', error.message);
+    }
+  }
+  arLocalizationResponse = await POILocalization.create({
+    name: xss(arLoc.name),
+    description: arLoc.description ? xss(arLoc.description) : null,
+    address: arLoc.address ? xss(arLoc.address) : null,
+    // ✅ Sauvegarder l'objet JSON
+    audioFiles: arabicAudioData ? JSON.stringify([arabicAudioData]) : null
   });
-          const audioResult = await uploadFromBuffer(
-            req.files.ar_audio[0].buffer,
-            'go-fez/audio/arabic',
-            { resource_type: 'video' }
-          );
-          arabicAudioUrl = audioResult.secure_url;
-          console.log('✅ [FR AUDIO UPLOADED] Cloudinary result url:', arabicAudioUrl);
-          console.log('✅ [FR AUDIO UPLOADED] Cloudinary result:', audioResult);
+}
 
-        } catch (error) {
-          console.warn('⚠️ Erreur upload audio arabe:', error.message);
-        }
-      }
-      arLocalizationResponse = await POILocalization.create({
-        name: xss(arLoc.name),
-        description: arLoc.description ? xss(arLoc.description) : null,
-        address: arLoc.address ? xss(arLoc.address) : null,
-        audioFiles: arabicAudioUrl ? JSON.stringify([arabicAudioUrl]) : null
-      });
+// Créer la localisation française
+if (frLoc && frLoc.name) {
+  let frenchAudioData = null; // <- Changement
+  if (req.files?.fr_audio) {
+    try {
+      const audioResult = await uploadFromBuffer(
+        req.files.fr_audio[0].buffer,
+        'go-fez/audio/french',
+        { resource_type: 'video' }
+      );
+      // ✅ Sauvegarder l'objet complet
+      frenchAudioData = { 
+        url: audioResult.secure_url, 
+        publicId: audioResult.public_id 
+      };
+    } catch (error) {
+      console.warn('⚠️ Erreur upload audio français:', error.message);
     }
+  }
+  frLocalizationResponse = await POILocalization.create({
+    name: xss(frLoc.name),
+    description: frLoc.description ? xss(frLoc.description) : null,
+    address: frLoc.address ? xss(frLoc.address) : null,
+    // ✅ Sauvegarder l'objet JSON
+    audioFiles: frenchAudioData ? JSON.stringify([frenchAudioData]) : null
+  });
+}
 
-    // Créer la localisation française
-    if (frLoc && frLoc.name) {
-      let frenchAudioUrl = null;
-      if (req.files?.fr_audio) {
-        try {
-          const audioResult = await uploadFromBuffer(
-            req.files.fr_audio[0].buffer,
-            'go-fez/audio/french',
-            { resource_type: 'video' }
-          );
-          frenchAudioUrl = audioResult.secure_url;
-        } catch (error) {
-          console.warn('⚠️ Erreur upload audio français:', error.message);
-        }
-      }
-      frLocalizationResponse = await POILocalization.create({
-        name: xss(frLoc.name),
-        description: frLoc.description ? xss(frLoc.description) : null,
-        address: frLoc.address ? xss(frLoc.address) : null,
-        audioFiles: frenchAudioUrl ? JSON.stringify([frenchAudioUrl]) : null
-      });
+// Créer la localisation anglaise
+if (enLoc && enLoc.name) {
+  let englishAudioData = null; // <- Changement
+  if (req.files?.en_audio) {
+    try {
+      const audioResult = await uploadFromBuffer(
+        req.files.en_audio[0].buffer,
+        'go-fez/audio/english',
+        { resource_type: 'video' }
+      );
+       // ✅ Sauvegarder l'objet complet
+      englishAudioData = { 
+        url: audioResult.secure_url, 
+        publicId: audioResult.public_id 
+      };
+    } catch (error) {
+      console.warn('⚠️ Erreur upload audio anglais:', error.message);
     }
-
-    // Créer la localisation anglaise
-    if (enLoc && enLoc.name) {
-      let englishAudioUrl = null;
-      if (req.files?.en_audio) {
-        try {
-          const audioResult = await uploadFromBuffer(
-            req.files.en_audio[0].buffer,
-            'go-fez/audio/english',
-            { resource_type: 'video' }
-          );
-          englishAudioUrl = audioResult.secure_url;
-        } catch (error) {
-          console.warn('⚠️ Erreur upload audio anglais:', error.message);
-        }
-      }
-      enLocalizationResponse = await POILocalization.create({
-        name: xss(enLoc.name),
-        description: enLoc.description ? xss(enLoc.description) : null,
-        address: enLoc.address ? xss(enLoc.address) : null,
-        audioFiles: englishAudioUrl ? JSON.stringify([englishAudioUrl]) : null
-      });
-    }
+  }
+  enLocalizationResponse = await POILocalization.create({
+    name: xss(enLoc.name),
+    description: enLoc.description ? xss(enLoc.description) : null,
+    address: enLoc.address ? xss(enLoc.address) : null,
+    // ✅ Sauvegarder l'objet JSON
+    audioFiles: englishAudioData ? JSON.stringify([englishAudioData]) : null
+  });
+}
 
     // 2. Créer le POI principal d'abord pour obtenir son ID
     const parsedCoordinates = JSON.parse(coordinates);
@@ -294,6 +301,7 @@ const findOnePOI = async (req, res) => {
 
 // Méthode pour mettre à jour un POI
 const updatePOI = async (req, res) => {
+  console.log('📩 audioToRemove brut reçu:', req.body.audioToRemove);
   try {
     const { id } = req.params;
 
@@ -308,139 +316,129 @@ const updatePOI = async (req, res) => {
     });
 
     if (!poi) {
-      return res.status(404).json({
-        success: false,
-        message: "POI non trouvé",
-      });
+      return res.status(404).json({ success: false, message: "POI non trouvé" });
     }
 
-    let poiData = req.body;
-    let arLoc, frLoc, enLoc;
-
-    if (req.body.data) {
+    // --- Safe JSON parsing helper ---
+    const safeParse = (input, label) => {
       try {
-        poiData = JSON.parse(req.body.data);
-      } catch (e) {
-        return res.status(400).json({
-          success: false,
-          message: 'Format de données invalide'
+        return typeof input === 'string' ? JSON.parse(input) : input;
+      } catch (err) {
+        console.warn(`⚠️ Erreur parsing ${label}:`, err.message);
+        return null;
+      }
+    };
+
+    let poiData = req.body;
+    if (req.body.data) {
+      const parsed = safeParse(req.body.data, 'data');
+      if (!parsed) return res.status(400).json({ success: false, message: 'Format de données invalide (data)' });
+      poiData = parsed;
+    }
+
+let audioToRemove = { fr: false, ar: false, en: false };
+if (req.body.audioToRemove) {
+  try {
+    audioToRemove = JSON.parse(req.body.audioToRemove);
+  } catch (err) {
+    console.warn('⚠️ Erreur parsing audioToRemove:', err.message);
+    audioToRemove = { fr: false, ar: false, en: false }; // fallback
+  }
+}
+
+      const filesToRemove = safeParse(poiData.filesToRemove, 'filesToRemove') || [];
+    const arLoc = safeParse(poiData.arLocalization, 'arLocalization');
+    const frLoc = safeParse(poiData.frLocalization, 'frLocalization');
+    const enLoc = safeParse(poiData.enLocalization, 'enLocalization');
+
+    // --- Audio deletion logic ---
+    const deleteAudioIfNeeded = async (lang, localization, folder) => {
+      if (!audioToRemove[lang] || !localization) return;
+      try {
+        const audioData = JSON.parse(localization.audioFiles || '[]');
+        const publicId = audioData[0]?.publicId;
+        if (publicId) {
+          await deleteFile(publicId);
+          console.log(`🗑️ Audio ${lang.toUpperCase()} supprimé de Cloudinary:`, publicId);
+        }
+        await localization.update({ audioFiles: null });
+        console.log(`🧹 Audio ${lang.toUpperCase()} supprimé de la DB`);
+      } catch (err) {
+        console.warn(`⚠️ Erreur suppression audio ${lang.toUpperCase()}:`, err.message);
+      }
+    };
+
+    await deleteAudioIfNeeded('fr', poi.frLocalization, 'french');
+    await deleteAudioIfNeeded('ar', poi.arLocalization, 'arabic');
+    await deleteAudioIfNeeded('en', poi.enLocalization, 'english');
+
+    // --- Update localizations ---
+    const updateLocalization = async (lang, locData, localization, folder) => {
+      if (!locData || !localization) return;
+
+      await localization.update({
+        name: locData.name ? xss(locData.name) : localization.name,
+        description: locData.description ? xss(locData.description) : localization.description,
+        address: locData.address ? xss(locData.address) : localization.address
+      });
+
+      if (req.files?.[`${lang}_audio`]) {
+        try {
+          const oldAudioData = JSON.parse(localization.audioFiles || '[]');
+          const oldPublicId = oldAudioData[0]?.publicId;
+          if (oldPublicId) {
+            await deleteFile(oldPublicId);
+            console.log(`🗑️ Ancien audio ${lang.toUpperCase()} supprimé:`, oldPublicId);
+          }
+
+          const audioResult = await uploadFromBuffer(
+            req.files[`${lang}_audio`][0].buffer,
+            `go-fez/audio/${folder}`,
+            { resource_type: 'video' }
+          );
+
+          const newAudioData = {
+            url: audioResult.secure_url,
+            publicId: audioResult.public_id
+          };
+
+          await localization.update({ audioFiles: JSON.stringify([newAudioData]) });
+        } catch (error) {
+          console.warn(`⚠️ Erreur upload audio ${lang.toUpperCase()}:`, error.message);
+        }
+      }
+    };
+
+    await updateLocalization('fr', frLoc, poi.frLocalization, 'french');
+    await updateLocalization('ar', arLoc, poi.arLocalization, 'arabic');
+    await updateLocalization('en', enLoc, poi.enLocalization, 'english');
+
+    // --- Upload new media files ---
+    if (req.files?.image?.length > 0) {
+      const uploadResults = await uploadMultiplePoiFiles(req.files.image, 'image');
+      for (const result of uploadResults) {
+        await POIFile.create({
+          poiId: poi.id,
+          fileUrl: result.fileUrl,
+          filePublicId: result.filePublicId,
+          type: 'image'
         });
       }
     }
 
-    if (poiData.arLocalization) {
-      arLoc = typeof poiData.arLocalization === 'string'
-        ? JSON.parse(poiData.arLocalization)
-        : poiData.arLocalization;
-    }
-    if (poiData.frLocalization) {
-      frLoc = typeof poiData.frLocalization === 'string'
-        ? JSON.parse(poiData.frLocalization)
-        : poiData.frLocalization;
-    }
-    if (poiData.enLocalization) {
-      enLoc = typeof poiData.enLocalization === 'string'
-        ? JSON.parse(poiData.enLocalization)
-        : poiData.enLocalization;
-    }
-
-    if (arLoc && poi.arLocalization) {
-      await poi.arLocalization.update({
-        name: arLoc.name ? xss(arLoc.name) : poi.arLocalization.name,
-        description: arLoc.description ? xss(arLoc.description) : poi.arLocalization.description,
-        address: arLoc.address ? xss(arLoc.address) : poi.arLocalization.address
-      });
-
-      if (req.files?.ar_audio) {
-        try {
-          const audioResult = await uploadFromBuffer(
-            req.files.ar_audio[0].buffer,
-            'go-fez/audio/arabic',
-            { resource_type: 'video' }
-          );
-          await poi.arLocalization.update({
-            audioFiles: JSON.stringify([audioResult.secure_url])
-          });
-        } catch (error) {
-          console.warn('⚠️ Erreur upload audio arabe:', error.message);
-        }
+    if (req.files?.video?.length > 0) {
+      const uploadResults = await uploadMultiplePoiFiles(req.files.video, 'video');
+      for (const result of uploadResults) {
+        await POIFile.create({
+          poiId: poi.id,
+          fileUrl: result.fileUrl,
+          filePublicId: result.filePublicId,
+          type: 'video'
+        });
       }
     }
 
-    if (frLoc && poi.frLocalization) {
-      await poi.frLocalization.update({
-        name: frLoc.name ? xss(frLoc.name) : poi.frLocalization.name,
-        description: frLoc.description ? xss(frLoc.description) : poi.frLocalization.description,
-        address: frLoc.address ? xss(frLoc.address) : poi.frLocalization.address
-      });
-
-      if (req.files?.fr_audio) {
-        try {
-          const audioResult = await uploadFromBuffer(
-            req.files.fr_audio[0].buffer,
-            'go-fez/audio/french',
-            { resource_type: 'video' }
-          );
-          await poi.frLocalization.update({
-            audioFiles: JSON.stringify([audioResult.secure_url])
-          });
-        } catch (error) {
-          console.warn('⚠️ Erreur upload audio français:', error.message);
-        }
-      }
-    }
-
-    if (enLoc && poi.enLocalization) {
-      await poi.enLocalization.update({
-        name: enLoc.name ? xss(enLoc.name) : poi.enLocalization.name,
-        description: enLoc.description ? xss(enLoc.description) : poi.enLocalization.description,
-        address: enLoc.address ? xss(enLoc.address) : poi.enLocalization.address
-      });
-
-      if (req.files?.en_audio) {
-        try {
-          const audioResult = await uploadFromBuffer(
-            req.files.en_audio[0].buffer,
-            'go-fez/audio/english',
-            { resource_type: 'video' }
-          );
-          await poi.enLocalization.update({
-            audioFiles: JSON.stringify([audioResult.secure_url])
-          });
-        } catch (error) {
-          console.warn('⚠️ Erreur upload audio anglais:', error.message);
-        }
-      }
-    }
-
-    if (req.files?.image && req.files.image.length > 0) {
-      try {
-        const uploadResults = await uploadMultiplePoiFiles(req.files.image, 'image');
-        for (const result of uploadResults) {
-          await POIFile.create({
-            poiId: poi.id,
-            fileUrl: result.fileUrl,
-            filePublicId: result.filePublicId,
-            type: 'image'
-          });
-        }
-      } catch (error) {}
-    }
-
-    if (req.files?.video && req.files.video.length > 0) {
-      try {
-        const uploadResults = await uploadMultiplePoiFiles(req.files.video, 'video');
-        for (const result of uploadResults) {
-          await POIFile.create({
-            poiId: poi.id,
-            fileUrl: result.fileUrl,
-            filePublicId: result.filePublicId,
-            type: 'video'
-          });
-        }
-      } catch (error) {}
-    }
-
+    // --- Update virtual tour ---
     const { virtualTourUrl } = req.body;
     if (virtualTourUrl) {
       const existingVirtualTour = await POIFile.findOne({
@@ -459,68 +457,42 @@ const updatePOI = async (req, res) => {
       }
     }
 
-if (poiData.filesToRemove) {
+    // --- Delete marked files ---
+    for (const fileId of filesToRemove) {
       try {
-        // 1. D'ABORD, parser la chaîne venant du FormData
-        const fileIdsToRemove = typeof poiData.filesToRemove === 'string'
-          ? JSON.parse(poiData.filesToRemove)
-          : poiData.filesToRemove;
-
-        // 2. ENSUITE, vérifier si c'est un tableau
-        if (Array.isArray(fileIdsToRemove)) {
-          console.log('🔄 Fichiers à supprimer:', fileIdsToRemove); // <-- Vous verrez ce log maintenant
-
-          for (const fileId of fileIdsToRemove) {
-            try {
-              // 3. Trouver l'enregistrement du fichier par son ID (UUID)
-              const fileToDestroy = await POIFile.findOne({ where: { id: fileId } });
-
-              if (fileToDestroy) {
-                // 4. S'il a un filePublicId, le supprimer de Cloudinary
-                if (fileToDestroy.filePublicId) {
-                  await deleteFile(fileToDestroy.filePublicId);
-                  console.log('🗑️ Fichier supprimé de Cloudinary:', fileToDestroy.filePublicId);
-                }
-                
-                // 5. Détruire l'enregistrement dans la base de données
-                await fileToDestroy.destroy();
-                console.log('🗑️ Enregistrement fichier supprimé de la DB:', fileId);
-
-              } else {
-                console.warn('⚠️ Fichier à supprimer non trouvé (ID):', fileId);
-              }
-            } catch (err) {
-              console.warn(`⚠️ Erreur lors de la suppression du fichier (ID: ${fileId}):`, err.message);
-            }
+        const fileToDestroy = await POIFile.findOne({ where: { id: fileId } });
+        if (fileToDestroy) {
+          if (fileToDestroy.filePublicId) {
+            await deleteFile(fileToDestroy.filePublicId);
+            console.log('🗑️ Fichier supprimé de Cloudinary:', fileToDestroy.filePublicId);
           }
+          await fileToDestroy.destroy();
+          console.log('🗑️ Enregistrement fichier supprimé de la DB:', fileId);
+        } else {
+          console.warn('⚠️ Fichier à supprimer non trouvé (ID):', fileId);
         }
       } catch (err) {
-        console.warn('⚠️ Erreur lors du parsing ou du traitement de filesToRemove:', err.message);
+        console.warn(`⚠️ Erreur suppression fichier (ID: ${fileId}):`, err.message);
       }
     }
 
+    // --- Update POI core fields ---
     const updateData = {};
     if (poiData.coordinates) {
       updateData.coordinates = typeof poiData.coordinates === 'string'
-        ? JSON.parse(poiData.coordinates)
+        ? safeParse(poiData.coordinates, 'coordinates')
         : poiData.coordinates;
     }
     if (poiData.category) updateData.category = poiData.category;
     if (poiData.practicalInfo) {
       updateData.practicalInfo = typeof poiData.practicalInfo === 'string'
-        ? JSON.parse(poiData.practicalInfo)
+        ? safeParse(poiData.practicalInfo, 'practicalInfo')
         : poiData.practicalInfo;
     }
     if (poiData.cityId) updateData.cityId = poiData.cityId;
-    if (poiData.isActive !== undefined) {
-      updateData.isActive = poiData.isActive === 'true' || poiData.isActive === true;
-    }
-    if (poiData.isVerified !== undefined) {
-      updateData.isVerified = poiData.isVerified === 'true' || poiData.isVerified === true;
-    }
-    if (poiData.isPremium !== undefined) {
-      updateData.isPremium = poiData.isPremium === 'true' || poiData.isPremium === true;
-    }
+    if (poiData.isActive !== undefined) updateData.isActive = poiData.isActive === 'true' || poiData.isActive === true;
+    if (poiData.isVerified !== undefined) updateData.isVerified = poiData.isVerified === 'true' || poiData.isVerified === true;
+    if (poiData.isPremium !== undefined) updateData.isPremium = poiData.isPremium === 'true' || poiData.isPremium === true;
 
     await poi.update(updateData);
 

@@ -8,8 +8,8 @@ import { Checkbox } from '../shared/Checkbox';
 import { FormActions } from '../shared/FormActions';
 import MapSelector from './MapSelector';
 import { ImageIcon, Video, Map as Map360, Music, Info, MapPin, Plus, ChevronRight, ChevronLeft, Trash2, X } from 'lucide-react';
-
-import { POIFile } from '@/services/api/PoiApi'; // (Vérifiez le chemin)
+import { POIFile as ApiPOIFile, POI } from '@/services/api/PoiApi'; // ✅ Import POI types
+import { toast } from 'sonner'; // ✅ Import toast
 
 interface POIFormProps {
   formData: any;
@@ -22,7 +22,7 @@ interface POIFormProps {
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   isSubmitting: boolean;
-  selectedPOI: any;
+  selectedPOI: POI | null; // ✅ Updated type from 'any'
 }
 
 export function POIForm({
@@ -45,7 +45,7 @@ export function POIForm({
   const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
   const [newFieldKey, setNewFieldKey] = useState('');
   const [newFieldValue, setNewFieldValue] = useState('');
-  const [existingFiles, setExistingFiles] = useState<POIFile[]>([]);
+  const [existingFiles, setExistingFiles] = useState<ApiPOIFile[]>([]); // ✅ Use imported type
   
   const practicalInfoTemplate = {
     horaires: { checkin: '', checkout: '', reception: '' },
@@ -77,6 +77,25 @@ export function POIForm({
     }
   };
 
+  // ✅ HELPER: Parse le nouveau/ancien format audio
+  const getAudioUrl = (locAudioFiles: string | null | undefined): string | null => {
+    if (!locAudioFiles) return null;
+    try {
+      // Nouveau format: [{ "url": "...", "publicId": "..." }]
+      const parsed = JSON.parse(locAudioFiles);
+      return parsed[0]?.url || null;
+    } catch {
+      // Ancien format (fallback): ["..."]
+      try {
+        const oldParsed = JSON.parse(locAudioFiles);
+        return Array.isArray(oldParsed) ? oldParsed[0] : null;
+      } catch (e) {
+        return null;
+      }
+    }
+  };
+
+
   const handleFieldChange = (categoryKey: string, fieldKey: string, value: any, index?: number) => {
     const parsed = getParsedPracticalInfo();
     if (!parsed[categoryKey]) parsed[categoryKey] = practicalInfoTemplate[categoryKey] || {};
@@ -98,7 +117,7 @@ export function POIForm({
   useEffect(() => {
     if (selectedPOI) {
       // We are in "Edit" mode
-      const files: POIFile[] = selectedPOI.files || [];
+      const files: ApiPOIFile[] = selectedPOI.files || []; // ✅ Use imported type
       const tour = files.find((f) => f.type === 'virtualtour');
 
       setExistingFiles(files);
@@ -124,6 +143,7 @@ export function POIForm({
         virtualTourUrl: tour ? tour.fileUrl : '',
         
         filesToRemove: [], // Start with an empty list
+        audioToRemove: { fr: false, ar: false, en: false }, // ✅ Reset flags
       });
     } else {
       // We are in "Create" mode, reset the form
@@ -143,6 +163,7 @@ export function POIForm({
         practicalInfo: '{}',
         virtualTourUrl: '',
         filesToRemove: [], 
+        audioToRemove: { fr: false, ar: false, en: false }, // ✅ Reset flags
       });
     }
   }, [selectedPOI, onFormDataChange]); // --- MODIFICATION: Added onFormDataChange to deps ---
@@ -168,9 +189,10 @@ export function POIForm({
   const existingVideos = existingFiles.filter(f => f.type === 'video');
 
   // Get existing audio URLs from formData (which was populated in useEffect)
-  const existingFrAudio = formData.frLocalization?.audioFiles?.[0];
-  const existingArAudio = formData.arLocalization?.audioFiles?.[0];
-  const existingEnAudio = formData.enLocalization?.audioFiles?.[0];
+  // ✅ Use the new helper
+  const existingFrAudio = getAudioUrl(formData.frLocalization?.audioFiles);
+  const existingArAudio = getAudioUrl(formData.arLocalization?.audioFiles);
+  const existingEnAudio = getAudioUrl(formData.enLocalization?.audioFiles);
 
   // --- MODIFICATION: Add handler to remove existing files ---
   const handleRemoveExistingFile = (fileId: string) => {
@@ -181,6 +203,22 @@ export function POIForm({
       ...formData,
       filesToRemove: [...(formData.filesToRemove || []), fileId],
     });
+    toast.info('Image/Vidéo marquée pour suppression.');
+  };
+
+  // ✅ AJOUTÉ: Handler to remove existing audio files
+  const handleRemoveExistingAudio = (lang: 'fr' | 'ar' | 'en') => {
+    onFormDataChange({
+      ...formData,
+      // 1. Signaler au backend de supprimer ce fichier
+      audioToRemove: { ...formData.audioToRemove, [lang]: true },
+      // 2. Mettre à jour la localisation pour vider le champ audio (met à jour l'UI)
+      [`${lang}Localization`]: {
+        ...formData[`${lang}Localization`],
+        audioFiles: null 
+      }
+    });
+    toast.info(`Audio ${lang.toUpperCase()} marqué pour suppression.`);
   };
   
   const handleAddCustomField = (categoryKey: string, key: string, value: string) => {
@@ -513,45 +551,87 @@ export function POIForm({
       {/* --- FIN DE LA SECTION --- */}
 
 
-      {/* Audio Files */}
+      {/* ✅ --- SECTION AUDIO MISE À JOUR --- */}
       <div className="space-y-3">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
           <Music className="w-5 h-5" />
           Guides audio (optionnel)
         </h3>
         <div className="grid grid-cols-3 gap-4">
-          <MultipleFileUpload
-            label="Audio Français"
-            accept="audio/*"
-            files={files.fr_audio || []}
-            onChange={(file) => onFileChange(file, 'fr_audio')}
-            onRemove={(index) => onRemoveFile && onRemoveFile('fr_audio', index)}
-            icon={<Music className="w-4 h-4" />}
-            maxFiles={1}
-            existingFileUrl={existingFrAudio}
-          />
-          <MultipleFileUpload
-            label="Audio Arabe"
-            accept="audio/*"
-            files={files.ar_audio || []}
-            onChange={(file) => onFileChange(file, 'ar_audio')}
-            onRemove={(index) => onRemoveFile && onRemoveFile('ar_audio', index)}
-            icon={<Music className="w-4 h-4" />}
-            maxFiles={1}
-            existingFileUrl={existingArAudio}
-          />
-          <MultipleFileUpload
-            label="Audio Anglais"
-            accept="audio/*"
-            files={files.en_audio || []}
-            onChange={(file) => onFileChange(file, 'en_audio')}
-            onRemove={(index) => onRemoveFile && onRemoveFile('en_audio', index)}
-            icon={<Music className="w-4 h-4" />}
-            maxFiles={1}
-            existingFileUrl={existingEnAudio}
-          />
+          
+          {/* Audio Français */}
+          <div className="space-y-1">
+            <MultipleFileUpload
+              label="Audio Français"
+              accept="audio/*"
+              files={files.fr_audio || []}
+              onChange={(file) => onFileChange(file, 'fr_audio')}
+              onRemove={(index) => onRemoveFile && onRemoveFile('fr_audio', index)}
+              icon={<Music className="w-4 h-4" />}
+              maxFiles={1}
+              existingFileUrl={existingFrAudio}
+            />
+            {existingFrAudio && (
+              <button
+                type="button"
+                onClick={() => handleRemoveExistingAudio('fr')}
+                className="w-full text-xs p-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors flex items-center justify-center gap-1"
+              >
+                <Trash2 className="w-3 h-3" /> Supprimer l'audio actuel
+              </button>
+            )}
+          </div>
+
+          {/* Audio Arabe */}
+          <div className="space-y-1">
+            <MultipleFileUpload
+              label="Audio Arabe"
+              accept="audio/*"
+              files={files.ar_audio || []}
+              onChange={(file) => onFileChange(file, 'ar_audio')}
+              onRemove={(index) => onRemoveFile && onRemoveFile('ar_audio', index)}
+              icon={<Music className="w-4 h-4" />}
+              maxFiles={1}
+              existingFileUrl={existingArAudio}
+            />
+            {existingArAudio && (
+              <button
+                type="button"
+                onClick={() => handleRemoveExistingAudio('ar')}
+                className="w-full text-xs p-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors flex items-center justify-center gap-1"
+              >
+                <Trash2 className="w-3 h-3" /> Supprimer l'audio actuel
+              </button>
+            )}
+          </div>
+
+          {/* Audio Anglais */}
+          <div className="space-y-1">
+            <MultipleFileUpload
+              label="Audio Anglais"
+              accept="audio/*"
+              files={files.en_audio || []}
+              onChange={(file) => onFileChange(file, 'en_audio')}
+              onRemove={(index) => onRemoveFile && onRemoveFile('en_audio', index)}
+              icon={<Music className="w-4 h-4" />}
+              maxFiles={1}
+              existingFileUrl={existingEnAudio}
+            />
+            {existingEnAudio && (
+              <button
+                type="button"
+                onClick={() => handleRemoveExistingAudio('en')}
+                className="w-full text-xs p-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors flex items-center justify-center gap-1"
+              >
+                <Trash2 className="w-3 h-3" /> Supprimer l'audio actuel
+              </button>
+            )}
+          </div>
+          
         </div>
       </div>
+      {/* ✅ --- FIN DE LA SECTION AUDIO --- */}
+
 
       {/* Practical Info Progressive */}
       <div className="space-y-4">

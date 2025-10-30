@@ -52,14 +52,18 @@ const isValidUrl = (url?: string) => typeof url === 'string' && url.length > 5 &
   const has360Tour = tours.length > 0;
   
   // --- MODIFIED: Check for localization audio ---
-  const parseAudio = (raw: any) => {
+const parseAudio = (raw: any): string | null => {
   try {
     const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    return Array.isArray(parsed) ? parsed[0] : null;
+    if (Array.isArray(parsed) && parsed[0]) {
+      return typeof parsed[0] === 'string' ? parsed[0] : parsed[0].url || null;
+    }
+    return null;
   } catch {
     return null;
   }
 };
+
 
 const frAudioUrl = parseAudio(poi.frLocalization?.audioFiles);
 const arAudioUrl = parseAudio(poi.arLocalization?.audioFiles);
@@ -383,45 +387,58 @@ const enAudioUrl = parseAudio(poi.enLocalization?.audioFiles);
                 )}
 
                 {/* --- (AUDIO FIX) Audio Section --- */}
-                {hasAudio && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-600 flex items-center gap-2">
-                      <Music className="w-4 h-4" /> Guides audio
-                    </label>
-                    <div className="space-y-3">
-                      {isValidUrl(frAudioUrl) && (
-                        <div className="bg-blue-50 p-3 rounded-lg">
-                          <p className="text-sm font-medium text-blue-900 mb-2">🇫🇷 Français</p>
-                          <audio src={frAudioUrl} controls className="w-full"
-                          onError={(e) => {
-                              console.error(`[ERREUR LECTURE AUDIO FR] Erreur sur l'élément audio.`, e);
-                              console.error(`[ERREUR LECTURE AUDIO FR] URL tentée : ${frAudioUrl}`);
-                            }} />
-                        </div>
-                      )}
-                      {isValidUrl(arAudioUrl) && (
-                        <div className="bg-green-50 p-3 rounded-lg">
-                          <p className="text-sm font-medium text-green-900 mb-2">🇲🇦 العربية</p>
-                          <audio src={arAudioUrl} controls className="w-full"
-                          onError={(e) => {
-                              console.error(`[ERREUR LECTURE AUDIO AR] Erreur sur l'élément audio.`, e);
-                              console.error(`[ERREUR LECTURE AUDIO AR] URL tentée : ${arAudioUrl}`);
-                            }} />
-                        </div>
-                      )}
-                      {isValidUrl(enAudioUrl) && (
-                        <div className="bg-purple-50 p-3 rounded-lg">
-                          <p className="text-sm font-medium text-purple-900 mb-2">🇬🇧 English</p>
-                          <audio src={enAudioUrl} controls className="w-full" 
-                          onError={(e) => {
-                              console.error(`[ERREUR LECTURE AUDIO AR] Erreur sur l'élément audio.`, e);
-                              console.error(`[ERREUR LECTURE AUDIO AR] URL tentée : ${arAudioUrl}`);
-                            }}/>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+{hasAudio && (
+  <div className="space-y-2">
+    <label className="text-sm font-medium text-gray-600 flex items-center gap-2">
+      <Music className="w-4 h-4" /> Guides audio
+    </label>
+    <div className="space-y-3">
+      {isValidUrl(frAudioUrl) && (
+        <div className="bg-blue-50 p-3 rounded-lg">
+          <p className="text-sm font-medium text-blue-900 mb-2">🇫🇷 Français</p>
+          <audio
+            src={frAudioUrl}
+            controls
+            className="w-full"
+            onError={(e) => {
+              console.error(`[ERREUR LECTURE AUDIO FR]`, e);
+              console.error(`[ERREUR LECTURE AUDIO FR] URL: ${frAudioUrl}`);
+            }}
+          />
+        </div>
+      )}
+      {isValidUrl(arAudioUrl) && (
+        <div className="bg-green-50 p-3 rounded-lg">
+          <p className="text-sm font-medium text-green-900 mb-2">🇲🇦 العربية</p>
+          <audio
+            src={arAudioUrl}
+            controls
+            className="w-full"
+            onError={(e) => {
+              console.error(`[ERREUR LECTURE AUDIO AR]`, e);
+              console.error(`[ERREUR LECTURE AUDIO AR] URL: ${arAudioUrl}`);
+            }}
+          />
+        </div>
+      )}
+      {isValidUrl(enAudioUrl) && (
+        <div className="bg-purple-50 p-3 rounded-lg">
+          <p className="text-sm font-medium text-purple-900 mb-2">🇬🇧 English</p>
+          <audio
+            src={enAudioUrl}
+            controls
+            className="w-full"
+            onError={(e) => {
+              console.error(`[ERREUR LECTURE AUDIO EN]`, e);
+              console.error(`[ERREUR LECTURE AUDIO EN] URL: ${enAudioUrl}`);
+            }}
+          />
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
                 {/* --- (END AUDIO FIX) --- */}
                 
                 {/* --- No Media Fallback --- */}

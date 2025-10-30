@@ -40,6 +40,11 @@ interface POIFormData {
     address: string;
   };
   filesToRemove?: string[];
+  audioToRemove?: {
+    fr: boolean;
+    ar: boolean;
+    en: boolean;
+  };
 }
 
 const initialFormData: POIFormData = {
@@ -57,6 +62,7 @@ const initialFormData: POIFormData = {
   arLocalization: { name: '', description: '', address: '' },
   enLocalization: { name: '', description: '', address: '' },
   filesToRemove: [], 
+  audioToRemove: { fr: false, ar: false, en: false },
 };
 
 export function usePOIManagement() {
@@ -245,6 +251,9 @@ const handleRemoveFile = (key: string, index: number) => {
       if (formData.virtualTourUrl) {
         apiFormData.append('virtualTourUrl', formData.virtualTourUrl);
       }
+if (formData.audioToRemove) {
+  apiFormData.append('audioToRemove', JSON.stringify(formData.audioToRemove));
+}
 
       // Localisations (envoyer même si vides pour que le backend les gère)
       apiFormData.append('arLocalization', JSON.stringify(formData.arLocalization));
@@ -263,10 +272,16 @@ const handleRemoveFile = (key: string, index: number) => {
         });
       });
 
+      // --- DEBUT DES MODIFICATIONS ---
+
       // Ajoute la liste des fichiers à supprimer (uniquement en mode édition)
       if (selectedPOI && formData.filesToRemove && formData.filesToRemove.length > 0) {
         apiFormData.append('filesToRemove', JSON.stringify(formData.filesToRemove));
       }
+
+
+
+      // --- FIN DES MODIFICATIONS ---
 
       if (selectedPOI) {
         await updatePOI({ id: selectedPOI.id, data: apiFormData }).unwrap();
@@ -309,6 +324,7 @@ const handleRemoveFile = (key: string, index: number) => {
   // Réinitialiser le formulaire
   const resetForm = () => {
     setSelectedPOI(null);
+    // ✅ 'initialFormData' contient déjà la réinitialisation pour 'audioToRemove'
     setFormData(initialFormData);
     setFiles({});
   };
@@ -335,6 +351,8 @@ const handleRemoveFile = (key: string, index: number) => {
       arLocalization: poi.arLocalization || { name: '', description: '', address: '' },
       enLocalization: poi.enLocalization || { name: '', description: '', address: '' },
       filesToRemove: [], // Important pour le formulaire
+      // ✅ AJOUT: Réinitialiser les flags de suppression audio à chaque ouverture
+      audioToRemove: { fr: false, ar: false, en: false }, 
     });
     setFiles({}); 
     setIsModalOpen(true);
