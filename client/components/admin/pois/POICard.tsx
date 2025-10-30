@@ -19,7 +19,7 @@ interface POICardProps {
 export function POICard({ poi, onEdit, onDelete, isDeleting, getCategoryName, getCityName }: POICardProps) {
   const [showModal, setShowModal] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
-
+const isValidUrl = (url?: string) => typeof url === 'string' && url.length > 5 && (url.startsWith('http') || url.startsWith('/'));
   // --- Filter files from the poi.files array ---
   const images = poi.files?.filter((f: any) => f.type === 'image') || [];
   const videos = poi.files?.filter((f: any) => f.type === 'video') || [];
@@ -52,9 +52,18 @@ export function POICard({ poi, onEdit, onDelete, isDeleting, getCategoryName, ge
   const has360Tour = tours.length > 0;
   
   // --- MODIFIED: Check for localization audio ---
-  const frAudioUrl = poi.frLocalization?.audioFiles?.[0];
-  const arAudioUrl = poi.arLocalization?.audioFiles?.[0];
-  const enAudioUrl = poi.enLocalization?.audioFiles?.[0];
+  const parseAudio = (raw: any) => {
+  try {
+    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    return Array.isArray(parsed) ? parsed[0] : null;
+  } catch {
+    return null;
+  }
+};
+
+const frAudioUrl = parseAudio(poi.frLocalization?.audioFiles);
+const arAudioUrl = parseAudio(poi.arLocalization?.audioFiles);
+const enAudioUrl = parseAudio(poi.enLocalization?.audioFiles);
   const hasAudio = frAudioUrl || arAudioUrl || enAudioUrl;
 
   // Parse practical info
@@ -380,22 +389,34 @@ export function POICard({ poi, onEdit, onDelete, isDeleting, getCategoryName, ge
                       <Music className="w-4 h-4" /> Guides audio
                     </label>
                     <div className="space-y-3">
-                      {frAudioUrl && (
+                      {isValidUrl(frAudioUrl) && (
                         <div className="bg-blue-50 p-3 rounded-lg">
                           <p className="text-sm font-medium text-blue-900 mb-2">🇫🇷 Français</p>
-                          <audio src={frAudioUrl} controls className="w-full" />
+                          <audio src={frAudioUrl} controls className="w-full"
+                          onError={(e) => {
+                              console.error(`[ERREUR LECTURE AUDIO FR] Erreur sur l'élément audio.`, e);
+                              console.error(`[ERREUR LECTURE AUDIO FR] URL tentée : ${frAudioUrl}`);
+                            }} />
                         </div>
                       )}
-                      {arAudioUrl && (
+                      {isValidUrl(arAudioUrl) && (
                         <div className="bg-green-50 p-3 rounded-lg">
                           <p className="text-sm font-medium text-green-900 mb-2">🇲🇦 العربية</p>
-                          <audio src={arAudioUrl} controls className="w-full" />
+                          <audio src={arAudioUrl} controls className="w-full"
+                          onError={(e) => {
+                              console.error(`[ERREUR LECTURE AUDIO AR] Erreur sur l'élément audio.`, e);
+                              console.error(`[ERREUR LECTURE AUDIO AR] URL tentée : ${arAudioUrl}`);
+                            }} />
                         </div>
                       )}
-                      {enAudioUrl && (
+                      {isValidUrl(enAudioUrl) && (
                         <div className="bg-purple-50 p-3 rounded-lg">
                           <p className="text-sm font-medium text-purple-900 mb-2">🇬🇧 English</p>
-                          <audio src={enAudioUrl} controls className="w-full" />
+                          <audio src={enAudioUrl} controls className="w-full" 
+                          onError={(e) => {
+                              console.error(`[ERREUR LECTURE AUDIO AR] Erreur sur l'élément audio.`, e);
+                              console.error(`[ERREUR LECTURE AUDIO AR] URL tentée : ${arAudioUrl}`);
+                            }}/>
                         </div>
                       )}
                     </div>

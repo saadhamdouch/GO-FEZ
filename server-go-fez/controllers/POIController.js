@@ -59,12 +59,22 @@ const createPOIWithFiles = async (req, res) => {
       let arabicAudioUrl = null;
       if (req.files?.ar_audio) {
         try {
+            console.log('📥 [FR AUDIO] File received:', {
+    originalname: req.files.fr_audio[0].originalname,
+    mimetype: req.files.fr_audio[0].mimetype,
+    size: req.files.fr_audio[0].size,
+    bufferType: typeof req.files.fr_audio[0].buffer,
+    bufferLength: req.files.fr_audio[0].buffer?.length,
+  });
           const audioResult = await uploadFromBuffer(
             req.files.ar_audio[0].buffer,
             'go-fez/audio/arabic',
             { resource_type: 'video' }
           );
           arabicAudioUrl = audioResult.secure_url;
+          console.log('✅ [FR AUDIO UPLOADED] Cloudinary result url:', arabicAudioUrl);
+          console.log('✅ [FR AUDIO UPLOADED] Cloudinary result:', audioResult);
+
         } catch (error) {
           console.warn('⚠️ Erreur upload audio arabe:', error.message);
         }
@@ -307,7 +317,6 @@ const updatePOI = async (req, res) => {
     let poiData = req.body;
     let arLoc, frLoc, enLoc;
 
-    // Parser les données si elles viennent en FormData
     if (req.body.data) {
       try {
         poiData = JSON.parse(req.body.data);
@@ -319,7 +328,6 @@ const updatePOI = async (req, res) => {
       }
     }
 
-    // Parser les localisations
     if (poiData.arLocalization) {
       arLoc = typeof poiData.arLocalization === 'string'
         ? JSON.parse(poiData.arLocalization)
@@ -336,7 +344,6 @@ const updatePOI = async (req, res) => {
         : poiData.enLocalization;
     }
 
-    // Mettre à jour les localisations
     if (arLoc && poi.arLocalization) {
       await poi.arLocalization.update({
         name: arLoc.name ? xss(arLoc.name) : poi.arLocalization.name,
@@ -344,7 +351,6 @@ const updatePOI = async (req, res) => {
         address: arLoc.address ? xss(arLoc.address) : poi.arLocalization.address
       });
 
-      // Mettre à jour l'audio arabe si fourni
       if (req.files?.ar_audio) {
         try {
           const audioResult = await uploadFromBuffer(
@@ -407,7 +413,6 @@ const updatePOI = async (req, res) => {
       }
     }
 
-    // Mettre à jour les fichiers POI (nouvelle structure - plusieurs fichiers en une fois)
     if (req.files?.image && req.files.image.length > 0) {
       try {
         const uploadResults = await uploadMultiplePoiFiles(req.files.image, 'image');
@@ -419,8 +424,7 @@ const updatePOI = async (req, res) => {
             type: 'image'
           });
         }
-      } catch (error) {
-      }
+      } catch (error) {}
     }
 
     if (req.files?.video && req.files.video.length > 0) {
@@ -434,14 +438,11 @@ const updatePOI = async (req, res) => {
             type: 'video'
           });
         }
-      } catch (error) {
-      }
+      } catch (error) {}
     }
 
-    // Mettre à jour le lien de visite virtuelle
     const { virtualTourUrl } = req.body;
     if (virtualTourUrl) {
-      // Supprimer l'ancien lien s'il existe
       const existingVirtualTour = await POIFile.findOne({
         where: { poiId: poi.id, type: 'virtualtour' }
       });
@@ -449,7 +450,6 @@ const updatePOI = async (req, res) => {
       if (existingVirtualTour) {
         await existingVirtualTour.update({ fileUrl: virtualTourUrl });
       } else {
-        // Créer un nouveau lien
         await POIFile.create({
           poiId: poi.id,
           fileUrl: virtualTourUrl,
@@ -459,7 +459,38 @@ const updatePOI = async (req, res) => {
       }
     }
 
-    // Mettre à jour les données principales du POI
+if (poiData.filesToRemove && Array.isArray(poiData.filesToRemove)) {
+      try {
+        const fileIdsToRemove = poiData.filesToRemove; // Ceci est un tableau d'UUIDs
+
+        for (const fileId of fileIdsToRemove) {
+          try {
+            // 1. Trouver l'enregistrement du fichier par son ID (UUID)
+            const fileToDestroy = await POIFile.findOne({ where: { id: fileId } });
+
+            if (fileToDestroy) {
+              // 2. S'il a un filePublicId, le supprimer de Cloudinary
+              if (fileToDestroy.filePublicId) {
+                await deleteFile(fileToDestroy.filePublicId);
+                console.log('🗑️ Fichier supprimé de Cloudinary:', fileToDestroy.filePublicId);
+              }
+              
+              // 3. Détruire l'enregistrement dans la base de données
+              await fileToDestroy.destroy();
+              console.log('🗑️ Enregistrement fichier supprimé de la DB:', fileId);
+
+            } else {
+              console.warn('⚠️ Fichier à supprimer non trouvé (ID):', fileId);
+            }
+          } catch (err) {
+            console.warn(`⚠️ Erreur lors de la suppression du fichier (ID: ${fileId}):`, err.message);
+          }
+        }
+      } catch (err) {
+        console.warn('⚠️ Erreur lors du traitement de filesToRemove:', err.message);
+      }
+    }
+
     const updateData = {};
     if (poiData.coordinates) {
       updateData.coordinates = typeof poiData.coordinates === 'string'
@@ -485,7 +516,6 @@ const updatePOI = async (req, res) => {
 
     await poi.update(updateData);
 
-    // Récupérer le POI mis à jour
     const updatedPOI = await POI.findByPk(id, {
       include: [
         { model: POILocalization, as: 'frLocalization' },
@@ -511,6 +541,7 @@ const updatePOI = async (req, res) => {
     });
   }
 };
+
 
 // Méthode pour supprimer un POI (suppression logique)
 const deletePOI = async (req, res) => {

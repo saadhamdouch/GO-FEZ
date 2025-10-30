@@ -10,20 +10,25 @@ export interface POILocalization {
 }
 
 export interface POIFile {
-  id?: string;
-  image?: string;
-  video?: string;
-  virtualTour360?: string;
+  id: string;
+  poiId: string;
+  fileUrl: string;
+  filePublicId: string | null;
+  type: 'image' | 'video' | 'virtualtour';
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface POI {
   id: string;
-  coordinates: {
+  coordinates: { 
     latitude: number;
     longitude: number;
     address?: string;
-    files?: POIFile[];
   };
+  files?: POIFile[]; 
+
+  // --- Le reste de vos champs ---
   category: string;
   practicalInfo: any;
   cityId: string;
@@ -32,12 +37,12 @@ export interface POI {
   isPremium: boolean;
   rating?: number;
   reviewCount?: number;
-  poiFileId?: string | null;
+  poiFileId?: string | null; // Note: ce champ est probablement obsolète
   isDeleted?: boolean;
   arLocalization?: POILocalization;
   frLocalization?: POILocalization;
   enLocalization?: POILocalization;
-  poiFile?: POIFile;
+  poiFile?: POIFile; // Note: ce champ est aussi obsolète, utilisez 'files'
   categoryPOI?: any;
   created_at?: string;
   updated_at?: string;

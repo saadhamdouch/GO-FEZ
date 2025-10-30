@@ -164,13 +164,30 @@ const getCategoryName = (categoryId: string): string => {
   };
 
   // Supprimer un fichier spécifique
-  const handleRemoveFile = (key: string, index: number) => {
-    setFiles((prev) => ({
+const handleRemoveFile = (key: string, index: number) => {
+  setFiles((prev) => {
+    const fileToRemove = prev[key][index];
+
+    // Extract filePublicId if available
+    const publicId = (fileToRemove as any)?.filePublicId;
+
+    // Track it for deletion if it's an existing file (not a new upload)
+    if (publicId) {
+      setFormData((prevForm) => ({
+        ...prevForm,
+        filesToRemove: [...(prevForm.filesToRemove || []), publicId],
+      }));
+    }
+
+    return {
       ...prev,
       [key]: prev[key].filter((_, i) => i !== index),
-    }));
-    toast.success('Fichier supprimé');
-  };
+    };
+  });
+
+  toast.success('Fichier supprimé');
+};
+
 
   // Soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
