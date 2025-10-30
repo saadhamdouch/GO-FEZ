@@ -1,7 +1,3 @@
-/**
- * Utilitaires pour la compression d'images côté frontend
- */
-
 export interface CompressionOptions {
   maxSizeKB?: number;
   maxWidth?: number;
@@ -16,12 +12,6 @@ export interface CompressedImageResult {
   compressionRatio: number;
 }
 
-/**
- * Compresse une image si elle dépasse la taille maximale spécifiée
- * @param file - Le fichier image à compresser
- * @param options - Options de compression
- * @returns Promise<CompressedImageResult> - Résultat de la compression
- */
 export const compressImage = async (
   file: File,
   options: CompressionOptions = {}
@@ -38,7 +28,7 @@ export const compressImage = async (
 
   // Si l'image fait déjà moins de 0.5MB, la retourner telle quelle
   if (originalSize <= maxSizeBytes) {
-    console.log('✅ Image déjà optimale, pas de compression nécessaire');
+    console.log('Image déjà optimale, pas de compression nécessaire');
     return {
       file,
       originalSize,
@@ -47,7 +37,7 @@ export const compressImage = async (
     };
   }
 
-  console.log(`🔄 Compression de l'image: ${Math.round(originalSize / 1024)}KB → ${maxSizeKB}KB max`);
+  console.log(`Compression de l'image: ${Math.round(originalSize / 1024)}KB → ${maxSizeKB}KB max`);
 
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
@@ -98,7 +88,7 @@ export const compressImage = async (
 
             const compressionRatio = compressedSize / originalSize;
             
-            console.log(`✅ Image compressée: ${Math.round(originalSize / 1024)}KB → ${Math.round(compressedSize / 1024)}KB (${Math.round(compressionRatio * 100)}%)`);
+            console.log(` Image compressée: ${Math.round(originalSize / 1024)}KB → ${Math.round(compressedSize / 1024)}KB (${Math.round(compressionRatio * 100)}%)`);
 
             resolve({
               file: compressedFile,
@@ -109,14 +99,14 @@ export const compressImage = async (
           } else {
             // Réduire la qualité et réessayer
             currentQuality -= 0.1;
-            console.log(`🔄 Réduction qualité à ${Math.round(currentQuality * 100)}%`);
+            console.log(`Réduction qualité à ${Math.round(currentQuality * 100)}%`);
             tryCompress();
           }
         };
 
         tryCompress();
       } catch (error) {
-        console.error('❌ Erreur lors de la compression:', error);
+        console.error('Erreur lors de la compression:', error);
         reject(error);
       }
     };
@@ -130,13 +120,9 @@ export const compressImage = async (
   });
 };
 
-/**
- * Compresse une image SVG (pas de compression nécessaire, juste validation)
- * @param file - Le fichier SVG
- * @returns Promise<CompressedImageResult> - Résultat (inchangé)
- */
+
 export const compressSvg = async (file: File): Promise<CompressedImageResult> => {
-  console.log('✅ SVG détecté, pas de compression nécessaire');
+  console.log(' SVG détecté, pas de compression nécessaire');
   return {
     file,
     originalSize: file.size,
@@ -145,12 +131,7 @@ export const compressSvg = async (file: File): Promise<CompressedImageResult> =>
   };
 };
 
-/**
- * Compresse une image selon son type
- * @param file - Le fichier image
- * @param options - Options de compression
- * @returns Promise<CompressedImageResult> - Résultat de la compression
- */
+
 export const compressImageByType = async (
   file: File,
   options: CompressionOptions = {}
