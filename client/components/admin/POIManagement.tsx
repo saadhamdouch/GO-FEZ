@@ -37,28 +37,12 @@ export default function POIManagement() {
     handleEdit,
     resetForm,
     refetch,
-  } = usePOIManagement();
-const getCategoryName = (categoryId: string) => {
-  const category = (categories as any[]).find((c) => c.id === categoryId);
-  return (
-    category?.fr?.name ||
-    category?.en?.name ||
-    category?.ar?.name ||
-    category?.name ||
-    'Inconnue'
-  );
-};
 
-const getCityName = (cityId: string) => {
-  const city = (cities as any[]).find((c) => c.id === cityId);
-  return (
-    city?.fr?.name ||
-    city?.en?.name ||
-    city?.ar?.name ||
-    city?.name ||
-    'Inconnue'
-  );
-};
+    getCategoryName,
+    getCityName,
+  } = usePOIManagement();
+
+
   if (isLoading) return <LoadingState message="Chargement des POIs..." />;
   if (error) return <ErrorState error={error} onRetry={refetch} />;
 
@@ -93,6 +77,7 @@ const getCityName = (cityId: string) => {
         <CardGrid>
           {pois.map((poi) => (
             <POICard 
+              // Celles-ci utilisent maintenant les bonnes fonctions du hook
               getCityName={getCityName}
               getCategoryName={getCategoryName}
               key={poi.id}

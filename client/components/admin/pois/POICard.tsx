@@ -4,10 +4,11 @@ import { useState } from 'react';
 import ImagePreview from '../shared/ImagePreview';
 import { StatusBadge } from '../shared/StatusBadge';
 import { ActionButtons } from '../shared/ActionButtons';
-import { MapPin, Calendar, Star, Video, Music, Eye, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { MapPin, Calendar, Star, Video, Music, Eye, X, ChevronDown, ChevronUp, Image as ImageIcon } from 'lucide-react';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface POICardProps {
-  poi: any;
+  poi: any; // Assuming poi can have a 'files' array: { id: string, fileUrl: string, type: string }[]
   onEdit: () => void;
   onDelete: () => void;
   isDeleting: boolean;
@@ -18,6 +19,14 @@ interface POICardProps {
 export function POICard({ poi, onEdit, onDelete, isDeleting, getCategoryName, getCityName }: POICardProps) {
   const [showModal, setShowModal] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+
+  // --- Filter files from the poi.files array ---
+  const images = poi.files?.filter((f: any) => f.type === 'image') || [];
+  const videos = poi.files?.filter((f: any) => f.type === 'video') || [];
+  const tours = poi.files?.filter((f: any) => f.type === 'virtualtour') || [];
+  
+  // Use the first image for the card preview, or the old poiFile.image, or a fallback
+  const cardImageUrl = images[0]?.fileUrl || poi.poiFile?.image;
 
   // Get localized name with fallback
   const getName = () => {
@@ -38,10 +47,15 @@ export function POICard({ poi, onEdit, onDelete, isDeleting, getCategoryName, ge
   // Get category name from the relation
   const categoryName = poi.categoryPOI ? getCategoryName(poi.category) : 'Non catégorisé';
 
-  // Check available media
-  const hasVideo = poi.poiFile?.video;
-  const has360Tour = poi.poiFile?.virtualTour360;
-  const hasAudio = poi.frLocalization?.audioFiles || poi.arLocalization?.audioFiles || poi.enLocalization?.audioFiles;
+  // Check available media (using new filtered arrays)
+  const hasVideo = videos.length > 0;
+  const has360Tour = tours.length > 0;
+  
+  // --- MODIFIED: Check for localization audio ---
+  const frAudioUrl = poi.frLocalization?.audioFiles?.[0];
+  const arAudioUrl = poi.arLocalization?.audioFiles?.[0];
+  const enAudioUrl = poi.enLocalization?.audioFiles?.[0];
+  const hasAudio = frAudioUrl || arAudioUrl || enAudioUrl;
 
   // Parse practical info
   const getPracticalInfo = () => {
@@ -65,7 +79,7 @@ export function POICard({ poi, onEdit, onDelete, isDeleting, getCategoryName, ge
         {/* Image with Media Badges */}
         <div className="relative">
           <ImagePreview
-            src={poi.poiFile?.image}
+            src={cardImageUrl} // --- UPDATED ---
             alt={getName()}
             className="w-full h-48"
           />
@@ -292,72 +306,112 @@ export function POICard({ poi, onEdit, onDelete, isDeleting, getCategoryName, ge
                 )}
               </div>
 
-              {/* Media Files */}
+              {/* --- Media Files Section --- */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Fichiers multimédias</h3>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  {poi.poiFile?.image && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600 flex items-center gap-2 mb-2">
-                        📷 Images
-                      </label>
-                      <img
-                        src={poi.poiFile.image}
-                        alt="POI"
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
+                {/* --- Images Section --- */}
+                {images.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                      <ImageIcon className="w-4 h-4" /> Images ({images.length})
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {images.map((img: any) => (
+                        <AspectRatio key={img.id || img.fileUrl} ratio={16 / 9} className="bg-gray-100 rounded-lg overflow-hidden border">
+                          <img
+                            src={img.fileUrl}
+                            alt="Image POI"
+                            className="w-full h-full object-cover"
+                          />
+                        </AspectRatio>
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
                   
-                  {hasVideo && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600 flex items-center gap-2 mb-2">
-                        <Video className="w-4 h-4" /> Vidéo
-                      </label>
-                      <div className="bg-red-50 p-4 rounded-lg text-center text-red-700 text-sm">
-                        Vidéo disponible
-                      </div>
+                {/* --- Videos Section --- */}
+                {videos.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                      <Video className="w-4 h-4" /> Vidéos ({videos.length})
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {videos.map((vid: any) => (
+                        <AspectRatio key={vid.id || vid.fileUrl} ratio={16 / 9} className="bg-black rounded-lg overflow-hidden">
+                          <video
+                            src={vid.fileUrl}
+                            controls
+                            className="w-full h-full"
+                          >
+                            Votre navigateur ne supporte pas la balise vidéo.
+                          </video>
+                        </AspectRatio>
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
                   
-                  {has360Tour && (
-                    <div className="col-span-2">
-                      <label className="text-sm font-medium text-gray-600 flex items-center gap-2 mb-2">
-                        🌐 Visite 360°
-                      </label>
-                      <div className="bg-blue-50 p-4 rounded-lg text-center text-blue-700 text-sm">
-                        Visite virtuelle disponible
-                      </div>
+                {/* --- 360 Tours Section --- */}
+                {tours.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                      🌐 Visites 360° ({tours.length})
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {tours.map((tour: any) => (
+                        <AspectRatio key={tour.id || tour.fileUrl} ratio={16 / 9} className="border rounded-lg overflow-hidden">
+                          <iframe
+                            src={tour.fileUrl}
+                            className="w-full h-full"
+                            allowFullScreen
+                            title={`Visite 360° ${tour.id}`}
+                          />
+                        </AspectRatio>
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {hasAudio && (
-                    <div className="col-span-2">
-                      <label className="text-sm font-medium text-gray-600 flex items-center gap-2 mb-2">
-                        <Music className="w-4 h-4" /> Guides audio
-                      </label>
-                      <div className="flex gap-2">
-                        {poi.frLocalization?.audioFiles && (
-                          <span className="px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-xs">
-                            🇫🇷 Français
-                          </span>
-                        )}
-                        {poi.arLocalization?.audioFiles && (
-                          <span className="px-3 py-2 bg-green-50 text-green-700 rounded-lg text-xs">
-                            🇲🇦 العربية
-                          </span>
-                        )}
-                        {poi.enLocalization?.audioFiles && (
-                          <span className="px-3 py-2 bg-purple-50 text-purple-700 rounded-lg text-xs">
-                            🇬🇧 English
-                          </span>
-                        )}
-                      </div>
+                {/* --- (AUDIO FIX) Audio Section --- */}
+                {hasAudio && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                      <Music className="w-4 h-4" /> Guides audio
+                    </label>
+                    <div className="space-y-3">
+                      {frAudioUrl && (
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <p className="text-sm font-medium text-blue-900 mb-2">🇫🇷 Français</p>
+                          <audio src={frAudioUrl} controls className="w-full" />
+                        </div>
+                      )}
+                      {arAudioUrl && (
+                        <div className="bg-green-50 p-3 rounded-lg">
+                          <p className="text-sm font-medium text-green-900 mb-2">🇲🇦 العربية</p>
+                          <audio src={arAudioUrl} controls className="w-full" />
+                        </div>
+                      )}
+                      {enAudioUrl && (
+                        <div className="bg-purple-50 p-3 rounded-lg">
+                          <p className="text-sm font-medium text-purple-900 mb-2">🇬🇧 English</p>
+                          <audio src={enAudioUrl} controls className="w-full" />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
+                {/* --- (END AUDIO FIX) --- */}
+                
+                {/* --- No Media Fallback --- */}
+                {images.length === 0 && videos.length === 0 && tours.length === 0 && !hasAudio && (
+                  <div className="bg-gray-50 p-4 rounded-lg text-center text-gray-500 text-sm">
+                    Aucun fichier multimédia n'a été téléversé pour ce POI.
+                  </div>
+                )}
               </div>
+              {/* --- (END) Media Files Section --- */}
+
 
               {/* Practical Info */}
               {Object.keys(getPracticalInfo()).length > 0 && (

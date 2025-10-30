@@ -7,7 +7,13 @@ import { MultipleFileUpload } from '../shared/MultipleFileUpload';
 import { Checkbox } from '../shared/Checkbox';
 import { FormActions } from '../shared/FormActions';
 import MapSelector from './MapSelector';
-import { ImageIcon, Video, Map as Map360, Music, Info, MapPin, Plus, ChevronRight, ChevronLeft, Trash2 } from 'lucide-react';
+import { ImageIcon, Video, Map as Map360, Music, Info, MapPin, Plus, ChevronRight, ChevronLeft, Trash2, X } from 'lucide-react';
+
+interface POIFile { 
+  id: string;
+  fileUrl: string;
+  type: 'image' | 'video' | 'virtualtour';
+}
 
 interface POIFormProps {
   formData: any;
@@ -43,7 +49,8 @@ export function POIForm({
   const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
   const [newFieldKey, setNewFieldKey] = useState('');
   const [newFieldValue, setNewFieldValue] = useState('');
-
+  const [existingFiles, setExistingFiles] = useState<POIFile[]>([]);
+  
   const practicalInfoTemplate = {
     horaires: { checkin: '', checkout: '', reception: '' },
     prix: { chambre_simple: '', chambre_double: '', suite: '', petit_dejeuner: '' },
@@ -68,7 +75,7 @@ export function POIForm({
   const getParsedPracticalInfo = () => {
     try {
       const parsed = JSON.parse(formData.practicalInfo || '{}');
-      return typeof parsed === 'object' ? parsed : {};
+      return typeof parsed === 'object' && parsed !== null ? parsed : {}; // Handle null case
     } catch {
       return {};
     }
@@ -92,6 +99,58 @@ export function POIForm({
     });
   };
 
+  useEffect(() => {
+    if (selectedPOI) {
+      // We are in "Edit" mode
+      const files: POIFile[] = selectedPOI.files || [];
+      const tour = files.find((f) => f.type === 'virtualtour');
+
+      setExistingFiles(files);
+
+      onFormDataChange({
+        // Pre-populate all fields from selectedPOI
+        frLocalization: selectedPOI.frLocalization || { name: '', description: '', address: '' },
+        arLocalization: selectedPOI.arLocalization || { name: '', description: '', address: '' },
+        enLocalization: selectedPOI.enLocalization || { name: '', description: '', address: '' },
+        
+        latitude: selectedPOI.coordinates?.latitude?.toString() || '',
+        longitude: selectedPOI.coordinates?.longitude?.toString() || '',
+        address: selectedPOI.frLocalization?.address || '', // Use fr address as the default "address"
+        
+        category: selectedPOI.category || '',
+        cityId: selectedPOI.cityId || '',
+        
+        isActive: selectedPOI.isActive || false,
+        isVerified: selectedPOI.isVerified || false,
+        isPremium: selectedPOI.isPremium || false,
+        
+        practicalInfo: JSON.stringify(selectedPOI.practicalInfo || {}, null, 2),
+        virtualTourUrl: tour ? tour.fileUrl : '',
+        
+        filesToRemove: [], // Start with an empty list
+      });
+    } else {
+      // We are in "Create" mode, reset the form
+      setExistingFiles([]);
+      onFormDataChange({
+        frLocalization: { name: '', description: '', address: '' },
+        arLocalization: { name: '', description: '', address: '' },
+        enLocalization: { name: '', description: '', address: '' },
+        latitude: '',
+        longitude: '',
+        address: '',
+        category: '',
+        cityId: '',
+        isActive: true,
+        isVerified: false,
+        isPremium: false,
+        practicalInfo: '{}',
+        virtualTourUrl: '',
+        filesToRemove: [], 
+      });
+    }
+  }, [selectedPOI, onFormDataChange]); // --- MODIFICATION: Added onFormDataChange to deps ---
+
   const handleFieldKeyRename = (categoryKey: string, oldKey: string, newKey: string) => {
     const parsed = getParsedPracticalInfo();
     if (!parsed[categoryKey]) return;
@@ -108,6 +167,26 @@ export function POIForm({
     });
   };
 
+  // Filter existing files for rendering
+  const existingImages = existingFiles.filter(f => f.type === 'image');
+  const existingVideos = existingFiles.filter(f => f.type === 'video');
+
+  // Get existing audio URLs from formData (which was populated in useEffect)
+  const existingFrAudio = formData.frLocalization?.audioFiles?.[0];
+  const existingArAudio = formData.arLocalization?.audioFiles?.[0];
+  const existingEnAudio = formData.enLocalization?.audioFiles?.[0];
+
+  // --- MODIFICATION: Add handler to remove existing files ---
+  const handleRemoveExistingFile = (fileId: string) => {
+    // 1. Remove from visual state
+    setExistingFiles(prev => prev.filter(f => f.id !== fileId));
+    // 2. Add to parent's state to be submitted for deletion
+    onFormDataChange({
+      ...formData,
+      filesToRemove: [...(formData.filesToRemove || []), fileId],
+    });
+  };
+  
   const handleAddCustomField = (categoryKey: string, key: string, value: string) => {
     if (!key.trim()) return;
 
@@ -212,24 +291,47 @@ export function POIForm({
             required
           >
             <option value="">Sélectionner</option>
+            {/* --- MODIFICATION : Logique de parsing pour le dropdown --- */}
             {categories.map((cat: any) => {
-              let categoryName = 'Sans nom';
-              try {
-                if (typeof cat.fr === 'string') {
-                  const parsed = JSON.parse(cat.fr);
-                  categoryName = parsed.name || categoryName;
-                } else if (cat.fr?.name) {
-                  categoryName = cat.fr.name;
+              // Helper pour extraire le nom, gère string, {name: string} et JSON stringifié
+              const parseCategoryName = (langField: any): string | null => {
+                if (!langField) return null;
+                // Cas 1: C'est déjà un objet { name: "..." }
+                if (typeof langField === 'object' && langField.name) {
+                  return langField.name;
                 }
-              } catch {
-                categoryName = cat.fr || 'Sans nom';
-              }
+                // Cas 2: C'est une chaîne de caractères
+                if (typeof langField === 'string') {
+                  try {
+                    // On tente un premier parse (pour "{\"name\":\"test\"}")
+                    let parsed = JSON.parse(langField);
+                    // Cas 3: C'est une chaîne "double-encodée" ("\"{\\\"name\\\":\\\"test\\\"}\"")
+                    if (typeof parsed === 'string') {
+                      parsed = JSON.parse(parsed); // On parse une deuxième fois
+                    }
+                    // Si on a un objet avec un 'name', on le retourne
+                    if (typeof parsed === 'object' && parsed.name) {
+                      return parsed.name;
+                    }
+                  } catch (e) {
+                    // Si le parsing échoue, c'est une chaîne simple comme "Histoire"
+                    if (langField.trim()) {
+                      return langField;
+                    }
+                  }
+                }
+                return null;
+              };
+
+              const categoryName = parseCategoryName(cat.fr) || parseCategoryName(cat.en) || parseCategoryName(cat.ar) || 'Sans nom';
+              
               return (
                 <option key={cat.id} value={cat.id}>
                   {categoryName}
                 </option>
               );
             })}
+            {/* --- FIN DE LA MODIFICATION --- */}
           </select>
         </FormField>
 
@@ -328,12 +430,58 @@ export function POIForm({
         fields={localizationFields}
       />
 
-      {/* Media Files */}
+      {/* --- SECTION "Media Files" --- */}
       <div className="space-y-3">
         <h3 className="text-lg font-semibold text-gray-900">Fichiers multimédias</h3>
+        
+        {/* --- Affichage des Images Existantes --- */}
+        {existingImages.length > 0 && (
+          <div className="space-y-2 mb-4">
+            <label className="block text-sm font-medium text-gray-500">Images actuelles</label>
+            <div className="flex flex-wrap gap-4">
+              {existingImages.map(file => (
+                <div key={file.id} className="relative w-32 h-20">
+                  <img src={file.fileUrl} alt="Image POI" className="w-full h-full object-cover rounded-lg border" />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveExistingFile(file.id)}
+                    className="absolute -top-2 -right-2 p-1 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors"
+                    title="Supprimer cette image"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* --- Affichage des Vidéos Existantes --- */}
+        {existingVideos.length > 0 && (
+          <div className="space-y-2 mb-4">
+            <label className="block text-sm font-medium text-gray-500">Vidéos actuelles</label>
+            <div className="flex flex-wrap gap-4">
+              {existingVideos.map(file => (
+                <div key={file.id} className="relative w-32 h-20 bg-black rounded-lg flex items-center justify-center">
+                  <Video className="w-8 h-8 text-white" />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveExistingFile(file.id)}
+                    className="absolute -top-2 -right-2 p-1 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors"
+                    title="Supprimer cette vidéo"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* --- Grille pour l'ajout de NOUVEAUX fichiers --- */}
         <div className="grid grid-cols-3 gap-4">
           <MultipleFileUpload
-            label="Images"
+            label="Ajouter Images"
             accept="image/*"
             files={files.image || []}
             onChange={(file) => onFileChange(file, 'image')}
@@ -341,7 +489,7 @@ export function POIForm({
             icon={<ImageIcon className="w-4 h-4" />}
           />
           <MultipleFileUpload
-            label="Vidéos"
+            label="Ajouter Vidéos"
             accept="video/*"
             files={files.video || []}
             onChange={(file) => onFileChange(file, 'video')}
@@ -366,6 +514,8 @@ export function POIForm({
           </div>
         </div>
       </div>
+      {/* --- FIN DE LA SECTION --- */}
+
 
       {/* Audio Files */}
       <div className="space-y-3">
@@ -382,6 +532,7 @@ export function POIForm({
             onRemove={(index) => onRemoveFile && onRemoveFile('fr_audio', index)}
             icon={<Music className="w-4 h-4" />}
             maxFiles={1}
+            existingFileUrl={existingFrAudio}
           />
           <MultipleFileUpload
             label="Audio Arabe"
@@ -391,6 +542,7 @@ export function POIForm({
             onRemove={(index) => onRemoveFile && onRemoveFile('ar_audio', index)}
             icon={<Music className="w-4 h-4" />}
             maxFiles={1}
+            existingFileUrl={existingArAudio}
           />
           <MultipleFileUpload
             label="Audio Anglais"
@@ -400,6 +552,7 @@ export function POIForm({
             onRemove={(index) => onRemoveFile && onRemoveFile('en_audio', index)}
             icon={<Music className="w-4 h-4" />}
             maxFiles={1}
+            existingFileUrl={existingEnAudio}
           />
         </div>
       </div>
@@ -517,7 +670,7 @@ export function POIForm({
                 <div key={category} className="bg-white p-3 rounded-lg">
                   <p className="font-medium text-indigo-600 mb-2">{category}</p>
                   <ul className="ml-4 space-y-1">
-                    {typeof fields === 'object' &&
+                    {typeof fields === 'object' && fields !== null &&
                       Object.entries(fields).map(([key, value]) => (
                         <li key={key} className="text-xs">
                           <span className="font-semibold">{key}:</span>{' '}

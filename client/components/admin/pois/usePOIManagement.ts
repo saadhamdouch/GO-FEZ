@@ -39,6 +39,7 @@ interface POIFormData {
     description: string;
     address: string;
   };
+  filesToRemove?: string[];
 }
 
 const initialFormData: POIFormData = {
@@ -55,6 +56,7 @@ const initialFormData: POIFormData = {
   frLocalization: { name: '', description: '', address: '' },
   arLocalization: { name: '', description: '', address: '' },
   enLocalization: { name: '', description: '', address: '' },
+  filesToRemove: [], 
 };
 
 export function usePOIManagement() {
@@ -76,31 +78,60 @@ export function usePOIManagement() {
   const categories = categoriesData?.data || [];
   const cities = citiesData?.data || [];
 
-  // Helper pour récupérer le nom de catégorie
-  const getCategoryName = (categoryId: string): string => {
+const getCategoryName = (categoryId: string): string => {
     const category = categories.find((c: any) => c.id === categoryId);
     if (!category) return 'Non catégorisé';
 
-    try {
-      if (typeof category.fr === 'string') {
-        const parsed = JSON.parse(category.fr);
-        return parsed.name || 'Sans nom';
+    // Helper pour extraire le nom, gère string, {name: string} et JSON stringifié
+    const parseCategoryName = (langField: any): string | null => {
+      if (!langField) return null;
+
+      // Cas 1: C'est déjà un objet { name: "..." }
+      if (typeof langField === 'object' && langField.name) {
+        return langField.name;
       }
-      if (category.fr && typeof category.fr === 'object') {
-        return category.fr.name || 'Sans nom';
+
+      // Cas 2: C'est une chaîne de caractères
+      if (typeof langField === 'string') {
+        try {
+          // On tente un premier parse (pour "{\"name\":\"test\"}")
+          let parsed = JSON.parse(langField);
+
+          // Cas 3: C'est une chaîne "double-encodée" ("\"{\\\"name\\\":\\\"test\\\"}\"")
+          // Le premier parse aura donné une *nouvelle* chaîne : "{\"name\":\"test\"}"
+          if (typeof parsed === 'string') {
+            parsed = JSON.parse(parsed); // On parse une deuxième fois
+          }
+          
+          // Si on a un objet avec un 'name', on le retourne
+          if (typeof parsed === 'object' && parsed.name) {
+            return parsed.name;
+          }
+
+        } catch (e) {
+          // Si le parsing échoue, c'est une chaîne simple comme "Histoire"
+          if (langField.trim()) {
+            return langField;
+          }
+        }
       }
-      if (category.en && typeof category.en === 'object') {
-        return category.en.name || 'Sans nom';
-      }
-      if (category.ar && typeof category.ar === 'object') {
-        return category.ar.name || 'Sans nom';
-      }
-      return 'Sans nom';
-    } catch (e) {
-      console.error('Error parsing category name:', e);
-      return category.fr || category.en || category.ar || 'Sans nom';
-    }
+      return null;
+    };
+
+    // On essaie le français, puis l'anglais, puis l'arabe
+    const frName = parseCategoryName(category.fr);
+    if (frName) return frName;
+
+    const enName = parseCategoryName(category.en);
+    if (enName) return enName;
+
+    const arName = parseCategoryName(category.ar);
+    if (arName) return arName;
+
+    // Fallback
+    return 'Sans nom';
   };
+
 
   // Helper pour récupérer le nom de ville
   const getCityName = (cityId: string): string => {
@@ -215,6 +246,11 @@ export function usePOIManagement() {
         });
       });
 
+      // Ajoute la liste des fichiers à supprimer (uniquement en mode édition)
+      if (selectedPOI && formData.filesToRemove && formData.filesToRemove.length > 0) {
+        apiFormData.append('filesToRemove', JSON.stringify(formData.filesToRemove));
+      }
+
       if (selectedPOI) {
         await updatePOI({ id: selectedPOI.id, data: apiFormData }).unwrap();
         toast.success('POI mis à jour avec succès');
@@ -281,19 +317,24 @@ export function usePOIManagement() {
       frLocalization: poi.frLocalization || { name: '', description: '', address: '' },
       arLocalization: poi.arLocalization || { name: '', description: '', address: '' },
       enLocalization: poi.enLocalization || { name: '', description: '', address: '' },
+      filesToRemove: [], // Important pour le formulaire
     });
+    setFiles({}); 
     setIsModalOpen(true);
   };
 
   // Filtrer les POIs par terme de recherche
   const filteredPOIs = pois.filter((poi: POI) => {
     const searchLower = searchTerm.toLowerCase();
+    const categoryName = getCategoryName(poi.category) || '';
+    const cityName = getCityName(poi.cityId) || '';
+
     return (
       poi.frLocalization?.name?.toLowerCase().includes(searchLower) ||
       poi.arLocalization?.name?.toLowerCase().includes(searchLower) ||
       poi.enLocalization?.name?.toLowerCase().includes(searchLower) ||
-      getCategoryName(poi.category).toLowerCase().includes(searchLower) ||
-      getCityName(poi.cityId).toLowerCase().includes(searchLower)
+      categoryName.toLowerCase().includes(searchLower) ||
+      cityName.toLowerCase().includes(searchLower)
     );
   });
 

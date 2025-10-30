@@ -22,6 +22,7 @@ export interface POI {
     latitude: number;
     longitude: number;
     address?: string;
+    files?: POIFile[];
   };
   category: string;
   practicalInfo: any;
@@ -41,6 +42,7 @@ export interface POI {
   created_at?: string;
   updated_at?: string;
 }
+
 
 export const poiApi = createApi({
   reducerPath: "poiApi",

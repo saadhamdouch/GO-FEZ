@@ -1,9 +1,9 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Upload, X, Plus, Loader2 } from 'lucide-react'; // Ajout de Loader2
-import { compressImageByType } from '../../../utils/imageCompression'; // 1. Importer le compresseur
-import { toast } from 'sonner'; // Pour les erreurs
+import { Upload, X, Plus, Loader2,CheckCircle } from 'lucide-react';
+import { compressImageByType } from '../../../utils/imageCompression';
+import { toast } from 'sonner';
 
 interface MultipleFileUploadProps {
   label: string;
@@ -13,6 +13,7 @@ interface MultipleFileUploadProps {
   onRemove: (index: number) => void;
   icon?: React.ReactNode;
   maxFiles?: number;
+  existingFileUrl?: string; // --- J'ai gardé ceci de notre correction précédente ---
 }
 
 export function MultipleFileUpload({
@@ -23,36 +24,43 @@ export function MultipleFileUpload({
   onRemove,
   icon,
   maxFiles = 10,
+  existingFileUrl, // --- J'ai gardé ceci de notre correction précédente ---
 }: MultipleFileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // 2. Ajouter un état de chargement pour la compression
-  const [isCompressing, setIsCompressing] = useState(false);
+  
+  // --- MODIFICATION: Renommé en 'isProcessing' pour être plus générique ---
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleClick = () => {
     fileInputRef.current?.click();
   };
 
-  // 3. Rendre la fonction async pour gérer la compression
+  // --- MODIFICATION: La fonction 'handleFileChange' est mise à jour ---
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     
     if (file && files.length < maxFiles) {
-      setIsCompressing(true); // Activer le chargement
+      setIsProcessing(true); // Activer le chargement
       
       try {
-        // 4. Compresser l'image en utilisant votre utilitaire
-        const compressedResult = await compressImageByType(file, {
-          maxSizeKB: 512, // 0.5MB (valeur par défaut de votre utilitaire)
-        });
-        
-        // 5. Envoyer le fichier compressé au composant parent
-        onChange(compressedResult.file);
+        // --- FIX: NE COMPRESSER QUE LES IMAGES ---
+        if (accept === 'image/*') {
+          // C'est une image, on la compresse
+          const compressedResult = await compressImageByType(file, {
+            maxSizeKB: 512, 
+          });
+          onChange(compressedResult.file);
+        } else {
+          // C'est un audio ou une vidéo, on l'envoie tel quel
+          onChange(file);
+        }
         
       } catch (err) {
-        console.error("Erreur de compression:", err);
-        toast.error(`Erreur de compression: ${(err as Error).message}`);
+        console.error("Erreur de compression ou de fichier:", err);
+        // L'erreur que vous voyiez venait d'ici
+        toast.error(`Erreur de fichier: ${(err as Error).message}`);
       } finally {
-        setIsCompressing(false); // Désactiver le chargement
+        setIsProcessing(false); // Désactiver le chargement
       }
 
       // Réinitialiser l'input pour permettre de sélectionner le même fichier
@@ -62,38 +70,62 @@ export function MultipleFileUpload({
     }
   };
 
+  // --- Logique pour l'affichage (inchangée) ---
+  const hasExistingFile = !!existingFileUrl;
+  const hasNewFiles = files.length > 0;
+  
+  const showUploadButton = maxFiles === 1 
+    ? !hasExistingFile && !hasNewFiles 
+    : files.length < maxFiles;
+
+  const buttonDisabled = isProcessing || 
+    (maxFiles === 1 && (hasExistingFile || hasNewFiles)) || 
+    files.length >= maxFiles;
+
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-gray-700 flex items-center space-x-2">
         {icon || <Upload className="w-4 h-4" />}
         <span>{label}</span>
         <span className="text-xs text-gray-500">
-          ({files.length}/{maxFiles})
+          {maxFiles === 1 && (hasExistingFile || hasNewFiles) ? '(1/1)' : `(${files.length}/${maxFiles})`}
         </span>
       </label>
 
-      {/* Zone d'upload */}
-      <button
-        type="button"
-        onClick={handleClick}
-        className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-indigo-500 hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
-        // 6. Désactiver le bouton pendant la compression
-        disabled={files.length >= maxFiles || isCompressing}
-      >
-        {isCompressing ? (
-          <>
-            <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
-            <span className="text-sm text-gray-600">Compression...</span>
-          </>
-        ) : (
-          <>
-            <Plus className="w-5 h-5 text-gray-400" />
-            <span className="text-sm text-gray-600">
-              {files.length >= maxFiles ? 'Limite atteinte' : 'Ajouter un fichier'}
-            </span>
-          </>
-        )}
-      </button>
+      {/* --- Affichage du fichier existant (pour audio) --- */}
+      {maxFiles === 1 && hasExistingFile && (
+        <div className="flex items-center justify-between bg-green-50 p-2 rounded text-sm border border-green-200">
+          <div className="flex-1 min-w-0 flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+            <p className="truncate text-green-800 font-medium">Fichier actuel</p>
+          </div>
+        </div>
+      )}
+
+      {/* --- Zone d'upload --- */}
+      {showUploadButton && (
+        <button
+          type="button"
+          onClick={handleClick}
+          className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-indigo-500 hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
+          disabled={buttonDisabled}
+        >
+          {isProcessing ? ( // --- MODIFICATION: Utilise 'isProcessing' ---
+            <>
+              <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+              {/* --- MODIFICATION: Texte mis à jour --- */}
+              <span className="text-sm text-gray-600">Traitement...</span>
+            </>
+          ) : (
+            <>
+              <Plus className="w-5 h-5 text-gray-400" />
+              <span className="text-sm text-gray-600">
+                {buttonDisabled ? 'Limite atteinte' : 'Ajouter un fichier'}
+              </span>
+            </>
+          )}
+        </button>
+      )}
 
       <input
         ref={fileInputRef}
@@ -101,10 +133,10 @@ export function MultipleFileUpload({
         accept={accept}
         onChange={handleFileChange}
         className="hidden"
-        disabled={files.length >= maxFiles || isCompressing}
+        disabled={buttonDisabled}
       />
 
-      {/* Liste des fichiers */}
+      {/* Liste des *nouveaux* fichiers */}
       {files.length > 0 && (
         <div className="space-y-2 mt-2">
           {files.map((file, index) => (
@@ -115,7 +147,7 @@ export function MultipleFileUpload({
               <div className="flex-1 min-w-0">
                 <p className="truncate text-gray-700">{file.name}</p>
                 <p className="text-xs text-gray-500">
-                  {/* Afficher la taille du fichier (maintenant compressé) */}
+                  {/* Afficher la taille du fichier */}
                   {(file.size / 1024).toFixed(1)} KB
                 </p>
               </div>
