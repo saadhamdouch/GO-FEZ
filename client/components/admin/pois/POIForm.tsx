@@ -9,11 +9,7 @@ import { FormActions } from '../shared/FormActions';
 import MapSelector from './MapSelector';
 import { ImageIcon, Video, Map as Map360, Music, Info, MapPin, Plus, ChevronRight, ChevronLeft, Trash2, X } from 'lucide-react';
 
-interface POIFile { 
-  id: string;
-  fileUrl: string;
-  type: 'image' | 'video' | 'virtualtour';
-}
+import { POIFile } from '@/services/api/PoiApi'; // (Vérifiez le chemin)
 
 interface POIFormProps {
   formData: any;

@@ -459,35 +459,43 @@ const updatePOI = async (req, res) => {
       }
     }
 
-if (poiData.filesToRemove && Array.isArray(poiData.filesToRemove)) {
+if (poiData.filesToRemove) {
       try {
-        const fileIdsToRemove = poiData.filesToRemove; // Ceci est un tableau d'UUIDs
+        // 1. D'ABORD, parser la chaîne venant du FormData
+        const fileIdsToRemove = typeof poiData.filesToRemove === 'string'
+          ? JSON.parse(poiData.filesToRemove)
+          : poiData.filesToRemove;
 
-        for (const fileId of fileIdsToRemove) {
-          try {
-            // 1. Trouver l'enregistrement du fichier par son ID (UUID)
-            const fileToDestroy = await POIFile.findOne({ where: { id: fileId } });
+        // 2. ENSUITE, vérifier si c'est un tableau
+        if (Array.isArray(fileIdsToRemove)) {
+          console.log('🔄 Fichiers à supprimer:', fileIdsToRemove); // <-- Vous verrez ce log maintenant
 
-            if (fileToDestroy) {
-              // 2. S'il a un filePublicId, le supprimer de Cloudinary
-              if (fileToDestroy.filePublicId) {
-                await deleteFile(fileToDestroy.filePublicId);
-                console.log('🗑️ Fichier supprimé de Cloudinary:', fileToDestroy.filePublicId);
+          for (const fileId of fileIdsToRemove) {
+            try {
+              // 3. Trouver l'enregistrement du fichier par son ID (UUID)
+              const fileToDestroy = await POIFile.findOne({ where: { id: fileId } });
+
+              if (fileToDestroy) {
+                // 4. S'il a un filePublicId, le supprimer de Cloudinary
+                if (fileToDestroy.filePublicId) {
+                  await deleteFile(fileToDestroy.filePublicId);
+                  console.log('🗑️ Fichier supprimé de Cloudinary:', fileToDestroy.filePublicId);
+                }
+                
+                // 5. Détruire l'enregistrement dans la base de données
+                await fileToDestroy.destroy();
+                console.log('🗑️ Enregistrement fichier supprimé de la DB:', fileId);
+
+              } else {
+                console.warn('⚠️ Fichier à supprimer non trouvé (ID):', fileId);
               }
-              
-              // 3. Détruire l'enregistrement dans la base de données
-              await fileToDestroy.destroy();
-              console.log('🗑️ Enregistrement fichier supprimé de la DB:', fileId);
-
-            } else {
-              console.warn('⚠️ Fichier à supprimer non trouvé (ID):', fileId);
+            } catch (err) {
+              console.warn(`⚠️ Erreur lors de la suppression du fichier (ID: ${fileId}):`, err.message);
             }
-          } catch (err) {
-            console.warn(`⚠️ Erreur lors de la suppression du fichier (ID: ${fileId}):`, err.message);
           }
         }
       } catch (err) {
-        console.warn('⚠️ Erreur lors du traitement de filesToRemove:', err.message);
+        console.warn('⚠️ Erreur lors du parsing ou du traitement de filesToRemove:', err.message);
       }
     }
 
