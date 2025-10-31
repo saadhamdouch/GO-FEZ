@@ -140,31 +140,63 @@ interface CircuitMapProps {
 }
 
 // Helper pour extraire les coordonnées - GÈRE TOUS LES FORMATS POSSIBLES
+// Helper pour extraire les coordonnées - GÈRE TOUS LES FORMATS POSSIBLES
+// Helper pour extraire les coordonnées - GÈRE TOUS LES FORMATS POSSIBLES
 const getCoordinates = (poi: POI): [number, number] | null => {
-	if (!poi.coordinates) return null;
-	
-	// Cas 1: Format GeoJSON {type: 'Point', coordinates: [lng, lat]}
-	if (poi.coordinates.type === 'Point' && Array.isArray(poi.coordinates.coordinates)) {
-		const [lng, lat] = poi.coordinates.coordinates;
+	let rawCoords = poi.coordinates; // 'let' car nous allons peut-être le parser
+	if (!rawCoords) return null;
+
+	let coords: any = rawCoords;
+
+	// **LA CORRECTION EST ICI**
+	// 1. Vérifier si c'est un string, si oui, le parser en objet
+	if (typeof coords === 'string') {
+		try {
+			// Le 'in' operator a crashé, prouvant que 'coords' est un string JSON
+			coords = JSON.parse(coords);
+		} catch (e) {
+			console.error('Failed to parse coordinates string:', coords, e);
+			return null; // Données corrompues
+		}
+	}
+	// 'coords' est maintenant un objet ou un tableau, on peut le vérifier en toute sécurité.
+
+	// Cas 1: Format tableau direct [lng, lat] ou [lat, lng]
+	if (Array.isArray(coords)) {
+		if (coords.length === 2) {
+			const [first, second] = coords;
+			// Détection: latitude est généralement entre -90 et 90
+			if (Math.abs(first) <= 90 && Math.abs(second) > 90) {
+				return [first, second]; // [lat, lng]
+			}
+			return [second, first]; // [lng, lat] -> convertir en [lat, lng]
+		}
+		return null; // Tableau malformé
+	}
+
+	// Si ce n'est pas un tableau, c'est un objet.
+
+	// Cas 2: Format objet {latitude, longitude} (Le format de votre erreur)
+	if (coords && typeof coords === 'object' && 'latitude' in coords && 'longitude' in coords) {
+		return [coords.latitude, coords.longitude];
+	}
+
+	// Cas 3: Format GeoJSON {type: 'Point', coordinates: [lng, lat]}
+	if (coords && typeof coords === 'object' && 'type' in coords && coords.type === 'Point' && 'coordinates' in coords) {
+		const [lng, lat] = coords.coordinates;
 		return [lat, lng]; // Leaflet utilise [lat, lng]
 	}
-	
-	// Cas 2: Format objet {latitude, longitude}
-	if ((poi.coordinates as any).latitude && (poi.coordinates as any).longitude) {
-		return [(poi.coordinates as any).latitude, (poi.coordinates as any).longitude];
+
+	// Cas 4: Format objet {lat, lng} (Le format de l'admin)
+	if (coords && typeof coords === 'object' && 'lat' in coords && 'lng' in coords) {
+		return [coords.lat, coords.lng];
 	}
-	
-	// Cas 3: Format tableau direct [lng, lat] ou [lat, lng]
-	if (Array.isArray(poi.coordinates) && poi.coordinates.length === 2) {
-		const [first, second] = poi.coordinates;
-		// Détection: latitude est généralement entre -90 et 90
-		if (Math.abs(first) <= 90 && Math.abs(second) > 90) {
-			return [first, second]; // [lat, lng]
-		}
-		return [second, first]; // [lng, lat] -> convertir en [lat, lng]
-	}
-	
-	console.warn('⚠️ Format de coordonnées non reconnu pour le POI:', poi.id, poi.coordinates);
+
+	console.warn(
+		'⚠️ Format de coordonnées non reconnu pour le POI:',
+		poi.id,
+		coords
+	);
 	return null;
 };
 
