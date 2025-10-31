@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const categoryController = require('../controllers/categoryController');
-const { uploadCategoryFiles } = require('../config/cloudinary.js');
+const { uploadCategoryFiles } = require('../Config/cloudinary.js');
 
 router.post('/', uploadCategoryFiles.single('icon'), categoryController.createCategory);
 router.get('/', categoryController.getAllCategories);

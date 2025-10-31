@@ -1,6 +1,6 @@
 const xss = require('xss');
 const { Category, POI } = require('../models');
-const { deleteFile } = require('../config/cloudinary.js');
+const { deleteFile } = require('../Config/cloudinary.js');
 
 // 🔹 Fonction pour assainir les données multilingues
 const sanitizeCategoryLocalizations = (localizations) => {
