@@ -1,55 +1,72 @@
+import Image1 from '@/assets/monuments/m1.jpg';
+import Image2 from '@/assets/monuments/m2.jpg';
+import Image3 from '@/assets/monuments/m3.jpg';
+import Image4 from '@/assets/monuments/m4.jpg';
+import Image5 from '@/assets/monuments/m5.png';
+import Feather from '@expo/vector-icons/Feather';
+import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { Image } from 'expo-image';
+import { useState } from 'react';
+import {
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+const { width } = Dimensions.get('window');
 
-
-import { BottomSheetScrollView } from "@gorhom/bottom-sheet"
-import { useState } from "react"
-import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native"
-
-const { width } = Dimensions.get("window")
-
-const FILTER_TABS = ["Restaurant", "Museums", "Coffee", "Shopping"]
+const FILTER_TABS = ['Restaurant', 'Museums', 'Coffee', 'Shopping'];
 
 const CATEGORIES = [
-  { id: 1, name: "History", image: "/historical-monument.jpg" },
-  { id: 2, name: "Traditional", image: "/traditional-craft.jpg" },
-  { id: 3, name: "Gastronomy", image: "/moroccan-food.jpg" },
-  { id: 4, name: "Spiritual", image: "/mosque-architecture.jpg" },
-  { id: 5, name: "Architecture", image: "/islamic-architecture.jpg" },
-]
+  { id: 1, name: 'History', image: Image1 },
+  { id: 2, name: 'Traditional', image: Image2 },
+  { id: 3, name: 'Gastronomy', image: Image3 },
+  { id: 4, name: 'Spiritual', image: Image4 },
+  { id: 5, name: 'Architecture', image: Image5 },
+];
 
 const NEARBY_PLACES = [
-  { id: 1, name: "War Museum", location: "Burj al-Shamal", image: "/museum-interior.png" },
-  { id: 2, name: "Dar Moussa", location: "Burj al-Shamal", image: "/traditional-house.jpg" },
-  { id: 3, name: "War Museum", location: "Burj al-Shamal", image: "/museum-interior.jpg" },
-]
+  {
+    id: 1,
+    name: 'War Museum',
+    location: 'Burj al-Shamal',
+    image: Image1,
+  },
+  {
+    id: 2,
+    name: 'Dar Moussa',
+    location: 'Burj al-Shamal',
+    image: Image2,
+  },
+  {
+    id: 3,
+    name: 'War Museum',
+    location: 'Burj al-Shamal',
+    image: Image3,
+  },
+];
 
 interface BottomSheetContentProps {
-  selectedLocation: any
+  selectedLocation: any;
 }
 
-export default function BottomSheetContent({ selectedLocation }: BottomSheetContentProps) {
-  const [activeTab, setActiveTab] = useState(0)
+export default function BottomSheetContent({
+  selectedLocation,
+}: BottomSheetContentProps) {
+  const [activeTab, setActiveTab] = useState(0);
 
   return (
     <BottomSheetScrollView style={styles.container} scrollEnabled={true}>
       {/* Handle Bar */}
-      <View style={styles.handleBar} />
+      {/* <View style={styles.handleBar} /> */}
 
-      {/* Filter Tabs */}
-      <View style={styles.tabsContainer}>
-        {FILTER_TABS.map((tab, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[styles.tab, activeTab === index && styles.activeTab]}
-            onPress={() => setActiveTab(index)}
-          >
-            <Text style={[styles.tabText, activeTab === index && styles.activeTabText]}>{tab}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <Text style={styles.searchPlaceholder}>🔍 Search for restaurant, coffee...</Text>
+        <Feather name='search' size={20} color='black' />
+        <Text style={styles.searchPlaceholder}>
+          Search for restaurant, coffee...
+        </Text>
       </View>
 
       {/* Explore by Category */}
@@ -61,10 +78,13 @@ export default function BottomSheetContent({ selectedLocation }: BottomSheetCont
           style={styles.categoriesScroll}
           contentContainerStyle={styles.categoriesContent}
         >
-          {CATEGORIES.map((category) => (
+          {CATEGORIES.map((category, i) => (
             <TouchableOpacity key={category.id} style={styles.categoryCard}>
               <View style={styles.categoryImagePlaceholder}>
-                <Text style={styles.categoryImageText}>📸</Text>
+                <Image
+                  source={category.image}
+                  style={{ width: 100, height: 100, borderRadius: 10 }}
+                ></Image>
               </View>
               <Text style={styles.categoryName}>{category.name}</Text>
             </TouchableOpacity>
@@ -90,25 +110,25 @@ export default function BottomSheetContent({ selectedLocation }: BottomSheetCont
 
       <View style={styles.bottomPadding} />
     </BottomSheetScrollView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     paddingHorizontal: 16,
   },
   handleBar: {
     width: 40,
     height: 4,
-    backgroundColor: "#ddd",
+    backgroundColor: '#ddd',
     borderRadius: 2,
-    alignSelf: "center",
+    alignSelf: 'center',
     marginVertical: 12,
   },
   tabsContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginVertical: 16,
     gap: 8,
   },
@@ -116,38 +136,41 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: '#f0f0f0',
   },
   activeTab: {
-    backgroundColor: "#333",
+    backgroundColor: '#333',
   },
   tabText: {
     fontSize: 12,
-    color: "#666",
-    fontWeight: "500",
+    color: '#666',
+    fontWeight: '500',
   },
   activeTabText: {
-    color: "#fff",
+    color: '#fff',
   },
   searchContainer: {
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#f5f5f5',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
     marginVertical: 12,
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 10,
   },
   searchPlaceholder: {
     fontSize: 14,
-    color: "#999",
+    color: '#999',
   },
   section: {
     marginVertical: 20,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
     marginBottom: 12,
-    color: "#000",
+    color: '#000',
   },
   categoriesScroll: {
     marginHorizontal: -16,
@@ -158,15 +181,15 @@ const styles = StyleSheet.create({
   },
   categoryCard: {
     width: 100,
-    alignItems: "center",
+    alignItems: 'center',
   },
   categoryImagePlaceholder: {
     width: 100,
     height: 100,
-    backgroundColor: "#e8e8e8",
+    backgroundColor: '#e8e8e8',
     borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 8,
   },
   categoryImageText: {
@@ -174,25 +197,25 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     fontSize: 12,
-    fontWeight: "500",
-    textAlign: "center",
-    color: "#333",
+    fontWeight: '500',
+    textAlign: 'center',
+    color: '#333',
   },
   placeCard: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginBottom: 12,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: '#f9f9f9',
     borderRadius: 8,
     padding: 12,
-    alignItems: "center",
+    alignItems: 'center',
   },
   placeImagePlaceholder: {
     width: 80,
     height: 80,
-    backgroundColor: "#e8e8e8",
+    backgroundColor: '#e8e8e8',
     borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 12,
   },
   placeImageText: {
@@ -203,15 +226,15 @@ const styles = StyleSheet.create({
   },
   placeName: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#000",
+    fontWeight: '600',
+    color: '#000',
     marginBottom: 4,
   },
   placeLocation: {
     fontSize: 12,
-    color: "#999",
+    color: '#999',
   },
   bottomPadding: {
     height: 40,
   },
-})
+});

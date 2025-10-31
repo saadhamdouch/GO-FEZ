@@ -10,10 +10,22 @@ import cityApi from '../services/api/CityApi';
 import {circuitProgressApi} from '../services/api/CircuitProgressApi'; 
 
 // 2. Import the logger
-import logger from 'redux-logger';
+  // Charge le logger uniquement en développement pour éviter les erreurs de build
 
 // 3. Check for development environment
 const isDevelopment = process.env.NODE_ENV === 'development';
+
+// Crée le middleware logger uniquement en dev, sans import statique
+let loggerMiddleware: any | null = null;
+if (isDevelopment) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { createLogger } = require('redux-logger');
+    loggerMiddleware = createLogger();
+  } catch {
+    loggerMiddleware = null;
+  }
+}
 
 // 4. Create a middleware array
 const middleware = [
@@ -28,8 +40,8 @@ const middleware = [
 ];
 
 // 6. Conditionally add the logger
-if (isDevelopment) {
-  middleware.push(logger as any);
+if (loggerMiddleware) {
+  middleware.push(loggerMiddleware as any);
 }
 
 const configurestore = configureStore({

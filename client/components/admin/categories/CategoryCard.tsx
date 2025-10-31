@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { StatusBadge } from '../shared/StatusBadge';
 import { ActionButtons } from '../shared/ActionButtons';
 import { Folder } from 'lucide-react';
@@ -24,8 +25,20 @@ export function CategoryCard({
 
   return (
     <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden border border-gray-100">
-      <div className="relative bg-gradient-to-br from-indigo-50 to-purple-50 h-32 flex items-center justify-center">
-        <Folder className="w-16 h-16 text-indigo-600" />
+      <div className="relative h-32 overflow-hidden">
+        {category.icon ? (
+          <Image
+            src={category.icon}
+            alt={frLoc.name || 'Catégorie'}
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center">
+            <Folder className="w-16 h-16 text-indigo-600" />
+          </div>
+        )}
       </div>
 
       <div className="p-4">

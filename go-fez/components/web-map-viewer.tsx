@@ -1,7 +1,6 @@
-import React, { useRef } from 'react';
-import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
+import { useRef } from 'react';
+import { Dimensions, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { Text } from './ui/text';
 
 interface Monument {
   id: number;
@@ -51,7 +50,7 @@ const LOCATIONS: Monument[] = [
   { id: 5, latitude: 34.0616, longitude: -5.0107, title: 'Shop', type: 'shop' },
 ];
 
-export default function MonumentsMapViewer({
+export default function WebMapViewer({
   monuments = LOCATIONS,
   maptilerApiKey = 'cKuGgc1qdSgluaz2JWLK',
   styleUrl = 'https://api.maptiler.com/maps/019a213d-06f4-7ef2-be61-48b4b8fb7e56/style.json?key=cKuGgc1qdSgluaz2JWLK',
@@ -346,27 +345,7 @@ export default function MonumentsMapViewer({
     </html>
   `;
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.mapContainer}>
-        <WebView
-          ref={webViewRef}
-          source={{ html: mapHTML }}
-          style={styles.map}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          geolocationEnabled={true}
-          startInLoadingState={true}
-          renderLoading={() => (
-            <View style={styles.mapLoading}>
-              <ActivityIndicator size='large' color='#22c55e' />
-              <Text style={styles.mapLoadingText}>Loading map...</Text>
-            </View>
-          )}
-        />
-      </View>
-    </View>
-  );
+  return mapHTML;
 }
 
 const styles = StyleSheet.create({

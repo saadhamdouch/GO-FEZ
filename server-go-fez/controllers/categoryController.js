@@ -1,5 +1,6 @@
 const xss = require('xss');
 const { Category, POI } = require('../models');
+const { deleteFile } = require('../config/cloudinary.js');
 
 // 🔹 Fonction pour assainir les données multilingues
 const sanitizeCategoryLocalizations = (localizations) => {
@@ -28,20 +29,53 @@ const sanitizeCategoryLocalizations = (localizations) => {
 //  Créer une catégorie
 exports.createCategory = async (req, res) => {
   try {
-    const { localizations, isActive } = req.body;
+    console.log('📁 Fichier icône reçu:', req.file ? req.file.originalname : 'Aucun');
+    console.log('📦 Données reçues:', req.body);
 
-    if (!localizations || !localizations.ar || !localizations.fr || !localizations.en) {
+    const { localizations } = req.body;
+    
+    // Parser les localisations si elles sont envoyées comme des strings JSON
+    let parsedLocalizations = localizations;
+    
+    // Si les localisations viennent comme un objet avec des strings JSON
+    if (localizations && typeof localizations === 'object') {
+      if (typeof localizations.ar === 'string') {
+        try {
+          parsedLocalizations.ar = JSON.parse(localizations.ar);
+        } catch (e) {
+          console.error('Erreur parsing localizations.ar:', e);
+        }
+      }
+      if (typeof localizations.fr === 'string') {
+        try {
+          parsedLocalizations.fr = JSON.parse(localizations.fr);
+        } catch (e) {
+          console.error('Erreur parsing localizations.fr:', e);
+        }
+      }
+      if (typeof localizations.en === 'string') {
+        try {
+          parsedLocalizations.en = JSON.parse(localizations.en);
+        } catch (e) {
+          console.error('Erreur parsing localizations.en:', e);
+        }
+      }
+    }
+
+    if (!parsedLocalizations || !parsedLocalizations.ar || !parsedLocalizations.fr || !parsedLocalizations.en) {
       return res.status(400).json({
         status: 'fail',
         message: 'Champs de données requis (localizations) manquants.'
       });
     }
 
-    const sanitizedLocalizations = sanitizeCategoryLocalizations(localizations);
+    const sanitizedLocalizations = sanitizeCategoryLocalizations(parsedLocalizations);
 
     const category = await Category.create({
       ...sanitizedLocalizations,
-      isActive: isActive === 'true' || isActive === true,
+      icon: req.file ? req.file.path : null, // URL Cloudinary
+      iconPublicId: req.file ? req.file.filename : null, // Public ID Cloudinary
+      isActive: req.body.isActive === 'true' || req.body.isActive === true,
       isDeleted: false
     });
 
@@ -149,7 +183,7 @@ exports.getCategoryById = async (req, res) => {
 exports.updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { localizations, isActive } = req.body;
+    const { localizations } = req.body;
 
     const category = await Category.findOne({ where: { id, isDeleted: false } });
     if (!category) {
@@ -160,12 +194,52 @@ exports.updateCategory = async (req, res) => {
       return res.status(400).json({ status: 'fail', message: 'Localizations manquants.' });
     }
 
-    const sanitizedLocalizations = sanitizeCategoryLocalizations(localizations);
+    // Parser les localisations si elles sont envoyées comme des strings JSON
+    let parsedLocalizations = localizations;
+    
+    if (localizations && typeof localizations === 'object') {
+      if (typeof localizations.ar === 'string') {
+        try {
+          parsedLocalizations.ar = JSON.parse(localizations.ar);
+        } catch (e) {
+          console.error('Erreur parsing localizations.ar:', e);
+        }
+      }
+      if (typeof localizations.fr === 'string') {
+        try {
+          parsedLocalizations.fr = JSON.parse(localizations.fr);
+        } catch (e) {
+          console.error('Erreur parsing localizations.fr:', e);
+        }
+      }
+      if (typeof localizations.en === 'string') {
+        try {
+          parsedLocalizations.en = JSON.parse(localizations.en);
+        } catch (e) {
+          console.error('Erreur parsing localizations.en:', e);
+        }
+      }
+    }
 
-    await category.update({
+    const sanitizedLocalizations = sanitizeCategoryLocalizations(parsedLocalizations);
+
+    const updateData = {
       ...sanitizedLocalizations,
-      isActive: isActive === 'true' || isActive === true
-    });
+      isActive: req.body.isActive === 'true' || req.body.isActive === true
+    };
+
+    // Si une nouvelle icône est uploadée
+    if (req.file) {
+      // Supprimer l'ancienne icône de Cloudinary si elle existe
+      if (category.iconPublicId) {
+        console.log(`Suppression ancienne icône Cloudinary: ${category.iconPublicId}`);
+        await deleteFile(category.iconPublicId);
+      }
+      updateData.icon = req.file.path; // URL Cloudinary
+      updateData.iconPublicId = req.file.filename; // Public ID Cloudinary
+    }
+
+    await category.update(updateData);
 
     res.json({ status: 'success', data: category });
   } catch (error) {
@@ -182,6 +256,12 @@ exports.deleteCategory = async (req, res) => {
     const category = await Category.findOne({ where: { id, isDeleted: false } });
     if (!category) {
       return res.status(404).json({ status: 'fail', message: 'Catégorie non trouvée' });
+    }
+
+    // Supprimer l'icône de Cloudinary si elle existe
+    if (category.iconPublicId) {
+      console.log(`Suppression icône Cloudinary: ${category.iconPublicId}`);
+      await deleteFile(category.iconPublicId);
     }
 
     await category.update({ isDeleted: true });

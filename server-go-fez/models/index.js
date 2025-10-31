@@ -12,12 +12,14 @@ const { POI } = require("./POI");
 const  PointsTransaction  = require("./PointsTransaction");
 const  {User}  = require("./User");
 const  {UserSpace}  = require("./UserSpace");
+const { FavoritePOI } = require("./FavoritePOI");
+const { EmailVerification } = require("./EmailVerification");
 const { TransportMode } = require("./TransportMode");
 const { Route } = require("./Route");
 const { VisitedTrace } = require("./visitedTrace");
 const {RemovedTrace}= require("./removedTrace")
 
-// Création d’un objet contenant tous les modèles
+// Création d'un objet contenant tous les modèles
 const models = {
 	POI,
 	Circuit,
@@ -33,6 +35,8 @@ const models = {
 	PointsTransaction,
 	User,
 	UserSpace,
+	FavoritePOI,
+	EmailVerification,
 	TransportMode,
 	Route,
 	VisitedTrace,
@@ -245,6 +249,74 @@ UserSpace.belongsTo(POI, { foreignKey: 'poi_id', onDelete: 'CASCADE', onUpdate: 
 UserSpace.belongsTo(User, { foreignKey: 'user_id', as: 'spaceOwner', onDelete: 'CASCADE', onUpdate: 'CASCADE' }); 
 User.hasMany(UserSpace, { foreignKey: 'user_id', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 
+// Associations User ↔ POI via FavoritePOI (sauvegardes)
+User.belongsToMany(POI, {
+	through: FavoritePOI,
+	foreignKey: "userId",
+	otherKey: "poiId",
+	as: "savedPois",
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
+});
+
+POI.belongsToMany(User, {
+	through: FavoritePOI,
+	foreignKey: "poiId",
+	otherKey: "userId",
+	as: "savedByUsers",
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
+});
+
+// Associations directes pour FavoritePOI
+FavoritePOI.belongsTo(POI, {
+	foreignKey: "poiId",
+	as: "poi",
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
+});
+
+FavoritePOI.belongsTo(User, {
+	foreignKey: "userId",
+	as: "user",
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
+});
+
+// Associations User ↔ POI via FavoritePOI (sauvegardes)
+User.belongsToMany(POI, {
+	through: FavoritePOI,
+	foreignKey: "userId",
+	otherKey: "poiId",
+	as: "savedPois",
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
+});
+
+POI.belongsToMany(User, {
+	through: FavoritePOI,
+	foreignKey: "poiId",
+	otherKey: "userId",
+	as: "savedByUsers",
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
+});
+
+// Associations directes pour FavoritePOI
+FavoritePOI.belongsTo(POI, {
+	foreignKey: "poiId",
+	as: "poi",
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
+});
+
+FavoritePOI.belongsTo(User, {
+	foreignKey: "userId",
+	as: "user",
+	onDelete: 'CASCADE',
+	onUpdate: 'CASCADE'
+});
+
 // Route
     Route.belongsTo(Circuit, { 
 		foreignKey: 'circuitId', 
@@ -268,5 +340,4 @@ User.hasMany(UserSpace, { foreignKey: 'user_id', onDelete: 'CASCADE', onUpdate: 
    
     Circuit.hasMany(Route, { foreignKey: 'circuitId', as: 'routes' });
     User.hasMany(Route, { foreignKey: 'userId', as: 'routes' });
-
 module.exports = models;

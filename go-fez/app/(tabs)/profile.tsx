@@ -1,5 +1,3 @@
-import BottomSheetContent from '@/components/BottomSheetContent';
-import MonumentsMapViewer from '@/components/map';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
@@ -61,16 +59,6 @@ export default function HomeScreen() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <View style={styles.mapcontainer}>
-        <MonumentsMapViewer
-          monuments={LOCATIONS}
-          maptilerApiKey={MAPTILER_API_KEY}
-          styleUrl={
-            'https://api.maptiler.com/maps/019a213d-06f4-7ef2-be61-48b4b8fb7e56/style.json?key=cKuGgc1qdSgluaz2JWLK'
-          }
-        />
-      </View>
-
       <View style={{ padding: 16 }}>
         <Text>hello</Text>
         <Text>hello</Text>
@@ -78,19 +66,6 @@ export default function HomeScreen() {
         <Text>hello</Text>
         <Text>hello</Text>
       </View>
-      <BottomSheet
-        handleIndicatorStyle={{ backgroundColor: '#d9d9d9' }}
-        containerStyle={{
-          marginInline: 10,
-          paddingInline: 50,
-        }}
-        ref={bottomSheetRef}
-        snapPoints={snapPoints}
-        enablePanDownToClose={false}
-        enableOverDrag={false}
-      >
-        <BottomSheetContent selectedLocation={selectedLocation} />
-      </BottomSheet>
     </GestureHandlerRootView>
   );
 }

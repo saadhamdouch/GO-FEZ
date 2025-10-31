@@ -74,6 +74,21 @@ const cityImageStorage = new CloudinaryStorage({
       { bytes: 400000 } // Taille maximale de 400ko (400 * 1024 bytes)
     ]
   }
+});
+
+// Configuration pour les icônes de catégories
+const categoryIconStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'go-fez/categories',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg'],
+    transformation: [
+      { width: 1200, height: 800, crop: 'limit' },
+      { quality: 'auto:best', fetch_format: 'auto' }, // Compression AI optimale
+      { flags: 'lossy' }, // Compression avec perte
+      { bytes: 400000 } // Taille maximale de 400ko (400 * 1024 bytes)
+    ]
+  }
 }); 
 
 
@@ -135,6 +150,11 @@ const uploadThemeFiles = multer({
 const uploadCityFiles = multer({
   storage: cityImageStorage,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB max per file
+});
+
+const uploadCategoryFiles = multer({
+  storage: categoryIconStorage,
+  limits: { fileSize: 2 * 1024 * 1024 } // 2MB max pour les icônes
 });
 
 
@@ -330,6 +350,7 @@ module.exports = {
   uploadCircuitImage,
   uploadThemeFiles,
   uploadCityFiles,
+  uploadCategoryFiles,
   uploadAudio,
   uploadVideo,
   uploadVirtualTour,

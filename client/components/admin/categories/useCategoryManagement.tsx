@@ -38,6 +38,8 @@ export function useCategoryManagement() {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<CategoryFormData>(initialFormData);
+  const [iconFile, setIconFile] = useState<File | null>(null);
+  const [iconPreview, setIconPreview] = useState<string>('');
 
   const categories = categoriesData?.data || [];
 
@@ -64,6 +66,16 @@ const parseLoc = (loc: string | any): { name: string; desc: string } => {
   };
 };
 
+  // Gestion de l'icône
+  const handleIconChange = (file: File) => {
+    setIconFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setIconPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,18 +91,26 @@ const parseLoc = (loc: string | any): { name: string; desc: string } => {
     }
 
     try {
-      const payload = {
-        ar: formData.localizations.ar.name ? JSON.stringify(formData.localizations.ar) : JSON.stringify({ name: '', desc: '' }),
-        fr: formData.localizations.fr.name ? JSON.stringify(formData.localizations.fr) : JSON.stringify({ name: '', desc: '' }),
-        en: formData.localizations.en.name ? JSON.stringify(formData.localizations.en) : JSON.stringify({ name: '', desc: '' }),
-        isActive: formData.isActive,
-      };
+      const formPayload = new FormData();
+      
+      // Ajouter les localisations
+      formPayload.append('localizations[ar]', JSON.stringify(formData.localizations.ar));
+      formPayload.append('localizations[fr]', JSON.stringify(formData.localizations.fr));
+      formPayload.append('localizations[en]', JSON.stringify(formData.localizations.en));
+      
+      // Ajouter l'état actif
+      formPayload.append('isActive', formData.isActive.toString());
+
+      // Ajouter l'icône si elle existe
+      if (iconFile) {
+        formPayload.append('icon', iconFile);
+      }
 
       if (selectedCategory) {
-        await updateCategory({ id: selectedCategory.id, data: payload }).unwrap();
+        await updateCategory({ id: selectedCategory.id, formData: formPayload }).unwrap();
         toast.success('Catégorie mise à jour avec succès');
       } else {
-        await createCategory(payload).unwrap();
+        await createCategory(formPayload).unwrap();
         toast.success('Catégorie créée avec succès');
       }
 
@@ -121,6 +141,8 @@ const parseLoc = (loc: string | any): { name: string; desc: string } => {
   const resetForm = () => {
     setSelectedCategory(null);
     setFormData(initialFormData);
+    setIconFile(null);
+    setIconPreview('');
   };
 
   // Éditer une catégorie
@@ -134,6 +156,8 @@ const parseLoc = (loc: string | any): { name: string; desc: string } => {
       },
       isActive: category.isActive,
     });
+    setIconPreview(category.icon || '');
+    setIconFile(null);
     setIsModalOpen(true);
   };
 
@@ -167,6 +191,7 @@ const parseLoc = (loc: string | any): { name: string; desc: string } => {
     setIsModalOpen,
     formData,
     setFormData,
+    iconPreview,
     isCreating,
     isUpdating,
     isDeleting,
@@ -174,6 +199,7 @@ const parseLoc = (loc: string | any): { name: string; desc: string } => {
     handleSubmit,
     handleDelete,
     handleEdit,
+    handleIconChange,
     resetForm,
     refetch,
   };
