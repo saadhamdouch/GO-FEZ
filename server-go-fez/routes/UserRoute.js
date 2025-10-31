@@ -2,6 +2,7 @@ const express = require('express');
 const { body } = require('express-validator');
 const multer = require("multer");
 const path = require('path');
+const { authenticateToken } = require('../middleware/auth');
 const { 
   registerWithProvider,
     verifyOtp,
@@ -94,8 +95,8 @@ UserRouter.post('/otp/send', [
   body('email').isEmail().withMessage('Email invalide'),
   handleValidationErrors,
 ], sendOtp);
-UserRouter.get('/profile', getUserProfile);
-UserRouter.put('/profile', upload.single("profileImage"), updateUserProfile);
+UserRouter.get('/profile', authenticateToken, getUserProfile);
+UserRouter.put('/profile', authenticateToken, upload.single("profileImage"), updateUserProfile);
 UserRouter.get('/:id', findOneUser);
 UserRouter.put('/update-password/:id', updatePassword);
 UserRouter.post("/provider-register", registerWithProvider);

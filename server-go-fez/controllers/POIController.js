@@ -236,22 +236,80 @@ if (enLoc && enLoc.name) {
 // Méthode pour récupérer tous les POI
 const findAllPOIs = async (req, res) => {
   try {
-    const pois = await POI.findAll({
-      where: { isDeleted: false },
-      include: [
-        { model: POILocalization, as: 'frLocalization' },
-        { model: POILocalization, as: 'arLocalization' },
-        { model: POILocalization, as: 'enLocalization' },
-        { model: Category, as: 'categoryPOI', attributes: ['id', 'fr', 'ar', 'en'] },
-        { model: POIFile, as: 'files' },
-        { model: City, as: 'city', attributes: ['id', 'name', 'nameAr', 'nameEn'] }
-      ]
+    const { 
+      page = 1, 
+      limit = 12, 
+      search = '', 
+      category = '', 
+      cityId = '', 
+      isPremium, 
+      isActive 
+    } = req.query;
+
+    // Build where clause
+    const where = { isDeleted: false };
+    
+    // Add filters
+    if (category) where.category = category;
+    if (cityId) where.cityId = cityId;
+    if (isPremium !== undefined) where.isPremium = isPremium === 'true';
+    if (isActive !== undefined) where.isActive = isActive === 'true';
+
+    // Include models for associations
+    const include = [
+      { model: POILocalization, as: 'frLocalization' },
+      { model: POILocalization, as: 'arLocalization' },
+      { model: POILocalization, as: 'enLocalization' },
+      { model: Category, as: 'categoryPOI', attributes: ['id', 'fr', 'ar', 'en'] },
+      { model: POIFile, as: 'files' },
+      { model: City, as: 'city', attributes: ['id', 'name', 'nameAr', 'nameEn'] }
+    ];
+
+    // Add search filter (searches in localization names)
+    let searchCondition = {};
+    if (search) {
+      searchCondition = {
+        [Op.or]: [
+          { '$frLocalization.name$': { [Op.iLike]: `%${search}%` } },
+          { '$arLocalization.name$': { [Op.iLike]: `%${search}%` } },
+          { '$enLocalization.name$': { [Op.iLike]: `%${search}%` } }
+        ]
+      };
+    }
+
+    // Calculate pagination
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Get total count for pagination
+    const totalCount = await POI.count({
+      where: { ...where, ...searchCondition },
+      include,
+      distinct: true
     });
+
+    // Get POIs with pagination
+    const pois = await POI.findAll({
+      where: { ...where, ...searchCondition },
+      include,
+      limit: parseInt(limit),
+      offset: offset,
+      order: [['createdAt', 'DESC']],
+      distinct: true
+    });
+
+    const totalPages = Math.ceil(totalCount / parseInt(limit));
 
     res.status(200).json({
       success: true,
       message: "POI récupérés avec succès",
-      pois: pois,
+      data: {
+        pois: pois,
+        totalCount,
+        currentPage: parseInt(page),
+        totalPages,
+        hasNextPage: parseInt(page) < totalPages,
+        hasPreviousPage: parseInt(page) > 1
+      }
     });
   } catch (error) {
     console.error("Erreur lors de la récupération des POI:", error);

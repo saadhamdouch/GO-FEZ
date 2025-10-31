@@ -6,16 +6,21 @@ import circuitApi from '../services/api/CircuitApi';
 import poiApi from '../services/api/PoiApi';
 import categoryApi from '../services/api/CategoryApi';
 import cityApi from '../services/api/CityApi';
-// 1. Import the new API
-import {circuitProgressApi} from '../services/api/CircuitProgressApi'; 
+import { circuitProgressApi } from '../services/api/CircuitProgressApi';
+import { gamificationApi } from '../services/api/GamificationApi';
+import { customCircuitApi } from '../services/api/CustomCircuitApi';
+import { reviewApi } from '../services/api/ReviewApi';
+import { shareApi } from '../services/api/ShareApi';
+import { statisticsApi } from '../services/api/StatisticsApi';
+import { partnerApi } from '../services/api/PartnerApi';
 
-// 2. Import the logger
+// Import the logger
 import logger from 'redux-logger';
 
-// 3. Check for development environment
+// Check for development environment
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-// 4. Create a middleware array
+// Create a middleware array
 const middleware = [
   userApi.middleware,
   themeApi.middleware,
@@ -23,11 +28,16 @@ const middleware = [
   poiApi.middleware,
   categoryApi.middleware,
   cityApi.middleware,
-  // 5. Add the new middleware
   circuitProgressApi.middleware,
+  gamificationApi.middleware,
+  customCircuitApi.middleware,
+  reviewApi.middleware,
+  shareApi.middleware,
+  statisticsApi.middleware,
+  partnerApi.middleware,
 ];
 
-// 6. Conditionally add the logger
+// Conditionally add the logger
 if (isDevelopment) {
   middleware.push(logger as any);
 }
@@ -41,8 +51,13 @@ const configurestore = configureStore({
     [poiApi.reducerPath]: poiApi.reducer,
     [categoryApi.reducerPath]: categoryApi.reducer,
     [cityApi.reducerPath]: cityApi.reducer,
-    // 7. Add the new reducer
     [circuitProgressApi.reducerPath]: circuitProgressApi.reducer,
+    [gamificationApi.reducerPath]: gamificationApi.reducer,
+    [customCircuitApi.reducerPath]: customCircuitApi.reducer,
+    [reviewApi.reducerPath]: reviewApi.reducer,
+    [shareApi.reducerPath]: shareApi.reducer,
+    [statisticsApi.reducerPath]: statisticsApi.reducer,
+    [partnerApi.reducerPath]: partnerApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -62,13 +77,23 @@ const configurestore = configureStore({
           'categoryApi/mutations/removeMutationResult',
           'cityApi/subscriptions/unsubscribeQueryResult',
           'cityApi/mutations/removeMutationResult',
-          // 8. Add ignored actions for the new API
           'circuitProgressApi/subscriptions/unsubscribeQueryResult',
           'circuitProgressApi/mutations/removeMutationResult',
+          'gamificationApi/subscriptions/unsubscribeQueryResult',
+          'gamificationApi/mutations/removeMutationResult',
+          'customCircuitApi/subscriptions/unsubscribeQueryResult',
+          'customCircuitApi/mutations/removeMutationResult',
+          'reviewApi/subscriptions/unsubscribeQueryResult',
+          'reviewApi/mutations/removeMutationResult',
+          'shareApi/subscriptions/unsubscribeQueryResult',
+          'shareApi/mutations/removeMutationResult',
+          'statisticsApi/subscriptions/unsubscribeQueryResult',
+          'statisticsApi/mutations/removeMutationResult',
+          'partnerApi/subscriptions/unsubscribeQueryResult',
+          'partnerApi/mutations/removeMutationResult',
         ],
       },
     })
-      // 9. Concat the middleware array
       .concat(middleware),
   
   // Enable Redux DevTools only in development

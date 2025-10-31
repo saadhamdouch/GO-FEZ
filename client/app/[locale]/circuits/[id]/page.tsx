@@ -1,7 +1,7 @@
 // client/app/[locale]/circuits/[id]/page.tsx
 'use client';
 
-import React from 'react';
+import React, { use } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useGetCircuitByIdQuery } from '@/services/api/CircuitApi';
@@ -19,15 +19,16 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
 interface CircuitDetailPageProps {
-	params: {
+	params: Promise<{
 		locale: string;
 		id: string; // L'ID du circuit
-	};
+	}>;
 }
 
 export default function CircuitDetailPage({
-	params: { locale, id },
+	params,
 }: CircuitDetailPageProps) {
+	const { locale, id } = use(params);
 	const t = useTranslations('CircuitDetailPage');
 	const router = useRouter();
 
@@ -47,7 +48,7 @@ export default function CircuitDetailPage({
 			await startCircuit({ circuitId: circuit.id }).unwrap();
 			toast.success(t('startSuccess'));
 			// Rediriger vers la page de navigation
-			router.push(`/${locale}/circuits/${circuit.id}/navigation`);
+			router.push(`/circuits/${circuit.id}/navigation`);
 		} catch (err) {
 			toast.error(t('startError'));
 			console.error('Erreur lors du démarrage du circuit:', err);
@@ -55,20 +56,29 @@ export default function CircuitDetailPage({
 	};
 
 	if (isLoading) {
-		return <LoadingState text={t('loading')} />;
+		return <LoadingState message={t('loading')} />;
 	}
 
 	if (isError || !circuit) {
 		console.error('Erreur de chargement du circuit:', error);
-		return <ErrorState message={t('error')} onRetry={() => {}} />;
+		return <ErrorState error={error} onRetry={() => {}} />;
 	}
 
 	// Logique de localisation
-	const name =
-		circuit[locale as 'fr' | 'en' | 'ar']?.name || circuit.fr.name;
-	const description =
-		circuit[locale as 'fr' | 'en' | 'ar']?.description ||
-		circuit.fr.description;
+	const localeData = circuit[locale as 'fr' | 'en' | 'ar'];
+	const frData = circuit.fr;
+	
+	const name = (typeof localeData === 'object' && localeData?.name)
+		? localeData.name 
+		: (typeof frData === 'object' && frData?.name)
+			? frData.name
+			: 'Circuit';
+			
+	const description = (typeof localeData === 'object' && localeData?.description)
+		? localeData.description 
+		: (typeof frData === 'object' && frData?.description)
+			? frData.description
+			: '';
 	const imageUrl = circuit.image || '/images/hero.jpg';
 
 	return (
@@ -87,11 +97,19 @@ export default function CircuitDetailPage({
 				<div className="container absolute inset-0 mx-auto flex max-w-7xl flex-col justify-end px-4 py-8 text-white">
 					<h1 className="text-4xl font-bold">{name}</h1>
 					<div className="mt-4 flex flex-wrap items-center gap-4">
-						{circuit.themes?.map((theme) => (
-							<Badge key={theme.id} variant="secondary">
-								{theme[locale as 'fr' | 'en' | 'ar'] || theme.fr}
-							</Badge>
-						))}
+						{circuit.themes?.map((theme) => {
+							const themeLocale = theme[locale as 'fr' | 'en' | 'ar'];
+							const themeName = typeof themeLocale === 'string' 
+								? themeLocale 
+								: typeof theme.fr === 'string' 
+									? theme.fr 
+									: '';
+							return (
+								<Badge key={theme.id} variant="secondary">
+									{themeName}
+								</Badge>
+							);
+						})}
 					</div>
 				</div>
 			</header>

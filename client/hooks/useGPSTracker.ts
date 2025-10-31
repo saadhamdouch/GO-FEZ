@@ -52,7 +52,7 @@ export function useGPSTracker(
 
 	const startTracking = () => {
 		if (typeof navigator !== 'undefined' && 'geolocation' in navigator) {
-			if (watchId) {
+			if (watchId !== null) {
 				navigator.geolocation.clearWatch(watchId); // Arrêter l'ancien suivi
 			}
 			const id = navigator.geolocation.watchPosition(
@@ -77,10 +77,11 @@ export function useGPSTracker(
 	// Nettoyage automatique lorsque le composant est démonté
 	useEffect(() => {
 		return () => {
-			stopTracking();
+			if (watchId !== null && typeof navigator !== 'undefined') {
+				navigator.geolocation.clearWatch(watchId);
+			}
 		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [watchId]);
 
 	return { position, error, startTracking, stopTracking };
 }

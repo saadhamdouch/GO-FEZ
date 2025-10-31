@@ -19,12 +19,39 @@ export interface POIFile {
   updatedAt?: string;
 }
 
+// Parameters for filtering POIs
+export interface GetPOIsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  cityId?: string;
+  isPremium?: boolean;
+  isActive?: boolean;
+}
+
+// Response type for filtered POIs
+export interface GetPOIsResponse {
+  success: boolean;
+  data: {
+    pois: POI[];
+    totalCount: number;
+    currentPage: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
 export interface POI {
   id: string;
   coordinates: { 
     latitude: number;
     longitude: number;
     address?: string;
+  } | {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude] GeoJSON format
   };
   files?: POIFile[]; 
 
@@ -46,6 +73,16 @@ export interface POI {
   categoryPOI?: any;
   created_at?: string;
   updated_at?: string;
+  
+  // For circuit POIs
+  CircuitPOI?: {
+    order: number;
+  };
+  
+  // Localized versions (shortcuts)
+  fr?: POILocalization;
+  ar?: POILocalization;
+  en?: POILocalization;
 }
 
 
@@ -59,6 +96,27 @@ export const poiApi = createApi({
         url: "/api/pois/",
         method: "GET"
       }),
+      providesTags: ["POIs"],
+    }),
+
+    // NEW: Get filtered POIs with pagination and search
+    getFilteredPOIs: builder.query<GetPOIsResponse, GetPOIsParams>({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        
+        if (params.page) queryParams.append('page', params.page.toString());
+        if (params.limit) queryParams.append('limit', params.limit.toString());
+        if (params.search) queryParams.append('search', params.search);
+        if (params.category) queryParams.append('category', params.category);
+        if (params.cityId) queryParams.append('cityId', params.cityId);
+        if (params.isPremium !== undefined) queryParams.append('isPremium', params.isPremium.toString());
+        if (params.isActive !== undefined) queryParams.append('isActive', params.isActive.toString());
+        
+        return {
+          url: `/api/pois?${queryParams.toString()}`,
+          method: "GET"
+        };
+      },
       providesTags: ["POIs"],
     }),
 
@@ -100,6 +158,7 @@ export const poiApi = createApi({
 
 export const {
   useGetAllPOIsQuery,
+  useGetFilteredPOIsQuery,
   useGetPOIByIdQuery,
   useCreatePOIWithFilesMutation,
   useUpdatePOIMutation,

@@ -2,145 +2,367 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import {
-	MapContainer,
-	TileLayer,
-	Marker,
-	Popup,
-	useMap,
-	CircleMarker,
-	Tooltip,
-} from 'react-leaflet';
-import L, { LatLngExpression } from 'leaflet';
+import dynamic from 'next/dynamic';
 import { POI } from '@/lib/types';
-import { defaultIcon, currentIcon, visitedIcon } from '@/lib/mapIcons'; // NOUVEAU
-import MapRouting from './MapRouting'; // NOUVEAU
+import L from 'leaflet';
 
-// Interface pour les props (ajout de completedPoiIds)
+// Importer Leaflet de manière dynamique pour éviter les problèmes SSR
+const MapContainer = dynamic(
+	() => import('react-leaflet').then((mod) => mod.MapContainer),
+	{ ssr: false }
+);
+const TileLayer = dynamic(
+	() => import('react-leaflet').then((mod) => mod.TileLayer),
+	{ ssr: false }
+);
+const Marker = dynamic(
+	() => import('react-leaflet').then((mod) => mod.Marker),
+	{ ssr: false }
+);
+const Popup = dynamic(
+	() => import('react-leaflet').then((mod) => mod.Popup),
+	{ ssr: false }
+);
+const Circle = dynamic(
+	() => import('react-leaflet').then((mod) => mod.Circle),
+	{ ssr: false }
+);
+
+// Importer MapRouting et CircuitRouting dynamiquement
+const MapRouting = dynamic(() => import('./MapRouting'), { ssr: false });
+const CircuitRouting = dynamic(() => import('./CircuitRouting'), { ssr: false });
+
+// Composant MapCenterUpdater chargé dynamiquement
+const MapCenterUpdater = dynamic(
+	() => import('react-leaflet').then((mod) => {
+		const { useMap } = mod;
+		
+		const Component: React.FC<{ center: [number, number]; zoom: number }> = ({ center, zoom }) => {
+			const map = useMap();
+			
+			React.useEffect(() => {
+				if (map && center) {
+					map.flyTo(center, zoom, {
+						animate: true,
+						duration: 1.5,
+					});
+				}
+			}, [map, center, zoom]);
+			
+			return null;
+		};
+		
+		return { default: Component };
+	}),
+	{ ssr: false }
+);
+
+// Icônes personnalisées pour les POIs
+const createIcon = (color: string, scale: number = 1) => {
+	if (typeof window === 'undefined') return undefined;
+	
+	const size = 25 * scale;
+	const anchorSize = 41 * scale;
+	
+	return new L.Icon({
+		iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+		shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+		iconSize: [size, anchorSize],
+		iconAnchor: [size / 2, anchorSize],
+		popupAnchor: [1, -34 * scale],
+		shadowSize: [41 * scale, 41 * scale],
+	});
+};
+
+// Icône ultra-moderne pour la position de l'utilisateur
+const createUserIcon = () => {
+	if (typeof window === 'undefined') return undefined;
+	
+	return new L.DivIcon({
+		className: 'custom-user-marker',
+		html: `
+			<div style="
+				position: relative;
+				width: 40px;
+				height: 40px;
+			">
+				<!-- Pulse externe -->
+				<div style="
+					position: absolute;
+					width: 40px;
+					height: 40px;
+					background: rgba(59, 130, 246, 0.3);
+					border-radius: 50%;
+					animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+				"></div>
+				<!-- Cercle principal -->
+				<div style="
+					position: absolute;
+					top: 8px;
+					left: 8px;
+					width: 24px;
+					height: 24px;
+					background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+					border: 3px solid white;
+					border-radius: 50%;
+					box-shadow: 0 4px 12px rgba(59, 130, 246, 0.6);
+					display: flex;
+					align-items: center;
+					justify-content: center;
+				">
+					<div style="
+						width: 8px;
+						height: 8px;
+						background: white;
+						border-radius: 50%;
+					"></div>
+				</div>
+			</div>
+			<style>
+				@keyframes pulse {
+					0%, 100% { transform: scale(1); opacity: 1; }
+					50% { transform: scale(1.5); opacity: 0; }
+				}
+			</style>
+		`,
+		iconSize: [40, 40],
+		iconAnchor: [20, 20],
+	});
+};
+
+// Interface pour les props
 interface CircuitMapProps {
 	pois: POI[];
 	currentPoiIndex: number;
-	completedPoiIds: string[]; // NOUVEAU
+	completedPoiIds: string[];
 	userPosition: { latitude: number; longitude: number; accuracy: number } | null;
 	locale: string;
 }
 
-// Composant pour recentrer la carte
-const RecenterMap: React.FC<{ center: LatLngExpression; zoom: number }> = ({ center, zoom }) => {
-	const map = useMap();
-	useEffect(() => {
-		// Utiliser flyTo pour une transition douce
-		map.flyTo(center, zoom, { duration: 1 });
-	}, [center, zoom, map]);
+// Helper pour extraire les coordonnées - GÈRE TOUS LES FORMATS POSSIBLES
+const getCoordinates = (poi: POI): [number, number] | null => {
+	if (!poi.coordinates) return null;
+	
+	// Cas 1: Format GeoJSON {type: 'Point', coordinates: [lng, lat]}
+	if (poi.coordinates.type === 'Point' && Array.isArray(poi.coordinates.coordinates)) {
+		const [lng, lat] = poi.coordinates.coordinates;
+		return [lat, lng]; // Leaflet utilise [lat, lng]
+	}
+	
+	// Cas 2: Format objet {latitude, longitude}
+	if ((poi.coordinates as any).latitude && (poi.coordinates as any).longitude) {
+		return [(poi.coordinates as any).latitude, (poi.coordinates as any).longitude];
+	}
+	
+	// Cas 3: Format tableau direct [lng, lat] ou [lat, lng]
+	if (Array.isArray(poi.coordinates) && poi.coordinates.length === 2) {
+		const [first, second] = poi.coordinates;
+		// Détection: latitude est généralement entre -90 et 90
+		if (Math.abs(first) <= 90 && Math.abs(second) > 90) {
+			return [first, second]; // [lat, lng]
+		}
+		return [second, first]; // [lng, lat] -> convertir en [lat, lng]
+	}
+	
+	console.warn('⚠️ Format de coordonnées non reconnu pour le POI:', poi.id, poi.coordinates);
 	return null;
 };
 
 const CircuitMap: React.FC<CircuitMapProps> = ({
 	pois,
 	currentPoiIndex,
-	completedPoiIds, // NOUVEAU
+	completedPoiIds,
 	userPosition,
 	locale,
 }) => {
-	// ... (tri des POIs, initialCenter, currentPoi, currentPoiCenter inchangés)
 	const sortedPois = [...pois].sort(
 		(a, b) => (a.CircuitPOI?.order || 0) - (b.CircuitPOI?.order || 0)
 	);
 
-	const initialCenter: LatLngExpression =
-		sortedPois.length > 0 && sortedPois[0].coordinates
-			? [
-					sortedPois[0].coordinates.coordinates[1],
-					sortedPois[0].coordinates.coordinates[0],
-			  ]
-			: [34.0333, -5.0000];
+	// Utiliser la fonction helper pour obtenir les coordonnées
+	const firstPoiCoords = sortedPois.length > 0 ? getCoordinates(sortedPois[0]) : null;
+	const initialCenter: [number, number] = firstPoiCoords || [34.0333, -5.0000]; // Fès par défaut
 
 	const currentPoi = sortedPois[currentPoiIndex];
-	const currentPoiCenter: LatLngExpression | null = currentPoi?.coordinates
-		? [
-				currentPoi.coordinates.coordinates[1],
-				currentPoi.coordinates.coordinates[0],
-		  ]
-		: null;
+	const currentPoiCenter: [number, number] | null = currentPoi ? getCoordinates(currentPoi) : null;
 
-	let mapCenter = currentPoiCenter || initialCenter;
+	// Calculer le centre de la carte - PRIORISER LE POI ACTUEL
+	let mapCenter: [number, number] = initialCenter;
 	let mapZoom = 15;
 
-	if (userPosition) {
+	if (currentPoiCenter) {
+		// Centrer sur le POI actuel
+		mapCenter = currentPoiCenter;
+		mapZoom = 17;
+	} else if (userPosition) {
+		// Fallback: centrer sur l'utilisateur
 		mapCenter = [userPosition.latitude, userPosition.longitude];
 		mapZoom = 16;
 	}
 
-	// Préparer les waypoints pour le routage
-	const waypoints = sortedPois
-		.filter((poi) => poi.coordinates)
-		.map((poi) =>
-			L.latLng(
-				poi.coordinates!.coordinates[1],
-				poi.coordinates!.coordinates[0]
-			)
+	// Préparer les waypoints pour le routage utilisateur -> POI actuel (LIGNE BLEUE)
+	const userToPoiWaypoints: L.LatLng[] = [];
+	
+	if (userPosition && currentPoiCenter) {
+		userToPoiWaypoints.push(
+			new L.LatLng(userPosition.latitude, userPosition.longitude),
+			new L.LatLng(currentPoiCenter[0], currentPoiCenter[1])
 		);
+	}
+
+	// Préparer les waypoints pour le circuit COMPLET (TOUS les POIs) - LIGNE VIOLETTE
+	const circuitWaypoints: L.LatLng[] = sortedPois
+		.map((poi) => {
+			const coords = getCoordinates(poi);
+			return coords ? new L.LatLng(coords[0], coords[1]) : null;
+		})
+		.filter((wp): wp is L.LatLng => wp !== null);
 
 	return (
 		<MapContainer
-			center={mapCenter}
-			zoom={mapZoom}
+			center={initialCenter}
+			zoom={15}
 			scrollWheelZoom={true}
+			zoomControl={true}
 			style={{ height: '100%', width: '100%' }}
+			className="rounded-lg overflow-hidden"
 		>
+			{/* Carte OpenStreetMap détaillée */}
 			<TileLayer
-				attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 				url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+				attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+				maxZoom={19}
+				minZoom={3}
 			/>
 
-			{/* Marqueurs pour tous les POIs avec icônes personnalisées */}
+			{/* Composant pour mettre à jour le centre automatiquement */}
+			<MapCenterUpdater center={mapCenter} zoom={mapZoom} />
+
+			{/* CIRCUIT COMPLET - Ligne VIOLETTE entre TOUS les POIs */}
+			{circuitWaypoints.length >= 2 && (
+				<CircuitRouting 
+					waypoints={circuitWaypoints}
+					key={`circuit-complete-${circuitWaypoints.length}`}
+				/>
+			)}
+
+			{/* Route utilisateur → POI actuel - Ligne BLEUE ÉPAISSE */}
+			{userToPoiWaypoints.length === 2 && (
+				<MapRouting 
+					waypoints={userToPoiWaypoints} 
+					key={`user-to-poi-${currentPoiIndex}-${userPosition?.latitude || 0}`} 
+				/>
+			)}
+
+			{/* Marqueurs pour TOUS les POIs avec états */}
 			{sortedPois.map((poi, index) => {
-				if (!poi.coordinates) return null;
-				const position: LatLngExpression = [
-					poi.coordinates.coordinates[1],
-					poi.coordinates.coordinates[0],
-				];
+				const position = getCoordinates(poi);
+				if (!position) return null;
+				
 				const name =
-					poi[locale as 'fr' | 'en' | 'ar']?.name || poi.frLocalization?.name;
+					(poi[locale as 'fr' | 'en' | 'ar'] as any)?.name || 
+					poi.frLocalization?.name || 
+					'POI sans nom';
+				
 				const isCurrent = index === currentPoiIndex;
 				const isVisited = completedPoiIds.includes(poi.id);
 
-				let icon = defaultIcon;
+				// Sélectionner l'icône et la taille selon l'état
+				let iconColor = 'grey';
+				let iconScale = 1;
+				
 				if (isCurrent) {
-					icon = currentIcon;
+					iconColor = 'red';
+					iconScale = 1.4; // Plus grand pour le POI actuel
 				} else if (isVisited) {
-					icon = visitedIcon;
+					iconColor = 'green';
+					iconScale = 1;
+				} else {
+					iconColor = 'grey';
+					iconScale = 0.9;
 				}
+				
+				const icon = createIcon(iconColor, iconScale);
 
 				return (
 					<Marker
 						key={poi.id}
 						position={position}
-						icon={icon} // Utiliser l'icône personnalisée
-						opacity={isCurrent ? 1 : isVisited ? 0.7 : 0.5} // Adapter l'opacité
-						zIndexOffset={isCurrent ? 1000 : isVisited ? 500 : 0} // Mettre le courant au premier plan
+						icon={icon}
+						zIndexOffset={isCurrent ? 1000 : isVisited ? 500 : 0}
 					>
-						<Popup>{name}</Popup>
+						<Popup maxWidth={250} className="custom-popup">
+							<div className="min-w-[200px] p-2">
+								<div className="flex items-center gap-2 mb-2">
+									{isCurrent && (
+										<span className="flex h-2 w-2 relative">
+											<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+											<span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+										</span>
+									)}
+									<p className="font-bold text-base text-gray-900">{name}</p>
+								</div>
+								<div className="space-y-1.5">
+									<p className="text-xs text-gray-600 font-medium">
+										Étape {index + 1} / {sortedPois.length}
+									</p>
+									{isVisited && (
+										<div className="flex items-center gap-1.5 text-green-600 text-sm font-semibold">
+											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+											</svg>
+											<span>✓ Visité</span>
+										</div>
+									)}
+									{isCurrent && (
+										<div className="flex items-center gap-1.5 text-red-600 text-sm font-bold">
+											<svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+												<circle cx="12" cy="12" r="8" />
+											</svg>
+											<span>Destination actuelle</span>
+										</div>
+									)}
+								</div>
+							</div>
+						</Popup>
 					</Marker>
 				);
 			})}
 
-			{/* Marqueur pour la position de l'utilisateur */}
+			{/* Position de l'utilisateur avec icône moderne et cercle de précision */}
 			{userPosition && (
-				<CircleMarker
-					center={[userPosition.latitude, userPosition.longitude]}
-					radius={8}
-					pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.8 }}
-				>
-					<Tooltip>Vous êtes ici</Tooltip>
-				</CircleMarker>
+				<>
+					{/* Cercle de précision */}
+					<Circle
+						center={[userPosition.latitude, userPosition.longitude]}
+						radius={userPosition.accuracy}
+						pathOptions={{ 
+							color: '#3b82f6', 
+							fillColor: '#93c5fd', 
+							fillOpacity: 0.15,
+							weight: 2,
+							opacity: 0.5,
+							dashArray: '5, 5'
+						}}
+					/>
+					
+					{/* Marqueur de position utilisateur */}
+					<Marker
+						position={[userPosition.latitude, userPosition.longitude]}
+						icon={createUserIcon()}
+						zIndexOffset={2000}
+					>
+						<Popup>
+							<div className="text-center p-1">
+								<p className="font-bold text-sm mb-1">📍 Vous êtes ici</p>
+								<p className="text-xs text-gray-600">
+									Précision: ±{Math.round(userPosition.accuracy)}m
+								</p>
+							</div>
+						</Popup>
+					</Marker>
+				</>
 			)}
-
-			{/* Composant pour recentrer */}
-			<RecenterMap center={mapCenter} zoom={mapZoom} />
-
-			{/* Composant pour le routage */}
-			{waypoints.length > 1 && <MapRouting waypoints={waypoints} />}
 		</MapContainer>
 	);
 };

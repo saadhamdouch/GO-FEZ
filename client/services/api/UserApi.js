@@ -32,6 +32,29 @@ providerRegister: builder.mutation({
         body: credentials,
       }),
     }),
+
+    // Récupérer le profil de l'utilisateur connecté
+    getUserProfile: builder.query({
+      query: () => ({
+        url: "/api/users/profile",
+        method: "GET",
+      }),
+      providesTags: ['User'],
+      transformResponse: (response) => {
+        // Handle both response formats: { user: ... } or { data: ... }
+        return response.data || response.user || response;
+      },
+    }),
+
+    // Mettre à jour le profil de l'utilisateur
+    updateUserProfile: builder.mutation({
+      query: (userData) => ({
+        url: "/api/users/profile",
+        method: "PUT",
+        body: userData,
+      }),
+      invalidatesTags: ['User'],
+    }),
   }),
 });
 
@@ -41,6 +64,9 @@ export const {
   useRegisterUserMutation,
   useLoginUserMutation,
   useProviderRegisterMutation,
+  // Profil utilisateur
+  useGetUserProfileQuery,
+  useUpdateUserProfileMutation,
 } = userApi;
 
 // Export de l'API pour l'utiliser dans le store

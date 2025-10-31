@@ -1,6 +1,7 @@
 const { Circuit } = require("./Circuit");
 const  Review  = require("./Review");
 const { CircuitPOI } = require("./CircuitPOI");
+const { CircuitProgress } = require("./CircuitProgress");
 const { Theme } = require("./Theme");
 const { ThemeCircuit } = require("./ThemeCircuit");
 const { City } = require("./City");
@@ -13,12 +14,16 @@ const  PointsTransaction  = require("./PointsTransaction");
 const  {User}  = require("./User");
 const  {UserSpace}  = require("./UserSpace");
 const { TransportMode } = require("./TransportMode");
+const db = require('../Config/db');
 
-// Création d’un objet contenant tous les modèles
+const sequelize = db.getSequelize();
+
+// Création d'un objet contenant tous les modèles
 const models = {
 	POI,
 	Circuit,
 	CircuitPOI,
+	CircuitProgress,
 	Theme,
 	ThemeCircuit,
 	City,
@@ -30,7 +35,8 @@ const models = {
 	PointsTransaction,
 	User,
 	UserSpace,
-	TransportMode
+	TransportMode,
+	sequelize // Ajouter sequelize pour les transactions
 };
 
 // Appel automatique de toutes les associations si elles existent
@@ -228,5 +234,11 @@ UserSpace.belongsTo(POI, { foreignKey: 'poi_id', onDelete: 'CASCADE', onUpdate: 
 
 UserSpace.belongsTo(User, { foreignKey: 'user_id', as: 'spaceOwner', onDelete: 'CASCADE', onUpdate: 'CASCADE' }); 
 User.hasMany(UserSpace, { foreignKey: 'user_id', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+
+// CircuitProgress Associations
+CircuitProgress.belongsTo(User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+CircuitProgress.belongsTo(Circuit, { foreignKey: 'circuitId', as: 'circuit', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+User.hasMany(CircuitProgress, { foreignKey: 'userId', as: 'circuitProgress', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+Circuit.hasMany(CircuitProgress, { foreignKey: 'circuitId', as: 'progress', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 
 module.exports = models;

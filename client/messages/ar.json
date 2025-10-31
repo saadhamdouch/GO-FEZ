@@ -129,6 +129,49 @@
     "error": "خطأ في تحميل البيانات.",
     "notFound": "النقطة غير موجودة."
   },
+
+  "CircuitDetailPage": {
+    "loading": "جاري تحميل المسار...",
+    "error": "تعذر تحميل تفاصيل المسار.",
+    "startSuccess": "تم بدء المسار بنجاح!",
+    "startError": "خطأ في بدء المسار.",
+    "aboutTitle": "حول هذا المسار",
+    "stopsTitle": "مراحل المسار",
+    "infoTitle": "معلومات أساسية",
+    "km": "كم",
+    "min": "دقيقة",
+    "stops": "محطات",
+    "premium": "مسار مميز",
+    "starting": "جاري البدء...",
+    "startButton": "ابدأ هذا المسار",
+    "circuitImageAlt": "صورة غلاف المسار"
+  },
+
+  "Circuits": {
+    "loading": "جاري التحميل...",
+    "error": "خطأ في التحميل",
+    "poiVisitedSuccess": "تم تحديد النقطة كزيارة!",
+    "poiVisitedError": "خطأ في التحقق من النقطة.",
+    "circuitComplete": "تهانينا! لقد أكملت هذا المسار!",
+    "nextStep": "التالي",
+    "prevStep": "السابق",
+    "markAsVisited": "وضع علامة كزيارة",
+    "completed": "مكتمل"
+  },
+
+  "CircuitNavigation": {
+    "step": "المرحلة",
+    "prev": "السابق",
+    "next": "التالي",
+    "markAsVisited": "وضع علامة كزيارة",
+    "visited": "تمت الزيارة",
+    "yourLocation": "أنت هنا",
+    "currentPOI": "النقطة الحالية",
+    "completedPOI": "نقطة تمت زيارتها",
+    "loading": "جاري التحميل...",
+    "error": "خطأ في التحميل"
+  },
+
   "AudioPlayer": {
     "title": "دليل صوتي",
     "selectLanguage": "اختر اللغة",
@@ -152,5 +195,13 @@
     "title": "التقييمات",
     "loading": "جاري تحميل التقييمات...",
     "noReviews": "لا توجد تقييمات حتى الآن."
+  }
+,
+  "PoisPage": {
+    "title": "???? ????????",
+    "subtitle": "?????? ??????? ??????? ?? ???",
+    "loading": "???? ????? ???? ????????...",
+    "error": "??? ?? ????? ???? ????????. ???? ???????? ??? ????.",
+    "noResults": "?? ??? ?????? ??? ???? ??????."
   }
 }

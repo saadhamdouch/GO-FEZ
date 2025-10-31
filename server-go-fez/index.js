@@ -81,9 +81,10 @@ app.use('/api/themes/', ThemeRoute);
 app.use('/api/circuits',jsonMiddleware, CircuitRoutes);
 app.use('/api/city', CityRoute);
 app.use('/api/pois',jsonMiddleware, POIRouter);
-app.use('/progress', circuitProgressRoutes);
+app.use('/progress', jsonMiddleware, circuitProgressRoutes);
 // Routes sans files
 app.use('/api/auth', jsonMiddleware, UserRouter);
+app.use('/api/users', jsonMiddleware, UserRouter); // Add users route for profile endpoints
 app.use('/api/categorys', jsonMiddleware, categoryRoutes);
 app.use('/api/config', jsonMiddleware, ConfigRouter);
 app.use('/api/gamification', jsonMiddleware, GamificationRouter);

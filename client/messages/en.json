@@ -129,6 +129,49 @@
     "error": "Error loading data.",
     "notFound": "Point of Interest not found."
   },
+
+  "CircuitDetailPage": {
+    "loading": "Loading circuit...",
+    "error": "Unable to load circuit details.",
+    "startSuccess": "Circuit started successfully!",
+    "startError": "Error starting circuit.",
+    "aboutTitle": "About this circuit",
+    "stopsTitle": "Circuit steps",
+    "infoTitle": "Key information",
+    "km": "km",
+    "min": "min",
+    "stops": "stops",
+    "premium": "Premium Circuit",
+    "starting": "Starting...",
+    "startButton": "Start this circuit",
+    "circuitImageAlt": "Circuit cover image"
+  },
+
+  "Circuits": {
+    "loading": "Loading...",
+    "error": "Loading error",
+    "poiVisitedSuccess": "Point of interest marked as visited!",
+    "poiVisitedError": "Error validating point of interest.",
+    "circuitComplete": "Congratulations! You have completed this circuit!",
+    "nextStep": "Next",
+    "prevStep": "Previous",
+    "markAsVisited": "Mark as visited",
+    "completed": "Completed"
+  },
+
+  "CircuitNavigation": {
+    "step": "Step",
+    "prev": "Previous",
+    "next": "Next",
+    "markAsVisited": "Mark as visited",
+    "visited": "Visited",
+    "yourLocation": "You are here",
+    "currentPOI": "Current POI",
+    "completedPOI": "Visited POI",
+    "loading": "Loading...",
+    "error": "Loading error"
+  },
+
   "AudioPlayer": {
     "title": "Audio Guide",
     "selectLanguage": "Select language",
@@ -152,5 +195,18 @@
     "title": "Reviews",
     "loading": "Loading reviews...",
     "noReviews": "No reviews yet."
+  },
+  "GamificationProfile": {
+    "points": "Points",
+    "level": "Level",
+    "badges": "Badges",
+    "leaderboard": "Leaderboard",
+    "totalPoints": "Total Points",
+    "nextLevel": "Next Level",
+    "earnedBadges": "Earned Badges",
+    "lockedBadges": "Locked Badges",
+    "rank": "Rank",
+    "user": "User"
   }
+
 }

@@ -229,6 +229,31 @@
     "circuitImageAlt": "Image de couverture du circuit"
   },
 
+  "Circuits": {
+    "loading": "Chargement...",
+    "error": "Erreur de chargement",
+    "poiVisitedSuccess": "Point d'intérêt marqué comme visité !",
+    "poiVisitedError": "Erreur lors de la validation du point d'intérêt.",
+    "circuitComplete": "Félicitations ! Vous avez terminé ce circuit !",
+    "nextStep": "Suivant",
+    "prevStep": "Précédent",
+    "markAsVisited": "Marquer comme visité",
+    "completed": "Terminé"
+  },
+
+  "CircuitNavigation": {
+    "step": "Étape",
+    "prev": "Précédent",
+    "next": "Suivant",
+    "markAsVisited": "Marquer comme visité",
+    "visited": "Visité",
+    "yourLocation": "Vous êtes ici",
+    "currentPOI": "POI actuel",
+    "completedPOI": "POI visité",
+    "loading": "Chargement...",
+    "error": "Erreur de chargement"
+  },
+
   "AudioPlayer": {
     "title": "Guide Audio",
     "selectLanguage": "Choisir la langue",

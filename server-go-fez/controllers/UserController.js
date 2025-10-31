@@ -240,25 +240,12 @@ const loginUser = async (req, res) => {
 // Méthode pour obtenir le profil utilisateur
 const getUserProfile = async (req, res) => {
 	try {
-		// Récupérer le token depuis les headers
-		const authHeader = req.headers.authorization;
-		if (!authHeader || !authHeader.startsWith("Bearer ")) {
-			return res.status(401).json({
-				success: false,
-				message: "Token d'authentification requis",
-			});
-		}
-
-		const token = authHeader.substring(7);
-
-		// Vérifier le token
-		const decoded = jwt.verify(
-			token,
-			process.env.JWT_SECRET || "your-secret-key"
-		);
+		// The authenticateToken middleware has already verified the token
+		// and added req.user with userId
+		const userId = req.user.userId;
 
 		// Récupérer l'utilisateur
-		const user = await User.findByPk(decoded.userId, {
+		const user = await User.findByPk(userId, {
 			attributes: { exclude: ["password"] },
 		});
 
@@ -271,16 +258,9 @@ const getUserProfile = async (req, res) => {
 
 		res.status(200).json({
 			success: true,
-			user,
+			data: user, // Changed from 'user' to 'data' for consistency with other APIs
 		});
 	} catch (error) {
-		if (error.name === "JsonWebTokenError") {
-			return res.status(401).json({
-				success: false,
-				message: "Token invalide",
-			});
-		}
-
 		console.error("Erreur lors de la récupération du profil:", error);
 		res.status(500).json({
 			success: false,
