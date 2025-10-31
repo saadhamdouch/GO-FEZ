@@ -34,6 +34,14 @@ const POILocalization = sequelize.define('POILocalization', {
         allowNull: true,
         comment: 'JSON string contenant les URLs des fichiers audio'
     },
+
+    audioPublicIds: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        field: 'audio_public_ids',
+        comment: 'JSON string contenant les Public IDs Cloudinary des fichiers audio'
+    },
+    
     createdAt: {
         type: DataTypes.DATE,
         allowNull: false,

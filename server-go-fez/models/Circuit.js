@@ -8,6 +8,7 @@ const Circuit = sequelize.define('Circuit', {
     type: DataTypes.UUID,
     primaryKey: true,
     defaultValue: DataTypes.UUIDV4,
+    allowNull: false,
   },
   ar: {
     type: DataTypes.JSON,

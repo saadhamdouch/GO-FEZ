@@ -245,4 +245,28 @@ UserSpace.belongsTo(POI, { foreignKey: 'poi_id', onDelete: 'CASCADE', onUpdate: 
 UserSpace.belongsTo(User, { foreignKey: 'user_id', as: 'spaceOwner', onDelete: 'CASCADE', onUpdate: 'CASCADE' }); 
 User.hasMany(UserSpace, { foreignKey: 'user_id', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 
+// Route
+    Route.belongsTo(Circuit, { 
+		foreignKey: 'circuitId', 
+		as: 'circuit', 
+	});
+    Route.belongsTo(User, { 
+		foreignKey: 'userId',
+		as: 'user',
+	 });
+    Route.hasMany(VisitedTrace, { foreignKey: 'routeId', as: 'visitedTraces' });
+
+// VisitedTrace 
+    VisitedTrace.belongsTo(Route, { foreignKey: 'routeId', as: 'route' });
+    VisitedTrace.belongsTo(POI, { foreignKey: 'idPoi', as: 'poi' });
+    
+    // RemovedTrace 
+    RemovedTrace.belongsTo(Circuit, { foreignKey: 'circuitId', as: 'circuit' });
+    RemovedTrace.belongsTo(POI, { foreignKey: 'poiId', as: 'poi' });
+    RemovedTrace.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+    
+   
+    Circuit.hasMany(Route, { foreignKey: 'circuitId', as: 'routes' });
+    User.hasMany(Route, { foreignKey: 'userId', as: 'routes' });
+
 module.exports = models;

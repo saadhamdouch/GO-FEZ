@@ -8,15 +8,26 @@ const Route = sequelize.define('Route', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
- circuitId: {
-            type: DataTypes.UUID,
-            allowNull: false,
-            
-        },
+  circuitId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+        model: 'circuits', // Nom de la table du Circuit
+        key: 'id',
+    },
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
+},
   userId: {
-            type: DataTypes.UUID,
-            allowNull: false,
-            
+            type: DataTypes.INTEGER,
+        // Si DataTypes.INTEGER seul ne suffit pas, essayez DataTypes.INTEGER.UNSIGNED
+        allowNull: false,
+        references: {
+            model: 'users', // Nom de la table de l'Utilisateur
+            key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
              },
  endPoint: {
             type: DataTypes.JSON, 

@@ -19,6 +19,7 @@ const { POIRouter } = require("./routes/POIRoute.js"); // Importer les routes PO
 const { ConfigRouter } = require("./routes/ConfigRoute.js");
 const { GamificationRouter } = require("./routes/gamificationRouter.js");
 const pointsTransactionRoutes = require('./routes/pointsTransactionRoutes.js');
+const routeRoutes = require('./routes/routeRoutes.js')
 
 
 const app = express();
@@ -81,6 +82,7 @@ app.use('/api/themes/', ThemeRoute);
 app.use('/api/circuits',jsonMiddleware, CircuitRoutes);
 app.use('/api/city', CityRoute);
 app.use('/api/pois',jsonMiddleware, POIRouter);
+app.use('/api/routes',jsonMiddleware, routeRoutes)
 
 // Routes sans files
 app.use('/api/users', jsonMiddleware, UserRouter);

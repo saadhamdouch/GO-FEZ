@@ -8,23 +8,19 @@ const RemovedTrace = sequelize.define('RemovedTrace', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
- 
- 
-   
-circuitId: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
+  circuitId: {
+    type: DataTypes.UUID,
+    allowNull: false,
             
-        },
-        poiId: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        userId: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-    
+    },
+  poiId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    },
   isDeleted: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
