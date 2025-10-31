@@ -4,6 +4,7 @@
 import React, { useState, useEffect, use } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { POI } from '@/lib/types';
 import { useGPSTracker } from '@/hooks/useGPSTracker';
 
@@ -19,7 +20,16 @@ import NavigationControls from '@/components/circuits/NavigationControls';
 import { LoadingState } from '@/components/admin/shared/LoadingState';
 import { ErrorState } from '@/components/admin/shared/ErrorState';
 import { toast } from 'sonner';
-import CircuitMap from '@/components/circuits/CircuitMap';
+
+// Import CircuitMap dynamically with SSR disabled to avoid leaflet window errors
+const CircuitMap = dynamic(() => import('@/components/circuits/CircuitMap'), {
+	ssr: false,
+	loading: () => (
+		<div className="flex h-full w-full items-center justify-center bg-gray-100">
+			<LoadingState message="Chargement de la carte..." />
+		</div>
+	),
+});
 
 interface NavigationPageProps {
 	params: Promise<{
