@@ -92,7 +92,7 @@ export function IAModelForm({
             onChange={(e) => onFormDataChange({ ...formData, is_default: e.target.checked })}
             className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
           />
-          <span className="text-sm font-medium text-gray-700">⭐ Par défaut</span>
+          <span className="text-sm font-medium text-gray-700"> Par défaut</span>
         </label>
 
         <label className="flex items-center gap-2 cursor-pointer">
@@ -102,7 +102,7 @@ export function IAModelForm({
             onChange={(e) => onFormDataChange({ ...formData, is_active: e.target.checked })}
             className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
           />
-          <span className="text-sm font-medium text-gray-700">✅ Actif</span>
+          <span className="text-sm font-medium text-gray-700"> Actif</span>
         </label>
       </div>
 
