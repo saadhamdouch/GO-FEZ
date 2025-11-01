@@ -12,10 +12,10 @@ const Share = sequelize.define(
 			primaryKey: true,
 		},
 		userId: {
-			type: DataTypes.UUID,
+			type: DataTypes.INTEGER,
 			allowNull: false,
 			references: {
-				model: "Users",
+				model: "users",
 				key: "id",
 			},
 		},
@@ -33,8 +33,10 @@ const Share = sequelize.define(
 		},
 	},
 	{
-		tableName: "Shares",
+		tableName: "shares",
 		timestamps: true,
+		createdAt: 'created_at',
+		updatedAt: 'updated_at',
 	}
 );
 

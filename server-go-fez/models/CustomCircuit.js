@@ -12,12 +12,9 @@ const CustomCircuit = sequelize.define(
 			primaryKey: true,
 		},
 		userId: {
-			type: DataTypes.UUID,
+			type: DataTypes.INTEGER, // Changed from UUID to INTEGER to match User.id
 			allowNull: false,
-			references: {
-				model: "Users",
-				key: "id",
-			},
+			// Remove direct references - let associations handle foreign keys
 		},
 		name: {
 			type: DataTypes.STRING,
