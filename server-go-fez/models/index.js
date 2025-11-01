@@ -1,6 +1,8 @@
 const { Circuit } = require("./Circuit");
 const  Review  = require("./Review");
 const { CircuitPOI } = require("./CircuitPOI");
+const { CircuitProgress } = require("./CircuitProgress");
+const { CustomCircuit } = require("./CustomCircuit");
 const { Theme } = require("./Theme");
 const { ThemeCircuit } = require("./ThemeCircuit");
 const { City } = require("./City");
@@ -18,12 +20,19 @@ const { TransportMode } = require("./TransportMode");
 const { Route } = require("./Route");
 const { VisitedTrace } = require("./visitedTrace");
 const {RemovedTrace}= require("./removedTrace")
+const { Share } = require("./Share");
+const { IAModel } = require("./IAModel");
+const db = require('../Config/db');
+
+const sequelize = db.getSequelize();
 
 // Création d'un objet contenant tous les modèles
 const models = {
 	POI,
 	Circuit,
 	CircuitPOI,
+	CircuitProgress,
+	CustomCircuit,
 	Theme,
 	ThemeCircuit,
 	City,
@@ -40,7 +49,10 @@ const models = {
 	TransportMode,
 	Route,
 	VisitedTrace,
-	RemovedTrace
+	RemovedTrace,
+	Share,
+	IAModel,
+	sequelize // Ajouter sequelize pour les transactions
 };
 
 // Appel automatique de toutes les associations si elles existent
@@ -65,16 +77,6 @@ POI.belongsToMany(Circuit, {
 	onDelete: 'CASCADE',
 	onUpdate: 'CASCADE'
 });
-Circuit.belongsTo(models.POI, {
-        foreignKey: 'startPoint',
-        as: 'startPoi', // L'alias 'startPoi' doit correspondre à celui utilisé dans le Controller
-    });
-
-    // ✅ NOUVELLE ASSOCIATION: Relation Circuit -> POI pour le point d'arrivée (Optionnel, mais bonne pratique)
-    Circuit.belongsTo(models.POI, {
-        foreignKey: 'endPoint',
-        as: 'endPoi',
-    });
 
 //  Associations Circuit ↔ Theme via ThemeCircuit
 Circuit.belongsToMany(Theme, {
@@ -236,6 +238,21 @@ POI.hasMany(Review, {
 	onDelete: 'CASCADE',
 	onUpdate: 'CASCADE'
 });
+
+// Review ↔ User associations
+Review.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+User.hasMany(Review, {
+    foreignKey: 'userId',
+    as: 'reviews',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
 POI.belongsTo(User, {
     foreignKey: 'ownerId',
     as: 'ownerInfo',
@@ -248,6 +265,54 @@ UserSpace.belongsTo(POI, { foreignKey: 'poi_id', onDelete: 'CASCADE', onUpdate: 
 
 UserSpace.belongsTo(User, { foreignKey: 'user_id', as: 'spaceOwner', onDelete: 'CASCADE', onUpdate: 'CASCADE' }); 
 User.hasMany(UserSpace, { foreignKey: 'user_id', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+
+// CircuitProgress Associations
+// Note: CircuitProgress supports both regular circuits and custom circuits
+// We don't define a belongsTo relationship with Circuit to avoid foreign key constraints
+CircuitProgress.belongsTo(User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+User.hasMany(CircuitProgress, { foreignKey: 'userId', as: 'circuitProgress', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+
+// CustomCircuit Associations
+CustomCircuit.belongsTo(User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+User.hasMany(CustomCircuit, { foreignKey: 'userId', as: 'customCircuits', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+
+// Share ↔ User associations
+Share.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+User.hasMany(Share, {
+    foreignKey: 'userId',
+    as: 'shares',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+// CircuitProgress Associations
+// Note: CircuitProgress supports both regular circuits and custom circuits
+// We don't define a belongsTo relationship with Circuit to avoid foreign key constraints
+CircuitProgress.belongsTo(User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+User.hasMany(CircuitProgress, { foreignKey: 'userId', as: 'circuitProgress', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+
+// CustomCircuit Associations
+CustomCircuit.belongsTo(User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+User.hasMany(CustomCircuit, { foreignKey: 'userId', as: 'customCircuits', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+
+// Share ↔ User associations
+Share.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+User.hasMany(Share, {
+    foreignKey: 'userId',
+    as: 'shares',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
 
 // Associations User ↔ POI via FavoritePOI (sauvegardes)
 User.belongsToMany(POI, {

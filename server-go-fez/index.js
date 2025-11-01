@@ -10,7 +10,7 @@ dotenv.config();
 const db = require("./Config/db.js"); // Importer l'instance Singleton de la base de données
 const models = require("./models/index.js");
 const { cleanupExpiredOTPs } = require("./services/cronJobs.js");
-
+const  CustomCircuitRouter  = require("./routes/CustomCircuitRoutes.js"); // Importer les routes utilisateur
 const { UserRouter } = require("./routes/UserRoute.js"); // Importer les routes utilisateur
 const CityRoute = require("./routes/CityRoute.js");
 const ThemeRoute = require("./routes/ThemeRoute.js");
@@ -23,6 +23,9 @@ const pointsTransactionRoutes = require('./routes/pointsTransactionRoutes.js');
 const routeRoutes = require('./routes/routeRoutes.js')
 const savePOIRoutes = require('./routes/SavePOIRoutes.js');
 const circuitProgressRoutes = require('./routes/CircuitProgressRoutes');
+const ReviewRouter = require('./routes/ReviewRoutes.js');
+const ShareRouter = require('./routes/ShareRoutes.js');
+const IAModelRoutes = require('./routes/IAModelRoutes.js');
 
 const app = express();
 const { header } = require("express-validator");
@@ -84,16 +87,19 @@ app.use('/api/themes/', ThemeRoute);
 app.use('/api/circuits',jsonMiddleware, CircuitRoutes);
 app.use('/api/city', CityRoute);
 app.use('/api/pois',jsonMiddleware, POIRouter);
-app.use('/api/routes',jsonMiddleware, routeRoutes)
 app.use('/progress', circuitProgressRoutes);
 // Routes sans files
-app.use('/api/users', jsonMiddleware, UserRouter);
+app.use('/api/auth', jsonMiddleware, UserRouter);
+app.use('/api/users', jsonMiddleware, UserRouter); // Add users route for profile endpoints
 app.use('/api/categorys', jsonMiddleware, categoryRoutes);
 app.use('/api/config', jsonMiddleware, ConfigRouter);
 app.use('/api/gamification', jsonMiddleware, GamificationRouter);
 app.use('/api/pointsTransaction', jsonMiddleware, pointsTransactionRoutes);
 app.use('/api/save-poi', jsonMiddleware, savePOIRoutes);
-
+app.use('/api/custom-circuits', jsonMiddleware, CustomCircuitRouter);
+app.use('/api/reviews', jsonMiddleware, ReviewRouter);
+app.use('/api/shares', jsonMiddleware, ShareRouter);
+app.use('/api/ia-models', jsonMiddleware, IAModelRoutes);
 // Middleware de gestion d'erreurs global
 app.use((err, req, res, next) => {
     console.error('❌ Erreur:', err.message);

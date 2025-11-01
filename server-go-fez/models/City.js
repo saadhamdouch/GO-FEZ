@@ -32,7 +32,7 @@ const City = sequelize.define('City', {
     },
     coordinates: {
         type: DataTypes.JSON,
-        allowNull: false,
+        allowNull: true,
     },
     radius: {
         type: DataTypes.DECIMAL(10, 2),

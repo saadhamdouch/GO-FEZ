@@ -11,6 +11,12 @@ interface StartCircuitResponse {
     data: CircuitProgress;
 }
 
+// Interface pour les arguments de startCircuit
+interface StartCircuitArgs {
+    circuitId: string;
+    circuitType?: 'REGULAR' | 'CUSTOM';
+}
+
 // Interface pour les arguments de mise à jour
 interface UpdateProgressArgs {
     circuitId: string;
@@ -23,11 +29,11 @@ export const circuitProgressApi = createApi({
     tagTypes: ['CircuitProgress'],
     endpoints: (builder) => ({
         // Démarrer un circuit
-        startCircuit: builder.mutation<StartCircuitResponse, { circuitId: string }>({
-            query: ({ circuitId }) => ({
+        startCircuit: builder.mutation<StartCircuitResponse, StartCircuitArgs>({
+            query: ({ circuitId, circuitType = 'REGULAR' }) => ({
                 url: '/progress/start',
                 method: 'POST',
-                body: { circuitId },
+                body: { circuitId, circuitType },
             }),
             invalidatesTags: (result, error, { circuitId }) => [
                 { type: 'CircuitProgress', id: circuitId },

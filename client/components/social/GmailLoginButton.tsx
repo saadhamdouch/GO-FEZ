@@ -1,17 +1,17 @@
-'use client'
+'use client';
 
-import React from 'react'
+import React from 'react';
 
 interface GmailLoginButtonProps {
-  onClick?: () => void
-  color?: 'green' | 'blue'
+  onClick?: () => void;
+  color?: 'green' | 'blue' | 'emerald';
 }
 
 export default function GmailLoginButton({ onClick, color = 'green' }: GmailLoginButtonProps) {
   const colorClasses =
     color === 'green'
       ? 'border-emerald-200 hover:bg-emerald-50'
-      : 'border-blue-200 hover:bg-blue-50'
+      : 'border-blue-200 hover:bg-blue-50';
 
   return (
     <button
@@ -27,7 +27,5 @@ export default function GmailLoginButton({ onClick, color = 'green' }: GmailLogi
       </svg>
       <span className="ml-2 text-sm font-medium text-gray-700">Google</span>
     </button>
-  )
+  );
 }
-
-

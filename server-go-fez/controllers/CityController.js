@@ -49,18 +49,91 @@ exports.createCity = async (req, res) => {
     }
 };
 
-//  Récupérer toutes les villes
-// Récupérer toutes les villes
+//  Récupérer toutes les villes avec filtres et recherche
 exports.getAllCities = async (req, res) => {
   try {
+    const { 
+      page, 
+      limit, 
+      search = '', 
+      country = '', 
+      isActive,
+      sortBy = 'name'
+    } = req.query;
+
+    // If no pagination params, return all cities (for dropdowns, etc.)
+    if (!page && !limit) {
+      const where = { isDeleted: false };
+      const cities = await City.findAll({
+        where,
+        order: [['name', 'ASC']]
+      });
+      return res.status(200).json({
+        status: 'success',
+        data: cities
+      });
+    }
+
+    const { Op } = require('sequelize');
+
+    // Build where clause
+    const where = { isDeleted: false };
+    
+    // Add filters
+    if (country) where.country = country;
+    if (isActive !== undefined) where.isActive = isActive === 'true';
+
+    // Add search filter
+    if (search) {
+      where[Op.or] = [
+        { name: { [Op.like]: `%${search}%` } },
+        { nameAr: { [Op.like]: `%${search}%` } },
+        { nameEn: { [Op.like]: `%${search}%` } }
+      ];
+    }
+
+    // Build order clause
+    let orderClause = [];
+    switch (sortBy) {
+      case 'newest':
+        orderClause.push(['createdAt', 'DESC']);
+        break;
+      case 'oldest':
+        orderClause.push(['createdAt', 'ASC']);
+        break;
+      case 'name':
+      default:
+        orderClause.push(['name', 'ASC']);
+        break;
+    }
+
+    // Calculate pagination
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get total count for pagination
+    const totalCount = await City.count({ where });
+
+    // Get cities with pagination
     const cities = await City.findAll({
-      where: { isDeleted: false },
-      order: [['name', 'ASC']]
+      where,
+      limit: parseInt(limit),
+      offset: offset,
+      order: orderClause
     });
+
+    const totalPages = Math.ceil(totalCount / parseInt(limit));
 
     res.status(200).json({
       status: 'success',
-      data: cities
+      message: 'Villes récupérées avec succès',
+      data: {
+        cities,
+        totalCount,
+        currentPage: parseInt(page),
+        totalPages,
+        hasNextPage: parseInt(page) < totalPages,
+        hasPreviousPage: parseInt(page) > 1
+      }
     });
   } catch (error) {
     console.error('Erreur récupération villes :', error.message, error.stack);

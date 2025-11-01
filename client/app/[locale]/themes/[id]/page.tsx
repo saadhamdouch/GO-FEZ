@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { MapPin, Clock, Sprout, AlertTriangle } from "lucide-react";
 // --- VERIFY THESE IMPORTS ---
-import { useGetOneThemeQuery } from "@/services/api/ThemeApi"; // Should be { ... }
+import { useGetThemeByIdQuery } from "@/services/api/ThemeApi";
 import { useGetAllCircuitsQuery } from "@/services/api/CircuitApi";
 import { getLocalizedField } from "@/lib/utils"; // Should be { ... }
 // --- END VERIFY ---
@@ -82,11 +82,11 @@ export default function ThemeDetailPage() {
   const dir = locale === "ar" ? "rtl" : "ltr";
 
   // Using useGetOneThemeQuery here
-  const {
-    data: themeData,
-    isLoading: isLoadingTheme,
-    error: themeError,
-  } = useGetOneThemeQuery(id);
+const {
+  data: themeData,
+  isLoading: isLoadingTheme,
+  error: themeError,
+} = useGetThemeByIdQuery(id);
   const {
     data: circuitsData,
     isLoading: isLoadingCircuits,

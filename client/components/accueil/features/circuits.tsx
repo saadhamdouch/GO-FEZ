@@ -40,7 +40,7 @@ export default function Circuits({ locale, isRTL }: CircuitsProps) {
       });
     } else {
       scrollRef.current.scrollTo({
-        left: isRTL ? scrollLeft - amount : scrollLeft + scrollAmount,
+        left: isRTL ? scrollLeft - scrollAmount : scrollLeft + scrollAmount,
         behavior: "smooth",
       });
     }
@@ -55,7 +55,10 @@ export default function Circuits({ locale, isRTL }: CircuitsProps) {
             isRTL ? "flex-row-reverse" : ""
           }`}
         >
-          <h2 className="text-2xl md:text-[40px] font-semibold text-black leading-tight">
+          <h2 
+            onClick={() => router.push('/circuits')}
+            className="text-2xl md:text-[40px] font-semibold text-black leading-tight cursor-pointer hover:text-blue-600 transition-colors"
+          >
             {t("exploreCircuit.title")}
           </h2>
 

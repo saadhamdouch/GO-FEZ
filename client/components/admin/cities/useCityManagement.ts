@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import {
-  useGetAllCitiesQuery,
+  useGetFilteredCitiesQuery,
   useCreateCityWithImageMutation,
   useUpdateCityWithImageMutation,
   useDeleteCityMutation,
@@ -40,7 +40,16 @@ const initialFormData: CityFormData = {
 };
 
 export function useCityManagement() {
-  const { data: citiesData, isLoading, error, refetch } = useGetAllCitiesQuery();
+  const [filters, setFilters] = useState({
+    page: 1,
+    limit: 100,
+    search: '',
+    country: undefined as string | undefined,
+    isActive: undefined as boolean | undefined,
+    sortBy: 'name' as 'name' | 'newest' | 'oldest',
+  });
+
+  const { data: citiesData, isLoading, error, refetch } = useGetFilteredCitiesQuery(filters);
   const [createCity, { isLoading: isCreating }] = useCreateCityWithImageMutation();
   const [updateCity, { isLoading: isUpdating }] = useUpdateCityWithImageMutation();
   const [deleteCity, { isLoading: isDeleting }] = useDeleteCityMutation();
@@ -52,7 +61,21 @@ export function useCityManagement() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const cities = citiesData?.data || [];
+  // Update search filter with debounce effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) => ({ ...prev, search: searchTerm, page: 1 }));
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const cities = citiesData?.data?.cities || [];
+  const totalCount = citiesData?.data?.totalCount || 0;
+  const totalPages = citiesData?.data?.totalPages || 1;
+  const currentPage = citiesData?.data?.currentPage || 1;
+  const hasNextPage = citiesData?.data?.hasNextPage || false;
+  const hasPreviousPage = citiesData?.data?.hasPreviousPage || false;
 
   // Gestion de l'image
   const handleImageChange = async (file: File) => {
@@ -175,20 +198,8 @@ export function useCityManagement() {
     });
   };
 
-  // Filtrer les villes
-  const filteredCities = cities.filter((city: City) => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      city.name?.toLowerCase().includes(searchLower) ||
-      city.nameAr?.toLowerCase().includes(searchLower) ||
-      city.nameEn?.toLowerCase().includes(searchLower) ||
-      city.country?.toLowerCase().includes(searchLower)
-    );
-  });
-
   return {
-    cities: filteredCities,
+    cities,
     isLoading,
     error,
     searchTerm,
@@ -209,5 +220,13 @@ export function useCityManagement() {
     handleLocationSelect,
     resetForm,
     refetch,
+    // Pagination
+    totalPages,
+    currentPage,
+    totalCount,
+    hasNextPage,
+    hasPreviousPage,
+    setFilters,
+    filters,
   };
 }

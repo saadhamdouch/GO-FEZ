@@ -53,6 +53,28 @@ export interface UpdateCityData {
   isActive?: boolean;
 }
 
+export interface GetCitiesParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  country?: string;
+  isActive?: boolean;
+  sortBy?: 'name' | 'newest' | 'oldest';
+}
+
+export interface GetCitiesResponse {
+  status: string;
+  message: string;
+  data: {
+    cities: City[];
+    totalCount: number;
+    currentPage: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
 export const cityApi = createApi({
   reducerPath: "cityApi",
   baseQuery: baseQuery,
@@ -63,6 +85,24 @@ export const cityApi = createApi({
         url: "/api/city/",
         method: "GET",
       }),
+      providesTags: ['Cities'],
+    }),
+
+    getFilteredCities: builder.query<GetCitiesResponse, GetCitiesParams>({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params.page) queryParams.append('page', params.page.toString());
+        if (params.limit) queryParams.append('limit', params.limit.toString());
+        if (params.search) queryParams.append('search', params.search);
+        if (params.country) queryParams.append('country', params.country);
+        if (params.isActive !== undefined) queryParams.append('isActive', params.isActive.toString());
+        if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+
+        return {
+          url: `/api/city/?${queryParams.toString()}`,
+          method: "GET",
+        };
+      },
       providesTags: ['Cities'],
     }),
 
@@ -110,6 +150,7 @@ export const cityApi = createApi({
 
 export const {
   useGetAllCitiesQuery,
+  useGetFilteredCitiesQuery,
   useGetCityByIdQuery,
   useCreateCityWithImageMutation,
   useUpdateCityWithImageMutation,

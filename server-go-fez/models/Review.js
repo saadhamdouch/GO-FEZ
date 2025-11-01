@@ -71,6 +71,17 @@ const Review = sequelize.define('Review', {
         defaultValue: 0,
         comment: 'Nombre de personnes ayant trouvé l\'avis utile',
     },
+    isDeleted: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        comment: 'Suppression logique de l\'avis',
+    },
+    photos: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'URLs des photos (JSON array)',
+    },
 }, {
     tableName: 'reviews',
     timestamps: true,

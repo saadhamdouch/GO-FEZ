@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import {
-  useGetAllCategoriesQuery,
+  useGetFilteredCategoriesQuery,
   useCreateCategoryMutation,
   useUpdateCategoryMutation,
   useDeleteCategoryMutation,
   type Category,
 } from '@/services/api/CategoryApi';
 import { logError } from "@/lib/logger";
+
 interface CategoryFormData {
   localizations: {
     fr: { name: string; desc: string };
@@ -29,7 +30,15 @@ const initialFormData: CategoryFormData = {
 };
 
 export function useCategoryManagement() {
-  const { data: categoriesData, isLoading, error, refetch } = useGetAllCategoriesQuery();
+  const [filters, setFilters] = useState({
+    page: 1,
+    limit: 100,
+    search: '',
+    isActive: undefined as boolean | undefined,
+    sortBy: 'id' as 'id' | 'name' | 'newest' | 'oldest',
+  });
+
+  const { data: categoriesData, isLoading, error, refetch } = useGetFilteredCategoriesQuery(filters);
   const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation();
   const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation();
   const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
@@ -38,10 +47,22 @@ export function useCategoryManagement() {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<CategoryFormData>(initialFormData);
-  const [iconFile, setIconFile] = useState<File | null>(null);
-  const [iconPreview, setIconPreview] = useState<string>('');
 
-  const categories = categoriesData?.data || [];
+  // Update search filter with debounce effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) => ({ ...prev, search: searchTerm, page: 1 }));
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const categories = categoriesData?.data?.categories || [];
+  const totalCount = categoriesData?.data?.totalCount || 0;
+  const totalPages = categoriesData?.data?.totalPages || 1;
+  const currentPage = categoriesData?.data?.currentPage || 1;
+  const hasNextPage = categoriesData?.data?.hasNextPage || false;
+  const hasPreviousPage = categoriesData?.data?.hasPreviousPage || false;
 
   // Parser les localisations
 const parseLoc = (loc: string | any): { name: string; desc: string } => {
@@ -91,20 +112,10 @@ const parseLoc = (loc: string | any): { name: string; desc: string } => {
     }
 
     try {
-      const formPayload = new FormData();
-      
-      // Ajouter les localisations
-      formPayload.append('localizations[ar]', JSON.stringify(formData.localizations.ar));
-      formPayload.append('localizations[fr]', JSON.stringify(formData.localizations.fr));
-      formPayload.append('localizations[en]', JSON.stringify(formData.localizations.en));
-      
-      // Ajouter l'état actif
-      formPayload.append('isActive', formData.isActive.toString());
-
-      // Ajouter l'icône si elle existe
-      if (iconFile) {
-        formPayload.append('icon', iconFile);
-      }
+      const payload = {
+        localizations: formData.localizations,
+        isActive: formData.isActive,
+      };
 
       if (selectedCategory) {
         await updateCategory({ id: selectedCategory.id, formData: formPayload }).unwrap();
@@ -161,27 +172,8 @@ const parseLoc = (loc: string | any): { name: string; desc: string } => {
     setIsModalOpen(true);
   };
 
-  // Filtrer les catégories
-  const filteredCategories = categories.filter((category: Category) => {
-    if (!searchTerm) return true;
-
-    const frLoc = parseLoc(category.fr);
-    const arLoc = parseLoc(category.ar);
-    const enLoc = parseLoc(category.en);
-    const searchLower = searchTerm.toLowerCase();
-
-    return (
-      frLoc.name?.toLowerCase().includes(searchLower) ||
-      arLoc.name?.toLowerCase().includes(searchLower) ||
-      enLoc.name?.toLowerCase().includes(searchLower) ||
-      frLoc.desc?.toLowerCase().includes(searchLower) ||
-      arLoc.desc?.toLowerCase().includes(searchLower) ||
-      enLoc.desc?.toLowerCase().includes(searchLower)
-    );
-  });
-
   return {
-    categories: filteredCategories,
+    categories,
     isLoading,
     error,
     searchTerm,
@@ -202,5 +194,13 @@ const parseLoc = (loc: string | any): { name: string; desc: string } => {
     handleIconChange,
     resetForm,
     refetch,
+    // Pagination
+    totalPages,
+    currentPage,
+    totalCount,
+    hasNextPage,
+    hasPreviousPage,
+    setFilters,
+    filters,
   };
 }

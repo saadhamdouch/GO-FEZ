@@ -2,6 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Leaflet CSS */
+@import 'leaflet/dist/leaflet.css';
+@import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+
+/* Custom styles pour la carte de navigation */
+.leaflet-routing-container {
+  display: none !important; /* Masquer le panneau de routage */
+}
+
+/* Style pour la ligne de route principale (utilisateur -> POI actuel) - Bleue épaisse */
+.route-line-main {
+  stroke: #3b82f6 !important;
+  stroke-width: 8 !important;
+  stroke-opacity: 1 !important;
+  stroke-dasharray: 20, 10;
+  animation: dash 30s linear infinite;
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.5));
+}
+
+/* Style pour le circuit complet (tous les POIs) - Violette pointillée */
+.circuit-complete-line {
+  stroke: #8b5cf6 !important;
+  stroke-width: 5 !important;
+  stroke-opacity: 0.7 !important;
+  stroke-dasharray: 10, 5;
+  filter: drop-shadow(0 1px 2px rgba(139, 92, 246, 0.3));
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -300;
+  }
+}
+
+/* Améliorer l'apparence des popups Leaflet */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.leaflet-popup-tip {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Zoom controls style */
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.leaflet-control-zoom a {
+  border-radius: 8px !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
 /* Masquer la scrollbar pour les éléments avec la classe scrollbar-hide */
 .scrollbar-hide {
   -ms-overflow-style: none;  /* Internet Explorer 10+ */

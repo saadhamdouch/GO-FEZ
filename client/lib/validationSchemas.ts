@@ -75,3 +75,24 @@ export const forgotPasswordStep3Schema = Yup.object({
     .oneOf([Yup.ref('newPassword')], 'Les mots de passe ne correspondent pas')
     .required('La confirmation du mot de passe est obligatoire'),
 });
+//this what work 
+export const signUpSchema = Yup.object().shape({
+  firstName: nameSchema,
+  lastName: nameSchema,
+  email: Yup.string()
+    .email("Format d'email invalide")
+    .nullable()
+    .notRequired(),
+  phone: Yup.string()
+    .matches(/^\d{8,10}$/, 'Le numéro doit contenir entre 8 et 10 chiffres')
+    .nullable()
+    .notRequired(),
+  password: passwordSchema,
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref('password')], 'Les mots de passe ne correspondent pas')
+    .required('La confirmation du mot de passe est obligatoire'),
+}).test(
+  'email-or-phone-required',
+  'Email ou téléphone requis',
+  (values) => !!values.email || !!values.phone
+);

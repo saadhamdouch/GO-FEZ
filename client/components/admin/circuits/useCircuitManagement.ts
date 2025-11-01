@@ -3,15 +3,16 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import {
-  useGetAllCircuitsQuery,
+  useGetFilteredCircuitsQuery,
   useCreateCircuitMutation,
   useUpdateCircuitMutation,
   useDeleteCircuitMutation,
   type Circuit,
+  type GetCircuitsParams,
 } from '@/services/api/CircuitApi';
 import { useGetAllCitiesQuery } from '@/services/api/CityApi';
 import { useGetAllThemesQuery } from '@/services/api/ThemeApi';
-import { useGetAllPOIsQuery } from '@/services/api/PoiApi';
+import { useGetFilteredPOIsQuery } from '@/services/api/PoiApi';
 import { compressImageByType } from '@/utils/imageCompression';
 
 interface CircuitFormData {
@@ -51,10 +52,16 @@ const initialFormData: CircuitFormData = {
 };
 
 export function useCircuitManagement() {
-  const { data: circuitsData, isLoading, error, refetch } = useGetAllCircuitsQuery();
+  // State for filters and pagination
+  const [filters, setFilters] = useState<GetCircuitsParams>({
+    page: 1,
+    limit: 100, // Show more items in admin
+  });
+
+  const { data: circuitsData, isLoading, error, refetch } = useGetFilteredCircuitsQuery(filters);
   const { data: citiesData } = useGetAllCitiesQuery();
   const { data: themesData } = useGetAllThemesQuery();
-  const { data: poisData } = useGetAllPOIsQuery();
+  const { data: poisData } = useGetFilteredPOIsQuery({ page: 1, limit: 1000 }); // Get all POIs for selection
 
   const [createCircuit, { isLoading: isCreating }] = useCreateCircuitMutation();
   const [updateCircuit, { isLoading: isUpdating }] = useUpdateCircuitMutation();
@@ -67,10 +74,10 @@ export function useCircuitManagement() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const circuits = circuitsData?.data || [];
+  const circuits = circuitsData?.data?.circuits || [];
   const cities = citiesData?.data || [];
   const themes = themesData?.data || [];
-  const pois = poisData?.pois || [];
+  const pois = poisData?.data?.pois || [];
 
   // Parser les localisations
   const parseLoc = (loc: string | any): { name: string; description: string } => {
@@ -209,30 +216,25 @@ export function useCircuitManagement() {
     setIsModalOpen(true);
   };
 
-  // Filtrer les circuits
-  const filteredCircuits = circuits.filter((circuit: Circuit) => {
-    if (!searchTerm) return true;
-    const frLoc = parseLoc(circuit.fr);
-    const arLoc = parseLoc(circuit.ar);
-    const enLoc = parseLoc(circuit.en);
-    const searchLower = searchTerm.toLowerCase();
-    
-    return (
-      frLoc.name?.toLowerCase().includes(searchLower) ||
-      arLoc.name?.toLowerCase().includes(searchLower) ||
-      enLoc.name?.toLowerCase().includes(searchLower)
-    );
-  });
+  // Handle search change (now using backend search)
+  const handleSearchChange = (newSearchTerm: string) => {
+    setSearchTerm(newSearchTerm);
+    setFilters((prev) => ({
+      ...prev,
+      search: newSearchTerm || undefined,
+      page: 1, // Reset to first page when searching
+    }));
+  };
 
   return {
-    circuits: filteredCircuits,
+    circuits: circuits, // Already filtered by backend
     cities,
     themes,
     pois,
     isLoading,
     error,
     searchTerm,
-    setSearchTerm,
+    setSearchTerm: handleSearchChange,
     selectedCircuit,
     isModalOpen,
     setIsModalOpen,
@@ -249,5 +251,14 @@ export function useCircuitManagement() {
     handleEdit,
     resetForm,
     refetch,
+    // Pagination data
+    totalPages: circuitsData?.data?.totalPages || 1,
+    currentPage: circuitsData?.data?.currentPage || 1,
+    totalCount: circuitsData?.data?.totalCount || 0,
+    hasNextPage: circuitsData?.data?.hasNextPage || false,
+    hasPreviousPage: circuitsData?.data?.hasPreviousPage || false,
+    // Filter functions
+    setFilters,
+    filters,
   };
 }

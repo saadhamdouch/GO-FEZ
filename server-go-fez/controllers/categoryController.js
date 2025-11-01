@@ -86,44 +86,122 @@ exports.createCategory = async (req, res) => {
   }
 };
 
-//  Récupérer toutes les catégories
+//  Récupérer toutes les catégories avec filtres et recherche
 exports.getAllCategories = async (req, res) => {
+  try {
+    const { 
+      page, 
+      limit, 
+      search = '', 
+      isActive,
+      sortBy = 'id'
+    } = req.query;
 
-  const page = parseInt(req.query.page) || 1; 
-    const limit = 10; 
-    const offset = (page - 1) * limit; 
-
-    try {
-
-        const totalItems = await Category.count({
-            where: { isDeleted: false }
-        });
-
-        const categories = await Category.findAll({
+    // If no pagination params, return all categories (for dropdowns, etc.)
+    if (!page && !limit) {
+      const categories = await Category.findAll({
+        where: { isDeleted: false },
+        include: [
+          {
+            model: POI,
+            as: 'pois',
+            attributes: [],
             where: { isDeleted: false },
-            
-            subQuery: false, 
-            
-            limit: limit,
-            offset: offset,
-            
-            include: [
-                {
-                    model: POI,
-                    as: 'pois',
-                    attributes: [],
-                    where: { isDeleted: false },
-                    required: false // LEFT JOIN
-                }
-            ],
-            attributes: {
+            required: false
+          }
+        ],
+        attributes: {
+          include: [
+            [Category.sequelize.fn("COUNT", Category.sequelize.col("pois.id")), "nbPois"]
+          ]
+        },
+        group: [
+          'Category.id', 
+          'Category.fr', 
+          'Category.ar', 
+          'Category.en', 
+          'Category.isActive', 
+          'Category.isDeleted', 
+          'Category.created_at', 
+          'Category.updated_at'
+        ],
+        order: [['id', 'ASC']],
+        subQuery: false
+      });
 
-                include: [
-                    [Category.sequelize.fn("COUNT", Category.sequelize.col("pois.id")), "nbPois"]
-                ]
-            },
-            
-           group: [
+      return res.json({ status: 'success', data: categories });
+    }
+
+    const { Op } = require('sequelize');
+
+    // Build where clause
+    const where = { isDeleted: false };
+    
+    // Add filters
+    if (isActive !== undefined) where.isActive = isActive === 'true';
+
+    // Add search filter - search in JSON fields
+    if (search) {
+      where[Op.or] = [
+        Category.sequelize.where(
+          Category.sequelize.cast(Category.sequelize.col('Category.fr'), 'CHAR'),
+          { [Op.like]: `%${search}%` }
+        ),
+        Category.sequelize.where(
+          Category.sequelize.cast(Category.sequelize.col('Category.ar'), 'CHAR'),
+          { [Op.like]: `%${search}%` }
+        ),
+        Category.sequelize.where(
+          Category.sequelize.cast(Category.sequelize.col('Category.en'), 'CHAR'),
+          { [Op.like]: `%${search}%` }
+        )
+      ];
+    }
+
+    // Build order clause
+    let orderClause = [];
+    switch (sortBy) {
+      case 'newest':
+        orderClause.push(['createdAt', 'DESC']);
+        break;
+      case 'oldest':
+        orderClause.push(['createdAt', 'ASC']);
+        break;
+      case 'name':
+        orderClause.push(['id', 'ASC']);
+        break;
+      case 'id':
+      default:
+        orderClause.push(['id', 'ASC']);
+        break;
+    }
+
+    // Calculate pagination
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get total count
+    const totalCount = await Category.count({ where });
+
+    // Get categories with pagination
+    const categories = await Category.findAll({
+      where,
+      limit: parseInt(limit),
+      offset: offset,
+      include: [
+        {
+          model: POI,
+          as: 'pois',
+          attributes: [],
+          where: { isDeleted: false },
+          required: false
+        }
+      ],
+      attributes: {
+        include: [
+          [Category.sequelize.fn("COUNT", Category.sequelize.col("pois.id")), "nbPois"]
+        ]
+      },
+      group: [
         'Category.id', 
         'Category.fr', 
         'Category.ar', 
@@ -132,28 +210,31 @@ exports.getAllCategories = async (req, res) => {
         'Category.isDeleted', 
         'Category.created_at', 
         'Category.updated_at'
-    ],
-    order: [['id', 'ASC']]
-        });
+      ],
+      order: orderClause,
+      subQuery: false
+    });
 
-        const totalPages = Math.ceil(totalItems / limit);
+    const totalPages = Math.ceil(totalCount / parseInt(limit));
 
-        res.json({
-            status: 'success',
-            data: categories,
-            meta: {
-                currentPage: page,
-                perPage: limit,
-                totalItems: totalItems,
-                totalPages: totalPages,
-            }
-        });
-
-    } catch (error) {
-        console.error('❌ Erreur getPaginatedCategories:', error);
-        res.status(500).json({ status: 'fail', message: 'Erreur serveur' });
-    }
+    res.json({
+      status: 'success',
+      message: 'Catégories récupérées avec succès',
+      data: {
+        categories,
+        totalCount,
+        currentPage: parseInt(page),
+        totalPages,
+        hasNextPage: parseInt(page) < totalPages,
+        hasPreviousPage: parseInt(page) > 1
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erreur getAllCategories:', error);
+    res.status(500).json({ status: 'fail', message: 'Erreur serveur' });
+  }
 };
+
 //  Récupérer une catégorie par ID
 exports.getCategoryById = async (req, res) => {
   try {

@@ -2,8 +2,11 @@ const express = require('express');
 const { body } = require('express-validator');
 const multer = require("multer");
 const path = require('path');
+const { authenticateToken } = require('../middleware/auth');
 const { 
   registerWithProvider,
+    verifyOtp,
+    sendOtp,
     handleValidationErrors,
     registerUser,
     loginUser,
@@ -47,7 +50,7 @@ const UserRouter = express.Router();
 
 // Routes
 UserRouter.get('/', findAllUsers);
-UserRouter.post('/signup', [
+UserRouter.post('/register', [
     body('firstName')
         .trim()
         .isLength({ min: 2, max: 100 })
@@ -67,7 +70,15 @@ UserRouter.post('/signup', [
         .withMessage('Le mot de passe doit contenir au moins une lettre et un chiffre'),
     handleValidationErrors
 ], registerUser);
-
+UserRouter.post(
+  '/otp/verify',
+  [
+    body('email').isEmail().withMessage('Email invalide'),
+    body('otpCode').isLength({ min: 6, max: 6 }).withMessage('Code OTP invalide'),
+    handleValidationErrors,
+  ],
+  verifyOtp
+);
 UserRouter.post('/login', [
     body('email')
         .notEmpty()
@@ -99,9 +110,12 @@ UserRouter.post('/resend-otp', [
         .withMessage('Email invalide'),
     handleValidationErrors
 ], resendOTP);
-
-UserRouter.get('/profile', getUserProfile);
-UserRouter.put('/profile', upload.single("profileImage"), updateUserProfile);
+UserRouter.post('/otp/send', [
+  body('email').isEmail().withMessage('Email invalide'),
+  handleValidationErrors,
+], sendOtp);
+UserRouter.get('/profile', authenticateToken, getUserProfile);
+UserRouter.put('/profile', authenticateToken, upload.single("profileImage"), updateUserProfile);
 UserRouter.get('/:id', findOneUser);
 UserRouter.put('/update-password/:id', updatePassword);
 UserRouter.post("/provider-register", registerWithProvider);

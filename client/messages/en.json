@@ -12,6 +12,40 @@
     "login": "Login",
     "signup": "Sign Up"
   },
+  "Login": {
+    "title": "Login",
+    "description": "Sign in to your account to continue",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "submit": "Log In",
+    "loading": "Logging in...",
+    "orContinueWith": "Or continue with",
+    "noAccount": "Don't have an account?",
+    "signUp": "Sign up",
+    "success": "Login successful! Welcome.",
+    "invalidCredentials": "Invalid email or password.",
+    "fillFields": "Please fill in all fields."
+  },
+  "SignUp": {
+    "title": "Sign Up",
+    "description": "Create your account to get started",
+    "firstName": "First Name",
+    "firstNamePlaceholder": "John",
+    "lastName": "Last Name",
+    "lastNamePlaceholder": "Doe",
+    "email": "Email",
+    "phone": "Phone (Optional)",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "submit": "Create Account",
+    "loading": "Creating...",
+    "alreadyAccount": "Already have an account?",
+    "login": "Log In",
+    "orSignUpWith": "Or sign up with",
+    "success": "Registration successful! Please log in.",
+    "error": "Error during sign up. The email or phone may already exist."
+  },
   "hero": {
     "discover": "Discover",
     "fez": "Fez",
@@ -89,5 +123,135 @@
     "about": "About",
     "language": "Language",
     "copyright": "© 2025 - Go Fez. All rights reserved"
+  },
+  "PoiDetailPage": {
+    "loading": "Loading Point of Interest...",
+    "error": "Error loading data.",
+    "notFound": "Point of Interest not found."
+  },
+
+  "CircuitDetailPage": {
+    "loading": "Loading circuit...",
+    "error": "Unable to load circuit details.",
+    "startSuccess": "Circuit started successfully!",
+    "startError": "Error starting the circuit.",
+    "aboutTitle": "About this circuit",
+    "stopsTitle": "Circuit stops",
+    "infoTitle": "Key information",
+    "km": "km",
+    "min": "min",
+    "stops": "stops",
+    "premium": "Premium Circuit",
+    "starting": "Starting...",
+    "startButton": "Start this circuit",
+    "circuitImageAlt": "Circuit cover image",
+    "customCircuit": "Custom Circuit",
+    "customCircuitInfo": "This is your custom circuit"
+  },
+
+  "Circuits": {
+    "loading": "Loading...",
+    "error": "Loading error",
+    "poiVisitedSuccess": "Point of interest marked as visited!",
+    "poiVisitedError": "Error validating point of interest.",
+    "circuitComplete": "Congratulations! You have completed this circuit!",
+    "nextStep": "Next",
+    "prevStep": "Previous",
+    "markAsVisited": "Mark as visited",
+    "completed": "Completed"
+  },
+
+  "CircuitNavigation": {
+    "step": "Step",
+    "prev": "Previous",
+    "next": "Next",
+    "markAsVisited": "Mark as visited",
+    "visited": "Visited",
+    "yourLocation": "You are here",
+    "currentPOI": "Current POI",
+    "completedPOI": "Visited POI",
+    "loading": "Loading...",
+    "error": "Loading error"
+  },
+
+  "AudioPlayer": {
+    "title": "Audio Guide",
+    "selectLanguage": "Select language",
+    "noAudio": "No audio available"
+  },
+  "ShareButtons": {
+    "title": "Share this place",
+    "emailBody": "Check out this place:",
+    "shareSuccess": "Shared successfully!",
+    "shareSuccessDesc": "Thank you for sharing this content!",
+    "linkCopied": "Link copied!",
+    "linkCopiedDesc": "The link has been copied to your clipboard.",
+    "copyError": "Error",
+    "copyErrorDesc": "Unable to copy link.",
+    "copied": "Copied!",
+    "copyLink": "Copy link"
+  },
+  "ReviewForm": {
+    "title": "Leave a Review",
+    "yourRating": "Your Rating",
+    "yourComment": "Your Comment",
+    "commentPlaceholder": "Share your experience...",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "ratingRequired": "Please select a rating.",
+    "successTitle": "Review submitted!"
+  },
+  "ReviewList": {
+    "title": "Reviews",
+    "loading": "Loading reviews...",
+    "error": "Error loading reviews",
+    "noReviews": "No reviews yet.",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page"
+  },
+  "GamificationProfile": {
+    "points": "Points",
+    "level": "Level",
+    "badges": "Badges",
+    "leaderboard": "Leaderboard",
+    "totalPoints": "Total Points",
+    "nextLevel": "Next Level",
+    "earnedBadges": "Earned Badges",
+    "lockedBadges": "Locked Badges",
+    "rank": "Rank",
+    "user": "User"
+  },
+  "CircuitsPage": {
+    "title": "Discover Our Circuits",
+    "subtitle": "Explore Fez through thematic and personalized routes.",
+    "loading": "Loading circuits...",
+    "error": "Unable to load circuits.",
+    "noCircuits": "No circuits found at the moment.",
+    "createButton": "Create a Circuit",
+    "allCircuits": "All Circuits",
+    "officialCircuits": "Official Circuits",
+    "customCircuits": "My Custom Circuits",
+    "noOfficialCircuits": "No official circuits available at the moment.",
+    "noCustomCircuits": "No custom circuits yet. Create your first one!"
+  },
+  "CircuitCard": {
+    "km": "km",
+    "min": "min",
+    "customCircuit": "Custom Circuit"
+  },
+  "PoiFilters": {
+    "searchPlaceholder": "Search for a POI...",
+    "categoryPlaceholder": "Select a category",
+    "cityPlaceholder": "Select a city",
+    "allCategories": "All categories",
+    "allCities": "All cities",
+    "premiumOnly": "Premium only"
+  },
+  "Pois": {
+    "loading": "Loading POIs...",
+    "error": "Error loading POIs.",
+    "noPois": "No POIs found."
   }
+
 }
