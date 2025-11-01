@@ -10,19 +10,53 @@ export interface POILocalization {
 }
 
 export interface POIFile {
-  id?: string;
-  image?: string;
-  video?: string;
-  virtualTour360?: string;
+  id: string;
+  poiId: string;
+  fileUrl: string;
+  filePublicId: string | null;
+  type: 'image' | 'video' | 'virtualtour';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Parameters for filtering POIs
+export interface GetPOIsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  cityId?: string;
+  isPremium?: boolean;
+  isActive?: boolean;
+  sortBy?: 'newest' | 'oldest' | 'name';
+}
+
+// Response type for filtered POIs
+export interface GetPOIsResponse {
+  success: boolean;
+  data: {
+    pois: POI[];
+    totalCount: number;
+    currentPage: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
 }
 
 export interface POI {
   id: string;
-  coordinates: {
+  coordinates: { 
     latitude: number;
     longitude: number;
     address?: string;
+  } | {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude] GeoJSON format
   };
+  files?: POIFile[]; 
+
+  // --- Le reste de vos champs ---
   category: string;
   practicalInfo: any;
   cityId: string;
@@ -31,27 +65,67 @@ export interface POI {
   isPremium: boolean;
   rating?: number;
   reviewCount?: number;
-  poiFileId?: string | null;
+  poiFileId?: string | null; // Note: ce champ est probablement obsolète
   isDeleted?: boolean;
   arLocalization?: POILocalization;
   frLocalization?: POILocalization;
   enLocalization?: POILocalization;
-  poiFile?: POIFile;
+  poiFile?: POIFile; // Note: ce champ est aussi obsolète, utilisez 'files'
   categoryPOI?: any;
   created_at?: string;
   updated_at?: string;
+  
+  // For circuit POIs
+  CircuitPOI?: {
+    order: number;
+  };
+  
+  // Localized versions (shortcuts)
+  fr?: POILocalization;
+  ar?: POILocalization;
+  en?: POILocalization;
 }
+
 
 export const poiApi = createApi({
   reducerPath: "poiApi",
   baseQuery,
   tagTypes: ["POI", "POIs"],
   endpoints: (builder) => ({
-    getAllPOIs: builder.query<{ success: boolean; pois: POI[] }, void>({
-      query: () => ({
-        url: "/api/pois/",
-        method: "GET"
-      }),
+    getAllPOIs: builder.query<{ success: boolean; pois: POI[] }, { search?: string; isActive?: boolean } | void>({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params?.search) queryParams.append('search', params.search);
+        if (params?.isActive !== undefined) queryParams.append('isActive', params.isActive.toString());
+        
+        const queryString = queryParams.toString();
+        return {
+          url: `/api/pois/${queryString ? `?${queryString}` : ''}`,
+          method: "GET"
+        };
+      },
+      providesTags: ["POIs"],
+    }),
+
+    // NEW: Get filtered POIs with pagination and search
+    getFilteredPOIs: builder.query<GetPOIsResponse, GetPOIsParams>({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        
+        if (params.page) queryParams.append('page', params.page.toString());
+        if (params.limit) queryParams.append('limit', params.limit.toString());
+        if (params.search) queryParams.append('search', params.search);
+        if (params.category) queryParams.append('category', params.category);
+        if (params.cityId) queryParams.append('cityId', params.cityId);
+        if (params.isPremium !== undefined) queryParams.append('isPremium', params.isPremium.toString());
+        if (params.isActive !== undefined) queryParams.append('isActive', params.isActive.toString());
+        if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+        
+        return {
+          url: `/api/pois?${queryParams.toString()}`,
+          method: "GET"
+        };
+      },
       providesTags: ["POIs"],
     }),
 
@@ -93,6 +167,7 @@ export const poiApi = createApi({
 
 export const {
   useGetAllPOIsQuery,
+  useGetFilteredPOIsQuery,
   useGetPOIByIdQuery,
   useCreatePOIWithFilesMutation,
   useUpdatePOIMutation,

@@ -1,6 +1,6 @@
 // client/services/api/CustomCircuitApi.ts
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { baseQuery } from '../BaseQuery';
+import  baseQuery  from '../BaseQuery';
 import { CustomCircuit, POI } from '@/lib/types'; // Assurez-vous que ces types existent
 
 // Interface pour la réponse getById (incluant les POIs détaillés)
@@ -21,10 +21,16 @@ interface ListCustomCircuitsResponse {
 // Interface pour la création/mise à jour
 interface MutateCustomCircuitArgs {
 	name: string;
-	selectedPOIs: string[]; // Array of POI IDs
+
+	
+	description?: string; 
 	startDate?: Date | string | null;
 	estimatedDuration?: number | null;
 	isPublic?: boolean;
+		pois: {
+		poiId: string;
+		order: number;
+	}[];
 }
 
 export const customCircuitApi = createApi({
@@ -38,7 +44,7 @@ export const customCircuitApi = createApi({
 			MutateCustomCircuitArgs
 		>({
 			query: (body) => ({
-				url: '/custom-circuits',
+				url: 'api/custom-circuits',
 				method: 'POST',
 				body: body,
 			}),
@@ -47,7 +53,7 @@ export const customCircuitApi = createApi({
 
 		// Récupérer les circuits personnalisés de l'utilisateur
 		getUserCustomCircuits: builder.query<ListCustomCircuitsResponse, void>({
-			query: () => '/custom-circuits/user',
+			query: () => 'api/custom-circuits/user',
 			providesTags: (result) =>
 				result
 					? [
@@ -62,7 +68,7 @@ export const customCircuitApi = createApi({
 
 		// Récupérer un circuit personnalisé par ID (avec POIs)
 		getCustomCircuitById: builder.query<GetCustomCircuitResponse, string>({
-			query: (id) => `/custom-circuits/${id}`,
+			query: (id) => `api/custom-circuits/${id}`,
 			providesTags: (result, error, id) => [{ type: 'CustomCircuit', id }],
 		}),
 
@@ -72,7 +78,7 @@ export const customCircuitApi = createApi({
 			{ id: string; body: Partial<MutateCustomCircuitArgs> }
 		>({
 			query: ({ id, body }) => ({
-				url: `/custom-circuits/${id}`,
+				url: `api/custom-circuits/${id}`,
 				method: 'PUT',
 				body: body,
 			}),
@@ -85,7 +91,7 @@ export const customCircuitApi = createApi({
 		// Supprimer un circuit personnalisé
 		deleteCustomCircuit: builder.mutation<{ success: boolean }, string>({
 			query: (id) => ({
-				url: `/custom-circuits/${id}`,
+				url: `api/custom-circuits/${id}`,
 				method: 'DELETE',
 			}),
 			invalidatesTags: (result, error, id) => [

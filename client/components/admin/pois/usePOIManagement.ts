@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import {
-  useGetAllPOIsQuery,
+  useGetFilteredPOIsQuery,
   useCreatePOIWithFilesMutation,
   useUpdatePOIMutation,
   useDeletePOIMutation,
   type POI,
+  type GetPOIsParams,
 } from '@/services/api/PoiApi';
 import { useGetAllCategoriesQuery } from '@/services/api/CategoryApi';
 import { useGetAllCitiesQuery } from '@/services/api/CityApi';
@@ -39,6 +40,12 @@ interface POIFormData {
     description: string;
     address: string;
   };
+  filesToRemove?: string[];
+  audioToRemove?: {
+    fr: boolean;
+    ar: boolean;
+    en: boolean;
+  };
 }
 
 const initialFormData: POIFormData = {
@@ -55,10 +62,19 @@ const initialFormData: POIFormData = {
   frLocalization: { name: '', description: '', address: '' },
   arLocalization: { name: '', description: '', address: '' },
   enLocalization: { name: '', description: '', address: '' },
+  filesToRemove: [], 
+  audioToRemove: { fr: false, ar: false, en: false },
 };
 
 export function usePOIManagement() {
-  const { data: poisData, isLoading, error, refetch } = useGetAllPOIsQuery();
+  // State for filters and pagination
+  const [filters, setFilters] = useState<GetPOIsParams>({
+    page: 1,
+    limit: 100, // Show more items in admin
+    sortBy: 'newest',
+  });
+
+  const { data: poisData, isLoading, error, refetch } = useGetFilteredPOIsQuery(filters);
   const { data: categoriesData } = useGetAllCategoriesQuery();
   const { data: citiesData } = useGetAllCitiesQuery();
 
@@ -72,35 +88,64 @@ export function usePOIManagement() {
   const [formData, setFormData] = useState<POIFormData>(initialFormData);
   const [files, setFiles] = useState<Record<string, File[]>>({});
 
-  const pois = poisData?.pois || [];
+  const pois = poisData?.data?.pois || [];
   const categories = categoriesData?.data || [];
   const cities = citiesData?.data || [];
 
-  // Helper pour récupérer le nom de catégorie
-  const getCategoryName = (categoryId: string): string => {
+const getCategoryName = (categoryId: string): string => {
     const category = categories.find((c: any) => c.id === categoryId);
     if (!category) return 'Non catégorisé';
 
-    try {
-      if (typeof category.fr === 'string') {
-        const parsed = JSON.parse(category.fr);
-        return parsed.name || 'Sans nom';
+    // Helper pour extraire le nom, gère string, {name: string} et JSON stringifié
+    const parseCategoryName = (langField: any): string | null => {
+      if (!langField) return null;
+
+      // Cas 1: C'est déjà un objet { name: "..." }
+      if (typeof langField === 'object' && langField.name) {
+        return langField.name;
       }
-      if (category.fr && typeof category.fr === 'object') {
-        return category.fr.name || 'Sans nom';
+
+      // Cas 2: C'est une chaîne de caractères
+      if (typeof langField === 'string') {
+        try {
+          // On tente un premier parse (pour "{\"name\":\"test\"}")
+          let parsed = JSON.parse(langField);
+
+          // Cas 3: C'est une chaîne "double-encodée" ("\"{\\\"name\\\":\\\"test\\\"}\"")
+          // Le premier parse aura donné une *nouvelle* chaîne : "{\"name\":\"test\"}"
+          if (typeof parsed === 'string') {
+            parsed = JSON.parse(parsed); // On parse une deuxième fois
+          }
+          
+          // Si on a un objet avec un 'name', on le retourne
+          if (typeof parsed === 'object' && parsed.name) {
+            return parsed.name;
+          }
+
+        } catch (e) {
+          // Si le parsing échoue, c'est une chaîne simple comme "Histoire"
+          if (langField.trim()) {
+            return langField;
+          }
+        }
       }
-      if (category.en && typeof category.en === 'object') {
-        return category.en.name || 'Sans nom';
-      }
-      if (category.ar && typeof category.ar === 'object') {
-        return category.ar.name || 'Sans nom';
-      }
-      return 'Sans nom';
-    } catch (e) {
-      console.error('Error parsing category name:', e);
-      return category.fr || category.en || category.ar || 'Sans nom';
-    }
+      return null;
+    };
+
+    // On essaie le français, puis l'anglais, puis l'arabe
+    const frName = parseCategoryName(category.fr);
+    if (frName) return frName;
+
+    const enName = parseCategoryName(category.en);
+    if (enName) return enName;
+
+    const arName = parseCategoryName(category.ar);
+    if (arName) return arName;
+
+    // Fallback
+    return 'Sans nom';
   };
+
 
   // Helper pour récupérer le nom de ville
   const getCityName = (cityId: string): string => {
@@ -133,13 +178,30 @@ export function usePOIManagement() {
   };
 
   // Supprimer un fichier spécifique
-  const handleRemoveFile = (key: string, index: number) => {
-    setFiles((prev) => ({
+const handleRemoveFile = (key: string, index: number) => {
+  setFiles((prev) => {
+    const fileToRemove = prev[key][index];
+
+    // Extract filePublicId if available
+    const publicId = (fileToRemove as any)?.filePublicId;
+
+    // Track it for deletion if it's an existing file (not a new upload)
+    if (publicId) {
+      setFormData((prevForm) => ({
+        ...prevForm,
+        filesToRemove: [...(prevForm.filesToRemove || []), publicId],
+      }));
+    }
+
+    return {
       ...prev,
       [key]: prev[key].filter((_, i) => i !== index),
-    }));
-    toast.success('Fichier supprimé');
-  };
+    };
+  });
+
+  toast.success('Fichier supprimé');
+};
+
 
   // Soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
@@ -197,6 +259,9 @@ export function usePOIManagement() {
       if (formData.virtualTourUrl) {
         apiFormData.append('virtualTourUrl', formData.virtualTourUrl);
       }
+if (formData.audioToRemove) {
+  apiFormData.append('audioToRemove', JSON.stringify(formData.audioToRemove));
+}
 
       // Localisations (envoyer même si vides pour que le backend les gère)
       apiFormData.append('arLocalization', JSON.stringify(formData.arLocalization));
@@ -214,6 +279,17 @@ export function usePOIManagement() {
           apiFormData.append(key, file);
         });
       });
+
+      // --- DEBUT DES MODIFICATIONS ---
+
+      // Ajoute la liste des fichiers à supprimer (uniquement en mode édition)
+      if (selectedPOI && formData.filesToRemove && formData.filesToRemove.length > 0) {
+        apiFormData.append('filesToRemove', JSON.stringify(formData.filesToRemove));
+      }
+
+
+
+      // --- FIN DES MODIFICATIONS ---
 
       if (selectedPOI) {
         await updatePOI({ id: selectedPOI.id, data: apiFormData }).unwrap();
@@ -256,6 +332,7 @@ export function usePOIManagement() {
   // Réinitialiser le formulaire
   const resetForm = () => {
     setSelectedPOI(null);
+    // ✅ 'initialFormData' contient déjà la réinitialisation pour 'audioToRemove'
     setFormData(initialFormData);
     setFiles({});
   };
@@ -267,12 +344,41 @@ export function usePOIManagement() {
     const virtualTourFile = poi.files?.find((f: any) => f.type === 'virtualtour');
     const virtualTourUrl = virtualTourFile?.fileUrl || '';
 
+    // Parse coordinates if it's a string (backward compatibility)
+    let coordinates = poi.coordinates;
+    if (typeof coordinates === 'string') {
+      try {
+        coordinates = JSON.parse(coordinates);
+      } catch (e) {
+        console.error('Error parsing coordinates:', e);
+        coordinates = { latitude: 0, longitude: 0, address: '' };
+      }
+    }
+
+    // Handle both coordinate formats
+    let latitude: string, longitude: string, address: string;
+    if (coordinates && typeof coordinates === 'object' && 'latitude' in coordinates) {
+      latitude = String(coordinates.latitude);
+      longitude = String(coordinates.longitude);
+      address = coordinates.address || '';
+    } else if (coordinates && typeof coordinates === 'object' && 'coordinates' in coordinates) {
+      // GeoJSON format
+      longitude = String(coordinates.coordinates[0]);
+      latitude = String(coordinates.coordinates[1]);
+      address = '';
+    } else {
+      // Fallback
+      latitude = '0';
+      longitude = '0';
+      address = '';
+    }
+
     setFormData({
       category: poi.category,
       cityId: poi.cityId,
-      latitude: String(poi.coordinates.latitude),
-      longitude: String(poi.coordinates.longitude),
-      address: poi.coordinates.address || '',
+      latitude,
+      longitude,
+      address,
       practicalInfo: JSON.stringify(poi.practicalInfo || {}, null, 2),
       virtualTourUrl,
       isActive: poi.isActive,
@@ -281,30 +387,32 @@ export function usePOIManagement() {
       frLocalization: poi.frLocalization || { name: '', description: '', address: '' },
       arLocalization: poi.arLocalization || { name: '', description: '', address: '' },
       enLocalization: poi.enLocalization || { name: '', description: '', address: '' },
+      filesToRemove: [], // Important pour le formulaire
+      // ✅ AJOUT: Réinitialiser les flags de suppression audio à chaque ouverture
+      audioToRemove: { fr: false, ar: false, en: false }, 
     });
+    setFiles({}); 
     setIsModalOpen(true);
   };
 
-  // Filtrer les POIs par terme de recherche
-  const filteredPOIs = pois.filter((poi: POI) => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      poi.frLocalization?.name?.toLowerCase().includes(searchLower) ||
-      poi.arLocalization?.name?.toLowerCase().includes(searchLower) ||
-      poi.enLocalization?.name?.toLowerCase().includes(searchLower) ||
-      getCategoryName(poi.category).toLowerCase().includes(searchLower) ||
-      getCityName(poi.cityId).toLowerCase().includes(searchLower)
-    );
-  });
+  // Filtrer les POIs par terme de recherche (now using backend search)
+  const handleSearchChange = (newSearchTerm: string) => {
+    setSearchTerm(newSearchTerm);
+    setFilters((prev) => ({
+      ...prev,
+      search: newSearchTerm || undefined,
+      page: 1, // Reset to first page when searching
+    }));
+  };
 
   return {
-    pois: filteredPOIs,
+    pois: pois, // Already filtered by backend
     categories,
     cities,
     isLoading,
     error,
     searchTerm,
-    setSearchTerm,
+    setSearchTerm: handleSearchChange,
     selectedPOI,
     isModalOpen,
     setIsModalOpen,
@@ -323,5 +431,14 @@ export function usePOIManagement() {
     refetch,
     getCategoryName,
     getCityName,
+    // Pagination data
+    totalPages: poisData?.data?.totalPages || 1,
+    currentPage: poisData?.data?.currentPage || 1,
+    totalCount: poisData?.data?.totalCount || 0,
+    hasNextPage: poisData?.data?.hasNextPage || false,
+    hasPreviousPage: poisData?.data?.hasPreviousPage || false,
+    // Filter functions
+    setFilters,
+    filters,
   };
 }

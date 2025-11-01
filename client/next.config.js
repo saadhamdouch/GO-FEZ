@@ -3,27 +3,37 @@ const path = require('path');
 
 const nextConfig = {
   eslint: {
-    // Autorise le build même si ESLint trouve des erreurs (les erreurs seront à corriger séparément)
     ignoreDuringBuilds: true,
   },
-  // Évite les avertissements liés aux lockfiles en précisant la racine du workspace
   outputFileTracingRoot: path.join(__dirname, '..'),
+  
+  // --- ADD THIS BLOCK ---
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+      },
+      // You might also need your real image host here later
+      // {
+      //   protocol: 'https',
+      //   hostname: 'res.cloudinary.com', 
+      // },
+    ],
+  },
+  // --- END OF BLOCK ---
+
   webpack: (config, { isServer }) => {
+    // ... (rest of your webpack config)
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
-        fs: false, // empêche webpack de chercher fs côté client
+        fs: false, 
       }
     }
     return config
   }
-  // images: {
-  //   loader: 'custom',
-  //   loaderFile: './src/utils/cloudenary-loader.ts',
-  // }
 }
-
-
 
 const withNextIntl = createNextIntlPlugin();
 

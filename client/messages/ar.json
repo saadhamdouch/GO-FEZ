@@ -12,6 +12,40 @@
     "login": "تسجيل الدخول",
     "signup": "التسجيل"
   },
+  "Login": {
+    "title": "تسجيل الدخول",
+    "description": "سجل الدخول إلى حسابك للمتابعة",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "forgotPassword": "هل نسيت كلمة المرور؟",
+    "submit": "تسجيل الدخول",
+    "loading": "جاري تسجيل الدخول...",
+    "orContinueWith": "أو المتابعة باستخدام",
+    "noAccount": "ليس لديك حساب؟",
+    "signUp": "إنشاء حساب",
+    "success": "تم تسجيل الدخول بنجاح! مرحبا بك.",
+    "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+    "fillFields": "يرجى ملء جميع الحقول."
+  },
+  "SignUp": {
+    "title": "إنشاء حساب",
+    "description": "أنشئ حسابك لتبدأ",
+    "firstName": "الاسم الأول",
+    "firstNamePlaceholder": "جون",
+    "lastName": "اسم العائلة",
+    "lastNamePlaceholder": "دو",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف (اختياري)",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "submit": "إنشاء حساب",
+    "loading": "جاري الإنشاء...",
+    "alreadyAccount": "هل لديك حساب بالفعل؟",
+    "login": "تسجيل الدخول",
+    "orSignUpWith": "أو التسجيل باستخدام",
+    "success": "تم التسجيل بنجاح! الرجاء تسجيل الدخول.",
+    "error": "خطأ أثناء التسجيل. قد يكون البريد الإلكتروني أو الهاتف موجودًا بالفعل."
+  },
   "hero": {
     "discover": "اكتشف",
     "fez": "فاس",
@@ -89,5 +123,130 @@
     "about": "حول",
     "language": "اللغة",
     "copyright": "© 2025 - جو فاس. جميع الحقوق محفوظة"
+  },
+  "PoiDetailPage": {
+    "loading": "جاري تحميل النقطة...",
+    "error": "خطأ في تحميل البيانات.",
+    "notFound": "النقطة غير موجودة."
+  },
+
+  "CircuitDetailPage": {
+    "loading": "جاري تحميل المسار...",
+    "error": "تعذر تحميل تفاصيل المسار.",
+    "startSuccess": "تم بدء المسار بنجاح!",
+    "startError": "خطأ في بدء المسار.",
+    "aboutTitle": "حول هذا المسار",
+    "stopsTitle": "مراحل المسار",
+    "infoTitle": "معلومات أساسية",
+    "km": "كم",
+    "min": "دقيقة",
+    "stops": "محطات",
+    "premium": "مسار مميز",
+    "starting": "جاري البدء...",
+    "startButton": "ابدأ هذا المسار",
+    "circuitImageAlt": "صورة غلاف المسار",
+    "customCircuit": "مسار مخصص",
+    "customCircuitInfo": "هذا مسارك المخصص"
+  },
+
+  "Circuits": {
+    "loading": "جاري التحميل...",
+    "error": "خطأ في التحميل",
+    "poiVisitedSuccess": "تم تحديد النقطة كزيارة!",
+    "poiVisitedError": "خطأ في التحقق من النقطة.",
+    "circuitComplete": "تهانينا! لقد أكملت هذا المسار!",
+    "nextStep": "التالي",
+    "prevStep": "السابق",
+    "markAsVisited": "وضع علامة كزيارة",
+    "completed": "مكتمل"
+  },
+
+  "CircuitNavigation": {
+    "step": "المرحلة",
+    "prev": "السابق",
+    "next": "التالي",
+    "markAsVisited": "وضع علامة كزيارة",
+    "visited": "تمت الزيارة",
+    "yourLocation": "أنت هنا",
+    "currentPOI": "النقطة الحالية",
+    "completedPOI": "نقطة تمت زيارتها",
+    "loading": "جاري التحميل...",
+    "error": "خطأ في التحميل"
+  },
+
+  "AudioPlayer": {
+    "title": "دليل صوتي",
+    "selectLanguage": "اختر اللغة",
+    "noAudio": "لا يوجد ملف صوتي"
+  },
+  "ShareButtons": {
+    "title": "شارك هذا المكان",
+    "emailBody": "اكتشف هذا المكان:",
+    "shareSuccess": "تم المشاركة بنجاح!",
+    "shareSuccessDesc": "شكراً لمشاركة هذا المحتوى!",
+    "linkCopied": "تم نسخ الرابط!",
+    "linkCopiedDesc": "تم نسخ الرابط إلى الحافظة.",
+    "copyError": "خطأ",
+    "copyErrorDesc": "تعذر نسخ الرابط.",
+    "copied": "تم النسخ!",
+    "copyLink": "نسخ الرابط"
+  },
+  "ReviewForm": {
+    "title": "اترك تقييمًا",
+    "yourRating": "تقييمك",
+    "yourComment": "تعليقك",
+    "commentPlaceholder": "شارك تجربتك...",
+    "submit": "إرسال",
+    "submitting": "جاري الإرسال...",
+    "ratingRequired": "الرجاء اختيار تقييم.",
+    "successTitle": "تم إرسال التقييم!"
+  },
+  "ReviewList": {
+    "title": "التقييمات",
+    "loading": "جاري تحميل التقييمات...",
+    "error": "خطأ في تحميل التقييمات",
+    "noReviews": "لا توجد تقييمات حتى الآن.",
+    "previous": "السابق",
+    "next": "التالي",
+    "page": "صفحة"
+  }
+,
+  "PoisPage": {
+    "title": "???? ????????",
+    "subtitle": "?????? ??????? ??????? ?? ???",
+    "loading": "???? ????? ???? ????????...",
+    "error": "??? ?? ????? ???? ????????. ???? ???????? ??? ????.",
+    "noResults": "?? ??? ?????? ??? ???? ??????."
+  },
+  "CircuitsPage": {
+    "title": "اكتشف مساراتنا",
+    "subtitle": "استكشف فاس من خلال مسارات موضوعية ومخصصة.",
+    "loading": "جاري تحميل المسارات...",
+    "error": "تعذر تحميل المسارات.",
+    "noCircuits": "لم يتم العثور على مسارات في الوقت الحالي.",
+    "createButton": "إنشاء مسار",
+    "allCircuits": "جميع المسارات",
+    "officialCircuits": "المسارات الرسمية",
+    "customCircuits": "مساراتي المخصصة",
+    "noOfficialCircuits": "لا توجد مسارات رسمية متاحة في الوقت الحالي.",
+    "noCustomCircuits": "لا توجد مسارات مخصصة بعد. أنشئ أول مسار لك!"
+  },
+  "CircuitCard": {
+    "km": "كم",
+    "min": "دقيقة",
+    "customCircuit": "مسار مخصص"
+  },
+  "PoiFilters": {
+    "searchPlaceholder": "ابحث عن نقطة اهتمام...",
+    "categoryPlaceholder": "اختر فئة",
+    "cityPlaceholder": "اختر مدينة",
+    "allCategories": "جميع الفئات",
+    "allCities": "جميع المدن",
+    "premiumOnly": "مميز فقط"
+  },
+  "Pois": {
+    "loading": "جارٍ تحميل نقاط الاهتمام...",
+    "error": "خطأ في تحميل نقاط الاهتمام.",
+    "noPois": "لم يتم العثور على نقاط اهتمام."
   }
 }

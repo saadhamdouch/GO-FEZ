@@ -15,6 +15,14 @@ export const userApi = createApi({
       }),
       invalidatesTags: ['Users'],
     }),
+providerRegister: builder.mutation({
+  query: (providerData) => ({
+    url: "/api/auth/provider-register",
+    method: "POST",
+    body: providerData,
+  }),
+  invalidatesTags: ['Users'],
+}),
 
     // Connexion d'un utilisateur par téléphone
     loginUser: builder.mutation({
@@ -25,59 +33,27 @@ export const userApi = createApi({
       }),
     }),
 
-    // OTP - envoyer un code (email ou téléphone)
-    sendOTP: builder.mutation({
-      query: (payload) => ({
-        url: "/api/auth/otp/send",
-        method: "POST",
-        body: payload, // { email? phone? country?, purpose }
+    // Récupérer le profil de l'utilisateur connecté
+    getUserProfile: builder.query({
+      query: () => ({
+        url: "/api/users/profile",
+        method: "GET",
       }),
+      providesTags: ['User'],
+      transformResponse: (response) => {
+        // Handle both response formats: { user: ... } or { data: ... }
+        return response.data || response.user || response;
+      },
     }),
 
-    // OTP - vérifier le code
-    verifyOTP: builder.mutation({
-      query: (payload) => ({
-        url: "/api/auth/otp/verify",
-        method: "POST",
-        body: payload, // { email? phone? country?, otpCode, purpose }
-      }),
-    }),
-
-    // Mettre à jour la vérification de l'utilisateur
-    updateVerificationStatus: builder.mutation({
-      query: (payload) => ({
-        url: "/api/auth/verify",
-        method: "POST",
-        body: payload, // { email? phone? country?, isVerified }
+    // Mettre à jour le profil de l'utilisateur
+    updateUserProfile: builder.mutation({
+      query: (userData) => ({
+        url: "/api/users/profile",
+        method: "PUT",
+        body: userData,
       }),
       invalidatesTags: ['User'],
-    }),
-
-    // Mot de passe oublié - démarrer (envoi OTP)
-    forgotPasswordStart: builder.mutation({
-      query: (payload) => ({
-        url: "/api/auth/forgot/start",
-        method: "POST",
-        body: payload, // { email }
-      }),
-    }),
-
-    // Mot de passe oublié - vérifier OTP
-    forgotPasswordVerify: builder.mutation({
-      query: (payload) => ({
-        url: "/api/auth/forgot/verify",
-        method: "POST",
-        body: payload, // { email, otpCode }
-      }),
-    }),
-
-    // Mot de passe oublié - réinitialiser
-    resetPassword: builder.mutation({
-      query: (payload) => ({
-        url: "/api/auth/forgot/reset",
-        method: "POST",
-        body: payload, // { email, newPassword }
-      }),
     }),
   }),
 });
@@ -87,12 +63,10 @@ export const {
   // Authentification
   useRegisterUserMutation,
   useLoginUserMutation,
-  useSendOTPMutation,
-  useVerifyOTPMutation,
-  useUpdateVerificationStatusMutation,
-  useForgotPasswordStartMutation,
-  useForgotPasswordVerifyMutation,
-  useResetPasswordMutation,
+  useProviderRegisterMutation,
+  // Profil utilisateur
+  useGetUserProfileQuery,
+  useUpdateUserProfileMutation,
 } = userApi;
 
 // Export de l'API pour l'utiliser dans le store

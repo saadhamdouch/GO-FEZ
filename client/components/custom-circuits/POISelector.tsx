@@ -3,12 +3,12 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-	DragDropContext,
-	Droppable,
-	Draggable,
-	DropResult,
-} from 'react-beautiful-dnd';
-import { useGetFilteredPOIsQuery, GetPOIsParams } from '@/services/api/PoiApi';
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from '@hello-pangea/dnd';
+import { useGetAllPOIsQuery } from '@/services/api/PoiApi';
 import { POI } from '@/lib/types';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslations } from 'next-intl';
@@ -103,9 +103,12 @@ const POISelector: React.FC<POISelectorProps> = ({
 	);
 
 	// Récupérer tous les POIs (ou ceux filtrés par la recherche)
-	const filterParams: GetPOIsParams = { search: debouncedSearch || undefined };
-	const { data: poiData, isLoading } = useGetFilteredPOIsQuery(filterParams);
-	const availablePois = poiData?.data?.pois || [];
+	// Use getAllPOIs without pagination to get ALL POIs (no limit)
+	const { data: poiData, isLoading } = useGetAllPOIsQuery({ 
+		search: debouncedSearch || undefined,
+		isActive: true // Only show active POIs
+	});
+	const availablePois = poiData?.pois || [];
 
 	// Initialiser la map des POIs sélectionnés (si initialSelectedPoiIds est fourni)
 	// Cet effet pourrait nécessiter d'ajuster l'API pour récupérer les détails des POIs initiaux

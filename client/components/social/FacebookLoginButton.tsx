@@ -1,17 +1,17 @@
-'use client'
+'use client';
 
-import React from 'react'
+import React from 'react';
 
 interface FacebookLoginButtonProps {
-  onClick?: () => void
-  color?: 'green' | 'blue'
+  onClick?: () => void;
+  color?: 'green' | 'blue';
 }
 
 export default function FacebookLoginButton({ onClick, color = 'blue' }: FacebookLoginButtonProps) {
   const colorClasses =
     color === 'green'
       ? 'border-emerald-200 hover:bg-emerald-50'
-      : 'border-blue-200 hover:bg-blue-50'
+      : 'border-blue-200 hover:bg-blue-50';
 
   return (
     <button
@@ -24,7 +24,5 @@ export default function FacebookLoginButton({ onClick, color = 'blue' }: Faceboo
       </svg>
       <span className="ml-2 text-sm font-medium text-gray-700">Facebook</span>
     </button>
-  )
+  );
 }
-
-

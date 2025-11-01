@@ -426,7 +426,10 @@ export default function FezDiscoveryApp() {
       <div className="py-12 md:py-20 bg-white">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className={`flex items-center justify-between mb-8 md:mb-10 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <h2 className="text-2xl md:text-[40px] font-semibold text-black leading-tight">
+            <h2 
+              onClick={() => router.push('/circuits')}
+              className="text-2xl md:text-[40px] font-semibold text-black leading-tight cursor-pointer hover:text-blue-600 transition-colors"
+            >
               {t('exploreCircuit.title')}
             </h2>
             <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>

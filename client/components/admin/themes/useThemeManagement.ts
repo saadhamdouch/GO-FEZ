@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import {
-  useGetAllThemesQuery,
+  useGetFilteredThemesQuery,
   useCreateThemeMutation,
   useUpdateThemeMutation,
   useDeleteThemeMutation,
   type Theme,
 } from '@/services/api/ThemeApi';
 import { compressImageByType } from '@/utils/imageCompression';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface ThemeFormData {
   localizations: {
@@ -32,12 +33,26 @@ const initialFormData: ThemeFormData = {
 };
 
 export function useThemeManagement() {
-  const { data: themesData, isLoading, error, refetch } = useGetAllThemesQuery();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState({
+    page: 1,
+    limit: 10,
+    search: '',
+    isActive: undefined as boolean | undefined,
+    sortBy: 'newest' as 'newest' | 'oldest' | 'name' | undefined,
+  });
+
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
+  useEffect(() => {
+    setFilters(prev => ({ ...prev, search: debouncedSearch, page: 1 }));
+  }, [debouncedSearch]);
+
+  const { data: themesData, isLoading, error, refetch } = useGetFilteredThemesQuery(filters);
   const [createTheme, { isLoading: isCreating }] = useCreateThemeMutation();
   const [updateTheme, { isLoading: isUpdating }] = useUpdateThemeMutation();
   const [deleteTheme, { isLoading: isDeleting }] = useDeleteThemeMutation();
 
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<ThemeFormData>(initialFormData);
@@ -47,6 +62,7 @@ export function useThemeManagement() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const themes = themesData?.data || [];
+  const pagination = themesData?.pagination;
 
   const parseLoc = (loc: any): { name: string; desc: string } => {
     if (typeof loc === 'string') {
@@ -152,17 +168,15 @@ export function useThemeManagement() {
     setIsModalOpen(true);
   };
 
-  const filteredThemes = themes.filter((theme: Theme) => {
-    const frLoc = parseLoc(theme.fr);
-    return frLoc.name?.toLowerCase().includes(searchTerm.toLowerCase());
-  });
-
   return {
-    themes: filteredThemes,
+    themes,
+    pagination,
     isLoading,
     error,
     searchTerm,
     setSearchTerm,
+    filters,
+    setFilters,
     selectedTheme,
     isModalOpen,
     setIsModalOpen,
