@@ -32,18 +32,6 @@ if (isDevelopment) {
   }
 }
 
-// Crée le middleware logger uniquement en dev, sans import statique
-let loggerMiddleware: any | null = null;
-if (isDevelopment) {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { createLogger } = require('redux-logger');
-    loggerMiddleware = createLogger();
-  } catch {
-    loggerMiddleware = null;
-  }
-}
-
 // Create a middleware array
 const middleware = [
   userApi.middleware,
@@ -61,9 +49,9 @@ const middleware = [
   partnerApi.middleware,
 ];
 
-// 6. Conditionally add the logger
-if (isDevelopment) {
-  middleware.push(logger as any);
+// 6. Ajouter le logger en dev s'il est disponible
+if (isDevelopment && loggerMiddleware) {
+  middleware.push(loggerMiddleware as any);
 }
 
 const configurestore = configureStore({
