@@ -56,10 +56,12 @@ export default function Themes({ locale, isRTL }: ThemesProps) {
             isRTL ? "flex-row-reverse" : ""
           }`}
         >
-          <h2 className="text-2xl md:text-[40px] font-semibold text-black leading-tight">
+          <h2 
+            onClick={() => router.push('/themes')}
+            className="text-2xl md:text-[40px] font-semibold text-black leading-tight cursor-pointer hover:text-blue-600 transition-colors"
+          >
             {t("exploreTheme.title")}
           </h2>
-
           <div className={`flex gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
             <button
               onClick={() => handleScroll("left")}
