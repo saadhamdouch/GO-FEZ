@@ -7,10 +7,8 @@ const {
   findOnePOI,
   updatePOI,
   deletePOI,
-  getPOIsForParcoursLibre,
-  getTravelTime,
-  getPOIsByCity,
-  searchPOIs
+    getPOIsForParcoursLibre,
+    getTravelTime
 } = require('../controllers/POIController.js');
 const { 
     uploadImage, 
@@ -149,8 +147,6 @@ POIRouter.post('/upload/virtual-tour', uploadVirtualTour.single('virtualTour'), 
 
 POIRouter.get('/parcours-libre', getPOIsForParcoursLibre);
 POIRouter.get('/travel-time', getTravelTime);
-POIRouter.get('/by-city/:cityId', getPOIsByCity);
-POIRouter.post('/search', searchPOIs);
 // Routes principales des POI
 POIRouter.get('/', findAllPOIs);
 

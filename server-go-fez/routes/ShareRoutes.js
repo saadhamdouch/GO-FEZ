@@ -5,7 +5,7 @@ const router = express.Router();
 const shareController = require('../controllers/ShareController');
 
 // Importer le middleware d'authentification
-const { authenticate } = require('../middleware/authEnhanced');
+const { authenticateToken } = require('../middleware/authEnhanced');
 
 /**
  * @route   POST /api/shares/register
@@ -15,6 +15,7 @@ const { authenticate } = require('../middleware/authEnhanced');
  */
 router.post(
 	'/register',
+	authenticateToken,
 	shareController.registerShare
 );
 

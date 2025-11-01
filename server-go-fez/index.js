@@ -9,7 +9,7 @@ dotenv.config();
 
 const db = require("./Config/db.js"); // Importer l'instance Singleton de la base de données
 const models = require("./models/index.js");
-
+const  CustomCircuitRouter  = require("./routes/CustomCircuitRoutes.js"); // Importer les routes utilisateur
 const { UserRouter } = require("./routes/UserRoute.js"); // Importer les routes utilisateur
 const CityRoute = require("./routes/CityRoute.js");
 const ThemeRoute = require("./routes/ThemeRoute.js");
@@ -20,6 +20,8 @@ const { ConfigRouter } = require("./routes/ConfigRoute.js");
 const { GamificationRouter } = require("./routes/gamificationRouter.js");
 const pointsTransactionRoutes = require('./routes/pointsTransactionRoutes.js');
 const circuitProgressRoutes = require('./routes/CircuitProgressRoutes');
+const ReviewRouter = require('./routes/ReviewRoutes.js');
+const ShareRouter = require('./routes/ShareRoutes.js');
 
 const app = express();
 const { header } = require("express-validator");
@@ -81,14 +83,17 @@ app.use('/api/themes/', ThemeRoute);
 app.use('/api/circuits',jsonMiddleware, CircuitRoutes);
 app.use('/api/city', CityRoute);
 app.use('/api/pois',jsonMiddleware, POIRouter);
-app.use('/progress', circuitProgressRoutes);
+app.use('/progress', jsonMiddleware, circuitProgressRoutes);
 // Routes sans files
-app.use('/api/users', jsonMiddleware, UserRouter);
+app.use('/api/auth', jsonMiddleware, UserRouter);
+app.use('/api/users', jsonMiddleware, UserRouter); // Add users route for profile endpoints
 app.use('/api/categorys', jsonMiddleware, categoryRoutes);
 app.use('/api/config', jsonMiddleware, ConfigRouter);
 app.use('/api/gamification', jsonMiddleware, GamificationRouter);
 app.use('/api/pointsTransaction', jsonMiddleware, pointsTransactionRoutes);
-
+app.use('/api/custom-circuits', jsonMiddleware, CustomCircuitRouter);
+app.use('/api/reviews', jsonMiddleware, ReviewRouter);
+app.use('/api/shares', jsonMiddleware, ShareRouter);
 // Middleware de gestion d'erreurs global
 app.use((err, req, res, next) => {
     console.error('❌ Erreur:', err.message);
