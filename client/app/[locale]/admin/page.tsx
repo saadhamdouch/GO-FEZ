@@ -60,6 +60,16 @@ export default async function AdminHomePage({
             Manage POI categories and organization.
           </p>
         </Link>
+
+        <Link
+          href={`/${locale}/admin/ia-models`}
+          className="block bg-gradient-to-br from-purple-500 to-indigo-600 shadow-sm hover:shadow-md rounded-2xl p-6 border border-purple-200 hover:border-purple-300 transition-all"
+        >
+          <h2 className="text-xl font-semibold text-white">IA Models</h2>
+          <p className="text-purple-100 mt-2 text-sm">
+            Configure AI providers for translations.
+          </p>
+        </Link>
       </div>
     </section>
   );

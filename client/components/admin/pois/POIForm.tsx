@@ -10,6 +10,7 @@ import MapSelector from './MapSelector';
 import { ImageIcon, Video, Map as Map360, Music, Info, MapPin, Plus, ChevronRight, ChevronLeft, Trash2, X } from 'lucide-react';
 import { POIFile as ApiPOIFile, POI } from '@/services/api/PoiApi'; // ✅ Import POI types
 import { toast } from 'sonner'; // ✅ Import toast
+import { IaNameTraduction } from '../shared/IaNameTraduction';
 
 interface POIFormProps {
   formData: any;
@@ -452,6 +453,17 @@ export function POIForm({
           </FormField>
         </div>
       </div>
+
+      {/* AI Translation Component */}
+      <IaNameTraduction
+        localizations={{
+          fr: formData.frLocalization,
+          ar: formData.arLocalization,
+          en: formData.enLocalization,
+        }}
+        onChange={handleLocalizationChange}
+        fieldName="name"
+      />
 
       {/* Localized Inputs */}
       <LocalizedInputs

@@ -16,6 +16,7 @@ const  {User}  = require("./User");
 const  {UserSpace}  = require("./UserSpace");
 const { TransportMode } = require("./TransportMode");
 const { Share } = require("./Share");
+const { IAModel } = require("./IAModel");
 const db = require('../Config/db');
 
 const sequelize = db.getSequelize();
@@ -40,6 +41,7 @@ const models = {
 	UserSpace,
 	TransportMode,
 	Share,
+	IAModel,
 	sequelize // Ajouter sequelize pour les transactions
 };
 

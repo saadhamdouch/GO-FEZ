@@ -22,6 +22,7 @@ const pointsTransactionRoutes = require('./routes/pointsTransactionRoutes.js');
 const circuitProgressRoutes = require('./routes/CircuitProgressRoutes');
 const ReviewRouter = require('./routes/ReviewRoutes.js');
 const ShareRouter = require('./routes/ShareRoutes.js');
+const IAModelRoutes = require('./routes/IAModelRoutes.js');
 
 const app = express();
 const { header } = require("express-validator");
@@ -94,6 +95,7 @@ app.use('/api/pointsTransaction', jsonMiddleware, pointsTransactionRoutes);
 app.use('/api/custom-circuits', jsonMiddleware, CustomCircuitRouter);
 app.use('/api/reviews', jsonMiddleware, ReviewRouter);
 app.use('/api/shares', jsonMiddleware, ShareRouter);
+app.use('/api/ia-models', jsonMiddleware, IAModelRoutes);
 // Middleware de gestion d'erreurs global
 app.use((err, req, res, next) => {
     console.error('❌ Erreur:', err.message);
