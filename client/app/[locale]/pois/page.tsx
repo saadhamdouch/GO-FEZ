@@ -1,7 +1,7 @@
 // client/app/[locale]/pois/page.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, use } from 'react';
 import { useTranslations } from 'next-intl';
 import { useGetFilteredPOIsQuery, GetPOIsParams } from '@/services/api/PoiApi';
 
@@ -17,12 +17,13 @@ import { EmptyState } from '@/components/admin/shared/EmptyState';
 
 // Interface pour les paramètres de la page
 interface PoisPageProps {
-	params: {
+	params: Promise<{
 		locale: string;
-	};
+	}>;
 }
 
-export default function PoisPage({ params: { locale } }: PoisPageProps) {
+export default function PoisPage({ params }: PoisPageProps) {
+	const { locale } = use(params);
 	const t = useTranslations('PoisPage');
 
 	// État pour les filtres, incluant la page
@@ -51,16 +52,16 @@ export default function PoisPage({ params: { locale } }: PoisPageProps) {
 	// Gérer l'affichage du contenu
 	const renderContent = () => {
 		if (isLoading) {
-			return <LoadingState text={t('loading')} />;
+			return <LoadingState message={t('loading')} />;
 		}
 
 		if (isError) {
 			console.error('Erreur de chargement des POIs:', error);
-			return <ErrorState message={t('error')} onRetry={() => {}} />; // Idéalement, relancer la requête
+			return <ErrorState error={t('error')} onRetry={() => {}} />; // Idéalement, relancer la requête
 		}
 
 		if (!data || data.data.pois.length === 0) {
-			return <EmptyState message={t('noResults')} />;
+			return <EmptyState title={t('noPois')} />;
 		}
 
 		return (

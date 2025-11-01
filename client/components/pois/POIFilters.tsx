@@ -42,17 +42,18 @@ const POIFilters: React.FC<POIFiltersProps> = ({
 
 	// Récupérer les catégories et les villes pour les dropdowns
 	const { data: categoriesData } = useGetAllCategoriesQuery();
-	const { data: citiesData }_ = useGetAllCitiesQuery();
+	const { data: citiesData } = useGetAllCitiesQuery();
 
 	// Quand un filtre change, appeler la fonction parente
 	useEffect(() => {
 		onFilterChange({
 			search: debouncedSearch || undefined,
-			categoryId: categoryId,
+			category: categoryId,
 			cityId: cityId,
 			isPremium: isPremium,
 		});
-	}, [debouncedSearch, categoryId, cityId, isPremium, onFilterChange]);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [debouncedSearch, categoryId, cityId, isPremium]);
 
 	return (
 		<div className="grid grid-cols-1 gap-4 rounded-lg border bg-white p-4 shadow-sm md:grid-cols-4">
@@ -77,9 +78,9 @@ const POIFilters: React.FC<POIFiltersProps> = ({
 					</SelectTrigger>
 					<SelectContent>
 						<SelectItem value="all">{t('allCategories')}</SelectItem>
-						{categoriesData?.map((category) => (
+						{categoriesData?.data?.map((category) => (
 							<SelectItem key={category.id} value={category.id}>
-								{category[locale as 'fr' | 'en' | 'ar'] || category.fr}
+								{(category as any)[locale as 'fr' | 'en' | 'ar']?.name || (category as any).fr?.name || category.name}
 							</SelectItem>
 						))}
 					</SelectContent>

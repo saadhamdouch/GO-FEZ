@@ -181,7 +181,15 @@
   },
   "ShareButtons": {
     "title": "شارك هذا المكان",
-    "emailBody": "اكتشف هذا المكان:"
+    "emailBody": "اكتشف هذا المكان:",
+    "shareSuccess": "تم المشاركة بنجاح!",
+    "shareSuccessDesc": "شكراً لمشاركة هذا المحتوى!",
+    "linkCopied": "تم نسخ الرابط!",
+    "linkCopiedDesc": "تم نسخ الرابط إلى الحافظة.",
+    "copyError": "خطأ",
+    "copyErrorDesc": "تعذر نسخ الرابط.",
+    "copied": "تم النسخ!",
+    "copyLink": "نسخ الرابط"
   },
   "ReviewForm": {
     "title": "اترك تقييمًا",
@@ -196,7 +204,11 @@
   "ReviewList": {
     "title": "التقييمات",
     "loading": "جاري تحميل التقييمات...",
-    "noReviews": "لا توجد تقييمات حتى الآن."
+    "error": "خطأ في تحميل التقييمات",
+    "noReviews": "لا توجد تقييمات حتى الآن.",
+    "previous": "السابق",
+    "next": "التالي",
+    "page": "صفحة"
   }
 ,
   "PoisPage": {
@@ -223,5 +235,18 @@
     "km": "كم",
     "min": "دقيقة",
     "customCircuit": "مسار مخصص"
+  },
+  "PoiFilters": {
+    "searchPlaceholder": "ابحث عن نقطة اهتمام...",
+    "categoryPlaceholder": "اختر فئة",
+    "cityPlaceholder": "اختر مدينة",
+    "allCategories": "جميع الفئات",
+    "allCities": "جميع المدن",
+    "premiumOnly": "مميز فقط"
+  },
+  "Pois": {
+    "loading": "جارٍ تحميل نقاط الاهتمام...",
+    "error": "خطأ في تحميل نقاط الاهتمام.",
+    "noPois": "لم يتم العثور على نقاط اهتمام."
   }
 }

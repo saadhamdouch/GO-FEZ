@@ -263,7 +263,15 @@
   },
   "ShareButtons": {
     "title": "Partager ce lieu",
-    "emailBody": "Découvrez ce lieu :"
+    "emailBody": "Découvrez ce lieu :",
+    "shareSuccess": "Partagé avec succès!",
+    "shareSuccessDesc": "Merci de partager ce contenu!",
+    "linkCopied": "Lien copié!",
+    "linkCopiedDesc": "Le lien a été copié dans le presse-papiers.",
+    "copyError": "Erreur",
+    "copyErrorDesc": "Impossible de copier le lien.",
+    "copied": "Copié!",
+    "copyLink": "Copier le lien"
   },
   "ReviewForm": {
     "title": "Laissez un avis",
@@ -273,12 +281,17 @@
     "submit": "Envoyer",
     "submitting": "Envoi...",
     "ratingRequired": "Veuillez sélectionner une note.",
-    "successTitle": "Avis envoyé !"
+    "successTitle": "Avis envoyé !",
+    "errorSubmit": "Erreur lors de la soumission de l'avis"
   },
   "ReviewList": {
     "title": "Avis",
     "loading": "Chargement des avis...",
-    "noReviews": "Aucun avis pour le moment."
+    "error": "Erreur lors du chargement des avis",
+    "noReviews": "Aucun avis pour le moment.",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "page": "Page"
   },
   "CircuitsPage": {
     "title": "Découvrez nos Circuits",
@@ -319,6 +332,31 @@
     "createError": "Échec de la création du circuit.",
     "errorNameRequired": "Le nom du circuit est obligatoire.",
     "errorMinPois": "Vous devez sélectionner au moins 2 POIs."
+  },
+
+  "ThemesPage": {
+    "title": "Explorer Fès par thème",
+    "subtitle": "Découvrez les trésors de Fès organisés par thèmes",
+    "loading": "Chargement des thèmes...",
+    "error": "Erreur lors du chargement des thèmes.",
+    "noThemes": "Aucun thème disponible."
+  },
+
+  "PoisPage": {
+    "title": "Points d'Intérêt",
+    "subtitle": "Découvrez les trésors de Fès",
+    "loading": "Chargement des POIs...",
+    "error": "Erreur lors du chargement des POIs.",
+    "noPois": "Aucun POI trouvé."
+  },
+
+  "PoiFilters": {
+    "searchPlaceholder": "Rechercher un POI...",
+    "categoryPlaceholder": "Sélectionner une catégorie",
+    "cityPlaceholder": "Sélectionner une ville",
+    "allCategories": "Toutes les catégories",
+    "allCities": "Toutes les villes",
+    "premiumOnly": "Premium seulement"
   }
 
 }

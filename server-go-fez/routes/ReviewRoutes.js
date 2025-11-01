@@ -3,10 +3,25 @@
 const express = require('express');
 const router = express.Router();
 const reviewController = require('../controllers/ReviewController');
+const multer = require('multer');
 
-// Importer le middleware d'authentification et l'upload
-// J'assume que 'authenticate' est votre middleware JWT et 'upload' est multer
-const { authenticate, upload } = require('../middleware/authEnhanced');
+// Importer le middleware d'authentification
+const { authenticateToken } = require('../middleware/authEnhanced');
+
+// Configuration multer pour l'upload des photos en mémoire
+const upload = multer({
+	storage: multer.memoryStorage(),
+	limits: {
+		fileSize: 5 * 1024 * 1024, // Limite à 5MB par fichier
+	},
+	fileFilter: (req, file, cb) => {
+		if (file.mimetype.startsWith('image/')) {
+			cb(null, true);
+		} else {
+			cb(new Error('Seules les images sont autorisées!'), false);
+		}
+	},
+});
 
 /**
  * @route   POST /api/reviews
@@ -17,7 +32,7 @@ const { authenticate, upload } = require('../middleware/authEnhanced');
  */
 router.post(
 	'/',
-	authenticate, // Protège la route
+	authenticateToken, // Protège la route
 	upload.array('photos', 5), // Gère l'upload de max 5 photos
 	reviewController.createReview
 );
@@ -39,7 +54,7 @@ router.get('/poi/:poiId', reviewController.getReviewsForPOI);
  */
 router.delete(
 	'/:reviewId',
-	authenticate, // Protège la route
+	authenticateToken, // Protège la route
 	reviewController.deleteReview
 );
 

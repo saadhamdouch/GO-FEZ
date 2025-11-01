@@ -15,6 +15,7 @@ const  PointsTransaction  = require("./PointsTransaction");
 const  {User}  = require("./User");
 const  {UserSpace}  = require("./UserSpace");
 const { TransportMode } = require("./TransportMode");
+const { Share } = require("./Share");
 const db = require('../Config/db');
 
 const sequelize = db.getSequelize();
@@ -38,6 +39,7 @@ const models = {
 	User,
 	UserSpace,
 	TransportMode,
+	Share,
 	sequelize // Ajouter sequelize pour les transactions
 };
 
@@ -224,6 +226,21 @@ POI.hasMany(Review, {
 	onDelete: 'CASCADE',
 	onUpdate: 'CASCADE'
 });
+
+// Review ↔ User associations
+Review.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+User.hasMany(Review, {
+    foreignKey: 'userId',
+    as: 'reviews',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
 POI.belongsTo(User, {
     foreignKey: 'ownerId',
     as: 'ownerInfo',
@@ -246,5 +263,19 @@ User.hasMany(CircuitProgress, { foreignKey: 'userId', as: 'circuitProgress', onD
 // CustomCircuit Associations
 CustomCircuit.belongsTo(User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 User.hasMany(CustomCircuit, { foreignKey: 'userId', as: 'customCircuits', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+
+// Share ↔ User associations
+Share.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+User.hasMany(Share, {
+    foreignKey: 'userId',
+    as: 'shares',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
 
 module.exports = models;

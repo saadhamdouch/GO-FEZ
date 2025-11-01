@@ -78,8 +78,8 @@ exports.createReview = async (req, res) => {
 
 		// Gérer l'upload des photos
 		let photoUrls = [];
-		if (req.files && req.files.photos) {
-			for (const file of req.files.photos) {
+		if (req.files && req.files.length > 0) {
+			for (const file of req.files) {
 				try {
 					const result = await uploadFromBuffer(
 						file.buffer,
@@ -149,7 +149,7 @@ exports.getReviewsForPOI = async (req, res) => {
 					attributes: ['firstName', 'lastName', 'profileImage'], // Ne pas inclure le mot de passe
 				},
 			],
-			order: [['createdAt', 'DESC']],
+			order: [['created_at', 'DESC']],
 			limit: parseInt(limit, 10),
 			offset: parseInt(offset, 10),
 		});

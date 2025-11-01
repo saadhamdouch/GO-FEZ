@@ -51,6 +51,11 @@ const POIDetailView: React.FC<POIDetailViewProps> = ({ poi, locale }) => {
 	const arAudio = poi.arLocalization?.audioFiles?.[0];
 	const enAudio = poi.enLocalization?.audioFiles?.[0];
 
+	// Generate share URL
+	const shareUrl = typeof window !== 'undefined' 
+		? `${window.location.origin}/${locale}/pois/${poi.id}`
+		: `https://gofez.com/${locale}/pois/${poi.id}`; // Fallback URL
+
 	return (
 		<>
 			<div className="container mx-auto max-w-7xl px-4 py-8">
@@ -104,6 +109,7 @@ const POIDetailView: React.FC<POIDetailViewProps> = ({ poi, locale }) => {
 							</Button>
 							{/* --- BOUTON AJOUTÉ --- */}
 							<ShareButtons
+								shareUrl={shareUrl}
 								resourceType="poi"
 								resourceId={poi.id}
 								title={name}

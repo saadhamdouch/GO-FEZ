@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import {
-  useGetAllPOIsQuery,
+  useGetFilteredPOIsQuery,
   useCreatePOIWithFilesMutation,
   useUpdatePOIMutation,
   useDeletePOIMutation,
   type POI,
+  type GetPOIsParams,
 } from '@/services/api/PoiApi';
 import { useGetAllCategoriesQuery } from '@/services/api/CategoryApi';
 import { useGetAllCitiesQuery } from '@/services/api/CityApi';
@@ -66,7 +67,13 @@ const initialFormData: POIFormData = {
 };
 
 export function usePOIManagement() {
-  const { data: poisData, isLoading, error, refetch } = useGetAllPOIsQuery();
+  // State for filters and pagination
+  const [filters, setFilters] = useState<GetPOIsParams>({
+    page: 1,
+    limit: 100, // Show more items in admin
+  });
+
+  const { data: poisData, isLoading, error, refetch } = useGetFilteredPOIsQuery(filters);
   const { data: categoriesData } = useGetAllCategoriesQuery();
   const { data: citiesData } = useGetAllCitiesQuery();
 
@@ -80,7 +87,7 @@ export function usePOIManagement() {
   const [formData, setFormData] = useState<POIFormData>(initialFormData);
   const [files, setFiles] = useState<Record<string, File[]>>({});
 
-  const pois = poisData?.pois || [];
+  const pois = poisData?.data?.pois || [];
   const categories = categoriesData?.data || [];
   const cities = citiesData?.data || [];
 
@@ -336,12 +343,25 @@ if (formData.audioToRemove) {
     const virtualTourFile = poi.files?.find((f: any) => f.type === 'virtualtour');
     const virtualTourUrl = virtualTourFile?.fileUrl || '';
 
+    // Handle both coordinate formats
+    let latitude: string, longitude: string, address: string;
+    if ('latitude' in poi.coordinates) {
+      latitude = String(poi.coordinates.latitude);
+      longitude = String(poi.coordinates.longitude);
+      address = poi.coordinates.address || '';
+    } else {
+      // GeoJSON format
+      longitude = String(poi.coordinates.coordinates[0]);
+      latitude = String(poi.coordinates.coordinates[1]);
+      address = '';
+    }
+
     setFormData({
       category: poi.category,
       cityId: poi.cityId,
-      latitude: String(poi.coordinates.latitude),
-      longitude: String(poi.coordinates.longitude),
-      address: poi.coordinates.address || '',
+      latitude,
+      longitude,
+      address,
       practicalInfo: JSON.stringify(poi.practicalInfo || {}, null, 2),
       virtualTourUrl,
       isActive: poi.isActive,
@@ -358,29 +378,24 @@ if (formData.audioToRemove) {
     setIsModalOpen(true);
   };
 
-  // Filtrer les POIs par terme de recherche
-  const filteredPOIs = pois.filter((poi: POI) => {
-    const searchLower = searchTerm.toLowerCase();
-    const categoryName = getCategoryName(poi.category) || '';
-    const cityName = getCityName(poi.cityId) || '';
-
-    return (
-      poi.frLocalization?.name?.toLowerCase().includes(searchLower) ||
-      poi.arLocalization?.name?.toLowerCase().includes(searchLower) ||
-      poi.enLocalization?.name?.toLowerCase().includes(searchLower) ||
-      categoryName.toLowerCase().includes(searchLower) ||
-      cityName.toLowerCase().includes(searchLower)
-    );
-  });
+  // Filtrer les POIs par terme de recherche (now using backend search)
+  const handleSearchChange = (newSearchTerm: string) => {
+    setSearchTerm(newSearchTerm);
+    setFilters((prev) => ({
+      ...prev,
+      search: newSearchTerm || undefined,
+      page: 1, // Reset to first page when searching
+    }));
+  };
 
   return {
-    pois: filteredPOIs,
+    pois: pois, // Already filtered by backend
     categories,
     cities,
     isLoading,
     error,
     searchTerm,
-    setSearchTerm,
+    setSearchTerm: handleSearchChange,
     selectedPOI,
     isModalOpen,
     setIsModalOpen,
@@ -399,5 +414,14 @@ if (formData.audioToRemove) {
     refetch,
     getCategoryName,
     getCityName,
+    // Pagination data
+    totalPages: poisData?.data?.totalPages || 1,
+    currentPage: poisData?.data?.currentPage || 1,
+    totalCount: poisData?.data?.totalCount || 0,
+    hasNextPage: poisData?.data?.hasNextPage || false,
+    hasPreviousPage: poisData?.data?.hasPreviousPage || false,
+    // Filter functions
+    setFilters,
+    filters,
   };
 }

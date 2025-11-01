@@ -195,9 +195,17 @@ export interface Review {
   rating: number;
   comment?: string;
   photos?: string[];
+  author?: string; // User name from backend
   createdAt?: string;
+  created_at?: string; // Snake case from DB
   updatedAt?: string;
-  user?: User;
+  updated_at?: string; // Snake case from DB
+  user?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    profileImage?: string;
+  };
 }
 
 // Share Types

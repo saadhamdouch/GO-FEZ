@@ -181,7 +181,15 @@
   },
   "ShareButtons": {
     "title": "Share this place",
-    "emailBody": "Check out this place:"
+    "emailBody": "Check out this place:",
+    "shareSuccess": "Shared successfully!",
+    "shareSuccessDesc": "Thank you for sharing this content!",
+    "linkCopied": "Link copied!",
+    "linkCopiedDesc": "The link has been copied to your clipboard.",
+    "copyError": "Error",
+    "copyErrorDesc": "Unable to copy link.",
+    "copied": "Copied!",
+    "copyLink": "Copy link"
   },
   "ReviewForm": {
     "title": "Leave a Review",
@@ -196,7 +204,11 @@
   "ReviewList": {
     "title": "Reviews",
     "loading": "Loading reviews...",
-    "noReviews": "No reviews yet."
+    "error": "Error loading reviews",
+    "noReviews": "No reviews yet.",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page"
   },
   "GamificationProfile": {
     "points": "Points",
@@ -227,6 +239,19 @@
     "km": "km",
     "min": "min",
     "customCircuit": "Custom Circuit"
+  },
+  "PoiFilters": {
+    "searchPlaceholder": "Search for a POI...",
+    "categoryPlaceholder": "Select a category",
+    "cityPlaceholder": "Select a city",
+    "allCategories": "All categories",
+    "allCities": "All cities",
+    "premiumOnly": "Premium only"
+  },
+  "Pois": {
+    "loading": "Loading POIs...",
+    "error": "Error loading POIs.",
+    "noPois": "No POIs found."
   }
 
 }

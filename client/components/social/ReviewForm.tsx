@@ -2,39 +2,44 @@
 
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useCreateReviewMutation } from "@/services/api/ReviewApi";
+import { toast } from "sonner";
 
 interface ReviewFormProps {
   poiId: string;
-  onSubmitSuccess: () => void; // Callback to refetch reviews
+  onSubmitSuccess?: () => void; // Callback to refetch reviews (now optional)
 }
 
 const ReviewForm = ({ poiId, onSubmitSuccess }: ReviewFormProps) => {
   const t = useTranslations("ReviewForm");
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  
+  const [createReview, { isLoading }] = useCreateReviewMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (rating === 0) {
-      alert(t("ratingRequired")); // Simple alert
+      toast.error(t("ratingRequired"));
       return;
     }
     
-    setIsLoading(true);
-
-    // --- TODO: Replace with your actual API call ---
-    // Simulating an API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log("Submitting review:", { poiId, rating, comment });
-    // --- End of TODO ---
-
-    setIsLoading(false);
-    
-    alert(t("successTitle")); // Simple alert
-    setRating(0);
-    setComment("");
-    onSubmitSuccess(); // Trigger refetch
+    try {
+      const result = await createReview({
+        poiId,
+        rating,
+        comment: comment.trim() || undefined,
+      }).unwrap();
+      
+      toast.success(t("successTitle"));
+      setRating(0);
+      setComment("");
+      onSubmitSuccess?.(); // Trigger refetch (optional)
+    } catch (error: any) {
+      console.error("Error submitting review:", error);
+      const errorMessage = error?.data?.message || error?.message || t("errorSubmit") || "Erreur lors de la soumission de l'avis";
+      toast.error(errorMessage);
+    }
   };
 
   return (
