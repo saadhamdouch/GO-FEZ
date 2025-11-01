@@ -8,6 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 
+const otpStore = new Map();
 const generateTokens = (user) => {
 	console.log('🔑 Génération des tokens JWT', {
 		userId: user.id,
@@ -239,25 +240,12 @@ const loginUser = async (req, res) => {
 // Méthode pour obtenir le profil utilisateur
 const getUserProfile = async (req, res) => {
 	try {
-		// Récupérer le token depuis les headers
-		const authHeader = req.headers.authorization;
-		if (!authHeader || !authHeader.startsWith("Bearer ")) {
-			return res.status(401).json({
-				success: false,
-				message: "Token d'authentification requis",
-			});
-		}
-
-		const token = authHeader.substring(7);
-
-		// Vérifier le token
-		const decoded = jwt.verify(
-			token,
-			process.env.JWT_SECRET || "your-secret-key"
-		);
+		// The authenticateToken middleware has already verified the token
+		// and added req.user with userId
+		const userId = req.user.userId;
 
 		// Récupérer l'utilisateur
-		const user = await User.findByPk(decoded.userId, {
+		const user = await User.findByPk(userId, {
 			attributes: { exclude: ["password"] },
 		});
 
@@ -270,16 +258,9 @@ const getUserProfile = async (req, res) => {
 
 		res.status(200).json({
 			success: true,
-			user,
+			data: user, // Changed from 'user' to 'data' for consistency with other APIs
 		});
 	} catch (error) {
-		if (error.name === "JsonWebTokenError") {
-			return res.status(401).json({
-				success: false,
-				message: "Token invalide",
-			});
-		}
-
 		console.error("Erreur lors de la récupération du profil:", error);
 		res.status(500).json({
 			success: false,
@@ -388,6 +369,48 @@ const findOneUser = async (req, res) => {
 			message: "Erreur interne du serveur",
 		});
 	}
+};
+const sendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email requis' });
+
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    otpStore.set(email, otp);
+
+    console.log(`OTP for ${email}: ${otp}`); // For dev only
+
+    return res.status(200).json({
+      success: true,
+      message: 'OTP envoyé avec succès',
+    });
+  } catch (err) {
+    console.error('Error sending OTP:', err);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+};
+const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp)
+      return res.status(400).json({ message: 'Email et OTP requis' });
+
+    const storedOtp = otpStore.get(email);
+    if (!storedOtp)
+      return res.status(400).json({ message: 'Aucun OTP trouvé pour cet email' });
+
+    if (parseInt(otp) !== storedOtp)
+      return res.status(400).json({ message: 'OTP invalide' });
+
+    // Remove OTP after successful verification
+    otpStore.delete(email);
+
+    return res.status(200).json({ success: true, message: 'OTP vérifié avec succès' });
+  } catch (err) {
+    console.error('Error verifying OTP:', err);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
 };
 const registerWithProvider = async (req, res) => {
   try {
@@ -517,6 +540,8 @@ const updatePassword = async (req, res) => {
 
 module.exports = {
 	registerWithProvider,
+	verifyOtp,
+	sendOtp,
 	handleValidationErrors,
 	registerUser,
 	loginUser,

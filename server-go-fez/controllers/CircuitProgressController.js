@@ -6,15 +6,16 @@ const {
 	CircuitPOI,
 	sequelize,
 } = require('../models');
+const { CustomCircuit } = require('../models/CustomCircuit');
 const { awardPoints } = require('../services/GamificationService');
 
 /**
  * Démarrer un circuit pour un utilisateur
- * @body circuitId
+ * @body circuitId, circuitType (optional, defaults to "REGULAR")
  * @user userId
  */
 exports.startCircuit = async (req, res) => {
-	const { circuitId } = req.body;
+	const { circuitId, circuitType = 'REGULAR' } = req.body;
 	const userId = req.user.userId; // Supposé provenir de l'auth middleware
 
 	if (!circuitId) {
@@ -23,10 +24,18 @@ exports.startCircuit = async (req, res) => {
 			.json({ success: false, message: 'circuitId est requis.' });
 	}
 
+	// Validate circuitType
+	if (!['REGULAR', 'CUSTOM'].includes(circuitType)) {
+		return res.status(400).json({
+			success: false,
+			message: 'circuitType doit être "REGULAR" ou "CUSTOM".',
+		});
+	}
+
 	try {
 		// Vérifier si une progression existe déjà
 		let progress = await CircuitProgress.findOne({
-			where: { userId, circuitId },
+			where: { userId, circuitId, circuitType },
 		});
 
 		if (progress) {
@@ -42,6 +51,7 @@ exports.startCircuit = async (req, res) => {
 		const newProgress = await CircuitProgress.create({
 			userId,
 			circuitId,
+			circuitType,
 			status: 'STARTED',
 			currentPOIIndex: 0,
 			completedPOIs: [],
@@ -108,10 +118,24 @@ exports.updateCircuitProgress = async (req, res) => {
 
 		// 3. Vérifier si le circuit est terminé
 		// (On récupère le nombre total de POIs pour ce circuit)
-		const totalPOIs = await CircuitPOI.count({
-			where: { circuitId: circuitId },
-			transaction: t,
-		});
+		let totalPOIs = 0;
+		
+		if (progress.circuitType === 'CUSTOM') {
+			// For custom circuits, get POI count from selectedPOIs
+			const customCircuit = await CustomCircuit.findByPk(circuitId, { transaction: t });
+			if (customCircuit) {
+				const poiIds = Array.isArray(customCircuit.selectedPOIs) 
+					? customCircuit.selectedPOIs 
+					: JSON.parse(customCircuit.selectedPOIs || '[]');
+				totalPOIs = poiIds.length;
+			}
+		} else {
+			// For regular circuits, count from CircuitPOI
+			totalPOIs = await CircuitPOI.count({
+				where: { circuitId: circuitId },
+				transaction: t,
+			});
+		}
 
 		let newStatus = 'IN_PROGRESS';
 		let completedAt = null;
@@ -127,10 +151,13 @@ exports.updateCircuitProgress = async (req, res) => {
 			// Appeler le service de gamification (ne bloque pas la transaction)
 			// Nous n'utilisons pas 'await' pour ne pas bloquer la réponse utilisateur
 			awardPoints(userId, 'COMPLETE_CIRCUIT', t);
-			// Si le circuit est premium, on peut aussi attribuer des points pour cela
-			const circuitInfo = await Circuit.findByPk(circuitId, { transaction: t });
-			if (circuitInfo && circuitInfo.isPremium) {
-				awardPoints(userId, 'COMPLETE_PREMIUM_CIRCUIT', t);
+			
+			// Only award premium points for regular circuits
+			if (progress.circuitType === 'REGULAR') {
+				const circuitInfo = await Circuit.findByPk(circuitId, { transaction: t });
+				if (circuitInfo && circuitInfo.isPremium) {
+					awardPoints(userId, 'COMPLETE_PREMIUM_CIRCUIT', t);
+				}
 			}
 		}
 
@@ -175,13 +202,6 @@ exports.getCircuitProgress = async (req, res) => {
 	try {
 		const progress = await CircuitProgress.findOne({
 			where: { userId, circuitId },
-			include: [
-				{
-					model: Circuit,
-					as: 'circuit',
-					attributes: ['id', 'fr', 'image'],
-				},
-			],
 		});
 
 		if (!progress) {
@@ -210,13 +230,6 @@ exports.getAllUserProgress = async (req, res) => {
 	try {
 		const allProgress = await CircuitProgress.findAll({
 			where: { userId },
-			include: [
-				{
-					model: Circuit,
-					as: 'circuit',
-					attributes: ['id', 'fr', 'image', 'distance', 'duration'],
-				},
-			],
 			order: [['updatedAt', 'DESC']],
 		});
 

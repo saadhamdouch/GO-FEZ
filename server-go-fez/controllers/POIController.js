@@ -1,7 +1,7 @@
 const { validationResult } = require('express-validator');
-const { Op,literal } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
+const logger = require('../Config/logger');
 const { POI, POILocalization, POIFile, City, Category, User, UserSpace, TransportMode } = require('../models');
-const sequelize = City.sequelize;
 const EARTH_RADIUS_KM = 6371;
 const { uploadFromBuffer, deleteFile, uploadPoiFile, uploadMultiplePoiFiles } = require('../Config/cloudinary');
 const xss = require('xss');
@@ -55,73 +55,90 @@ const createPOIWithFiles = async (req, res) => {
     let enLocalizationResponse = null;
 
     // Créer la localisation arabe
-    if (arLoc && arLoc.name) {
-      let arabicAudioUrl = null;
-      if (req.files?.ar_audio) {
-        try {
-          const audioResult = await uploadFromBuffer(
-            req.files.ar_audio[0].buffer,
-            'go-fez/audio/arabic',
-            { resource_type: 'video' }
-          );
-          arabicAudioUrl = audioResult.secure_url;
-        } catch (error) {
-          console.warn('⚠️ Erreur upload audio arabe:', error.message);
-        }
-      }
-      arLocalizationResponse = await POILocalization.create({
-        name: xss(arLoc.name),
-        description: arLoc.description ? xss(arLoc.description) : null,
-        address: arLoc.address ? xss(arLoc.address) : null,
-        audioFiles: arabicAudioUrl ? JSON.stringify([arabicAudioUrl]) : null
-      });
+if (arLoc && arLoc.name) {
+  let arabicAudioData = null; // <- Changement
+  if (req.files?.ar_audio) {
+    try {
+      // console.log('📥 [AR AUDIO] File received:', ...);
+      const audioResult = await uploadFromBuffer(
+        req.files.ar_audio[0].buffer,
+        'go-fez/audio/arabic',
+        { resource_type: 'video' }
+      );
+      // ✅ Sauvegarder l'objet complet
+      arabicAudioData = { 
+        url: audioResult.secure_url, 
+        publicId: audioResult.public_id 
+      };
+      // console.log('✅ [AR AUDIO UPLOADED] Cloudinary result:', audioResult);
+    } catch (error) {
+      console.warn('⚠️ Erreur upload audio arabe:', error.message);
     }
+  }
+  arLocalizationResponse = await POILocalization.create({
+    name: xss(arLoc.name),
+    description: arLoc.description ? xss(arLoc.description) : null,
+    address: arLoc.address ? xss(arLoc.address) : null,
+    // ✅ Sauvegarder l'objet JSON
+    audioFiles: arabicAudioData ? JSON.stringify([arabicAudioData]) : null
+  });
+}
 
-    // Créer la localisation française
-    if (frLoc && frLoc.name) {
-      let frenchAudioUrl = null;
-      if (req.files?.fr_audio) {
-        try {
-          const audioResult = await uploadFromBuffer(
-            req.files.fr_audio[0].buffer,
-            'go-fez/audio/french',
-            { resource_type: 'video' }
-          );
-          frenchAudioUrl = audioResult.secure_url;
-        } catch (error) {
-          console.warn('⚠️ Erreur upload audio français:', error.message);
-        }
-      }
-      frLocalizationResponse = await POILocalization.create({
-        name: xss(frLoc.name),
-        description: frLoc.description ? xss(frLoc.description) : null,
-        address: frLoc.address ? xss(frLoc.address) : null,
-        audioFiles: frenchAudioUrl ? JSON.stringify([frenchAudioUrl]) : null
-      });
+// Créer la localisation française
+if (frLoc && frLoc.name) {
+  let frenchAudioData = null; // <- Changement
+  if (req.files?.fr_audio) {
+    try {
+      const audioResult = await uploadFromBuffer(
+        req.files.fr_audio[0].buffer,
+        'go-fez/audio/french',
+        { resource_type: 'video' }
+      );
+      // ✅ Sauvegarder l'objet complet
+      frenchAudioData = { 
+        url: audioResult.secure_url, 
+        publicId: audioResult.public_id 
+      };
+    } catch (error) {
+      console.warn('⚠️ Erreur upload audio français:', error.message);
     }
+  }
+  frLocalizationResponse = await POILocalization.create({
+    name: xss(frLoc.name),
+    description: frLoc.description ? xss(frLoc.description) : null,
+    address: frLoc.address ? xss(frLoc.address) : null,
+    // ✅ Sauvegarder l'objet JSON
+    audioFiles: frenchAudioData ? JSON.stringify([frenchAudioData]) : null
+  });
+}
 
-    // Créer la localisation anglaise
-    if (enLoc && enLoc.name) {
-      let englishAudioUrl = null;
-      if (req.files?.en_audio) {
-        try {
-          const audioResult = await uploadFromBuffer(
-            req.files.en_audio[0].buffer,
-            'go-fez/audio/english',
-            { resource_type: 'video' }
-          );
-          englishAudioUrl = audioResult.secure_url;
-        } catch (error) {
-          console.warn('⚠️ Erreur upload audio anglais:', error.message);
-        }
-      }
-      enLocalizationResponse = await POILocalization.create({
-        name: xss(enLoc.name),
-        description: enLoc.description ? xss(enLoc.description) : null,
-        address: enLoc.address ? xss(enLoc.address) : null,
-        audioFiles: englishAudioUrl ? JSON.stringify([englishAudioUrl]) : null
-      });
+// Créer la localisation anglaise
+if (enLoc && enLoc.name) {
+  let englishAudioData = null; // <- Changement
+  if (req.files?.en_audio) {
+    try {
+      const audioResult = await uploadFromBuffer(
+        req.files.en_audio[0].buffer,
+        'go-fez/audio/english',
+        { resource_type: 'video' }
+      );
+       // ✅ Sauvegarder l'objet complet
+      englishAudioData = { 
+        url: audioResult.secure_url, 
+        publicId: audioResult.public_id 
+      };
+    } catch (error) {
+      console.warn('⚠️ Erreur upload audio anglais:', error.message);
     }
+  }
+  enLocalizationResponse = await POILocalization.create({
+    name: xss(enLoc.name),
+    description: enLoc.description ? xss(enLoc.description) : null,
+    address: enLoc.address ? xss(enLoc.address) : null,
+    // ✅ Sauvegarder l'objet JSON
+    audioFiles: englishAudioData ? JSON.stringify([englishAudioData]) : null
+  });
+}
 
     // 2. Créer le POI principal d'abord pour obtenir son ID
     const parsedCoordinates = JSON.parse(coordinates);
@@ -219,22 +236,155 @@ const createPOIWithFiles = async (req, res) => {
 // Méthode pour récupérer tous les POI
 const findAllPOIs = async (req, res) => {
   try {
-    const pois = await POI.findAll({
-      where: { isDeleted: false },
-      include: [
-        { model: POILocalization, as: 'frLocalization' },
-        { model: POILocalization, as: 'arLocalization' },
-        { model: POILocalization, as: 'enLocalization' },
-        { model: Category, as: 'categoryPOI', attributes: ['id', 'fr', 'ar', 'en'] },
-        { model: POIFile, as: 'files' },
-        { model: City, as: 'city', attributes: ['id', 'name', 'nameAr', 'nameEn'] }
-      ]
+    const { 
+      page, 
+      limit, 
+      search = '', 
+      category = '', 
+      cityId = '', 
+      isPremium, 
+      isActive,
+      sortBy
+    } = req.query;
+
+    // Smart endpoint: if no pagination params, return simple array (backward compatibility)
+    if (!page && !limit) {
+      const pois = await POI.findAll({
+        where: { isDeleted: false },
+        include: [
+          { model: POILocalization, as: 'frLocalization', required: false },
+          { model: POILocalization, as: 'arLocalization', required: false },
+          { model: POILocalization, as: 'enLocalization', required: false },
+          { model: Category, as: 'categoryPOI', attributes: ['id', 'fr', 'ar', 'en'], required: false },
+          { model: POIFile, as: 'files', required: false },
+          { model: City, as: 'city', attributes: ['id', 'name', 'nameAr', 'nameEn'], required: false }
+        ],
+        order: [['createdAt', 'DESC']]
+      });
+
+      // Parse JSON fields
+      const processedPOIs = pois.map(poi => {
+        const poiData = poi.toJSON();
+        // Parse coordinates if it's a string
+        if (typeof poiData.coordinates === 'string') {
+          try {
+            poiData.coordinates = JSON.parse(poiData.coordinates);
+          } catch (e) {
+            console.warn('Error parsing coordinates:', e.message);
+          }
+        }
+        // Parse practicalInfo if it's a string
+        if (typeof poiData.practicalInfo === 'string') {
+          try {
+            poiData.practicalInfo = JSON.parse(poiData.practicalInfo);
+          } catch (e) {
+            console.warn('Error parsing practicalInfo:', e.message);
+          }
+        }
+        return poiData;
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "POI récupérés avec succès",
+        pois: processedPOIs
+      });
+    }
+
+    // Otherwise, return paginated response
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 12;
+    const offset = (pageNum - 1) * limitNum;
+
+    // Build where clause
+    const where = { isDeleted: false };
+    
+    // Add filters
+    if (category) where.category = category;
+    if (cityId) where.cityId = cityId;
+    if (isPremium !== undefined) where.isPremium = isPremium === 'true';
+    if (isActive !== undefined) where.isActive = isActive === 'true';
+
+    // Include models for associations
+    const include = [
+      { model: POILocalization, as: 'frLocalization', required: false },
+      { model: POILocalization, as: 'arLocalization', required: false },
+      { model: POILocalization, as: 'enLocalization', required: false },
+      { model: Category, as: 'categoryPOI', attributes: ['id', 'fr', 'ar', 'en'], required: false },
+      { model: POIFile, as: 'files', required: false },
+      { model: City, as: 'city', attributes: ['id', 'name', 'nameAr', 'nameEn'], required: false }
+    ];
+
+    // Build where clause with search
+    const whereClause = { ...where };
+    if (search) {
+      whereClause[Op.or] = [
+        { '$frLocalization.name$': { [Op.like]: `%${search}%` } },
+        { '$arLocalization.name$': { [Op.like]: `%${search}%` } },
+        { '$enLocalization.name$': { [Op.like]: `%${search}%` } }
+      ];
+    }
+
+    // Sorting
+    let orderClause = [['createdAt', 'DESC']];
+    if (sortBy === 'newest') orderClause = [['createdAt', 'DESC']];
+    else if (sortBy === 'oldest') orderClause = [['createdAt', 'ASC']];
+    else if (sortBy === 'name') orderClause = [[{ model: POILocalization, as: 'frLocalization' }, 'name', 'ASC']];
+
+    // Get total count for pagination
+    const totalCount = await POI.count({
+      where: whereClause,
+      include,
+      distinct: true,
+      subQuery: false
     });
+
+    // Get POIs with pagination
+    const pois = await POI.findAll({
+      where: whereClause,
+      include,
+      limit: limitNum,
+      offset: offset,
+      order: orderClause,
+      distinct: true,
+      subQuery: false
+    });
+
+    // Parse JSON fields
+    const processedPOIs = pois.map(poi => {
+      const poiData = poi.toJSON();
+      // Parse coordinates if it's a string
+      if (typeof poiData.coordinates === 'string') {
+        try {
+          poiData.coordinates = JSON.parse(poiData.coordinates);
+        } catch (e) {
+          console.warn('Error parsing coordinates:', e.message);
+        }
+      }
+      // Parse practicalInfo if it's a string
+      if (typeof poiData.practicalInfo === 'string') {
+        try {
+          poiData.practicalInfo = JSON.parse(poiData.practicalInfo);
+        } catch (e) {
+          console.warn('Error parsing practicalInfo:', e.message);
+        }
+      }
+      return poiData;
+    });
+
+    const totalPages = Math.ceil(totalCount / limitNum);
 
     res.status(200).json({
       success: true,
       message: "POI récupérés avec succès",
-      pois: pois,
+      data: {
+        pois: processedPOIs,
+        totalCount,
+        currentPage: pageNum,
+        totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPreviousPage: pageNum > 1
+      }
     });
   } catch (error) {
     console.error("Erreur lors de la récupération des POI:", error);
@@ -269,9 +419,26 @@ const findOnePOI = async (req, res) => {
       });
     }
 
+    // Parse JSON fields
+    const poiData = poi.toJSON();
+    if (typeof poiData.coordinates === 'string') {
+      try {
+        poiData.coordinates = JSON.parse(poiData.coordinates);
+      } catch (e) {
+        console.warn('Error parsing coordinates:', e.message);
+      }
+    }
+    if (typeof poiData.practicalInfo === 'string') {
+      try {
+        poiData.practicalInfo = JSON.parse(poiData.practicalInfo);
+      } catch (e) {
+        console.warn('Error parsing practicalInfo:', e.message);
+      }
+    }
+
     res.status(200).json({
       success: true,
-      poi: poi,
+      poi: poiData,
     });
   } catch (error) {
     console.error("Erreur lors de la récupération du POI:", error);
@@ -284,6 +451,7 @@ const findOnePOI = async (req, res) => {
 
 // Méthode pour mettre à jour un POI
 const updatePOI = async (req, res) => {
+  console.log('📩 audioToRemove brut reçu:', req.body.audioToRemove);
   try {
     const { id } = req.params;
 
@@ -298,150 +466,131 @@ const updatePOI = async (req, res) => {
     });
 
     if (!poi) {
-      return res.status(404).json({
-        success: false,
-        message: "POI non trouvé",
-      });
+      return res.status(404).json({ success: false, message: "POI non trouvé" });
     }
 
-    let poiData = req.body;
-    let arLoc, frLoc, enLoc;
-
-    // Parser les données si elles viennent en FormData
-    if (req.body.data) {
+    // --- Safe JSON parsing helper ---
+    const safeParse = (input, label) => {
       try {
-        poiData = JSON.parse(req.body.data);
-      } catch (e) {
-        return res.status(400).json({
-          success: false,
-          message: 'Format de données invalide'
+        return typeof input === 'string' ? JSON.parse(input) : input;
+      } catch (err) {
+        console.warn(`⚠️ Erreur parsing ${label}:`, err.message);
+        return null;
+      }
+    };
+
+    let poiData = req.body;
+    if (req.body.data) {
+      const parsed = safeParse(req.body.data, 'data');
+      if (!parsed) return res.status(400).json({ success: false, message: 'Format de données invalide (data)' });
+      poiData = parsed;
+    }
+
+let audioToRemove = { fr: false, ar: false, en: false };
+if (req.body.audioToRemove) {
+  try {
+    audioToRemove = JSON.parse(req.body.audioToRemove);
+  } catch (err) {
+    console.warn('⚠️ Erreur parsing audioToRemove:', err.message);
+    audioToRemove = { fr: false, ar: false, en: false }; // fallback
+  }
+}
+
+      const filesToRemove = safeParse(poiData.filesToRemove, 'filesToRemove') || [];
+    const arLoc = safeParse(poiData.arLocalization, 'arLocalization');
+    const frLoc = safeParse(poiData.frLocalization, 'frLocalization');
+    const enLoc = safeParse(poiData.enLocalization, 'enLocalization');
+
+    // --- Audio deletion logic ---
+    const deleteAudioIfNeeded = async (lang, localization, folder) => {
+      if (!audioToRemove[lang] || !localization) return;
+      try {
+        const audioData = JSON.parse(localization.audioFiles || '[]');
+        const publicId = audioData[0]?.publicId;
+        if (publicId) {
+          await deleteFile(publicId);
+          console.log(`🗑️ Audio ${lang.toUpperCase()} supprimé de Cloudinary:`, publicId);
+        }
+        await localization.update({ audioFiles: null });
+        console.log(`🧹 Audio ${lang.toUpperCase()} supprimé de la DB`);
+      } catch (err) {
+        console.warn(`⚠️ Erreur suppression audio ${lang.toUpperCase()}:`, err.message);
+      }
+    };
+
+    await deleteAudioIfNeeded('fr', poi.frLocalization, 'french');
+    await deleteAudioIfNeeded('ar', poi.arLocalization, 'arabic');
+    await deleteAudioIfNeeded('en', poi.enLocalization, 'english');
+
+    // --- Update localizations ---
+    const updateLocalization = async (lang, locData, localization, folder) => {
+      if (!locData || !localization) return;
+
+      await localization.update({
+        name: locData.name ? xss(locData.name) : localization.name,
+        description: locData.description ? xss(locData.description) : localization.description,
+        address: locData.address ? xss(locData.address) : localization.address
+      });
+
+      if (req.files?.[`${lang}_audio`]) {
+        try {
+          const oldAudioData = JSON.parse(localization.audioFiles || '[]');
+          const oldPublicId = oldAudioData[0]?.publicId;
+          if (oldPublicId) {
+            await deleteFile(oldPublicId);
+            console.log(`🗑️ Ancien audio ${lang.toUpperCase()} supprimé:`, oldPublicId);
+          }
+
+          const audioResult = await uploadFromBuffer(
+            req.files[`${lang}_audio`][0].buffer,
+            `go-fez/audio/${folder}`,
+            { resource_type: 'video' }
+          );
+
+          const newAudioData = {
+            url: audioResult.secure_url,
+            publicId: audioResult.public_id
+          };
+
+          await localization.update({ audioFiles: JSON.stringify([newAudioData]) });
+        } catch (error) {
+          console.warn(`⚠️ Erreur upload audio ${lang.toUpperCase()}:`, error.message);
+        }
+      }
+    };
+
+    await updateLocalization('fr', frLoc, poi.frLocalization, 'french');
+    await updateLocalization('ar', arLoc, poi.arLocalization, 'arabic');
+    await updateLocalization('en', enLoc, poi.enLocalization, 'english');
+
+    // --- Upload new media files ---
+    if (req.files?.image?.length > 0) {
+      const uploadResults = await uploadMultiplePoiFiles(req.files.image, 'image');
+      for (const result of uploadResults) {
+        await POIFile.create({
+          poiId: poi.id,
+          fileUrl: result.fileUrl,
+          filePublicId: result.filePublicId,
+          type: 'image'
         });
       }
     }
 
-    // Parser les localisations
-    if (poiData.arLocalization) {
-      arLoc = typeof poiData.arLocalization === 'string'
-        ? JSON.parse(poiData.arLocalization)
-        : poiData.arLocalization;
-    }
-    if (poiData.frLocalization) {
-      frLoc = typeof poiData.frLocalization === 'string'
-        ? JSON.parse(poiData.frLocalization)
-        : poiData.frLocalization;
-    }
-    if (poiData.enLocalization) {
-      enLoc = typeof poiData.enLocalization === 'string'
-        ? JSON.parse(poiData.enLocalization)
-        : poiData.enLocalization;
-    }
-
-    // Mettre à jour les localisations
-    if (arLoc && poi.arLocalization) {
-      await poi.arLocalization.update({
-        name: arLoc.name ? xss(arLoc.name) : poi.arLocalization.name,
-        description: arLoc.description ? xss(arLoc.description) : poi.arLocalization.description,
-        address: arLoc.address ? xss(arLoc.address) : poi.arLocalization.address
-      });
-
-      // Mettre à jour l'audio arabe si fourni
-      if (req.files?.ar_audio) {
-        try {
-          const audioResult = await uploadFromBuffer(
-            req.files.ar_audio[0].buffer,
-            'go-fez/audio/arabic',
-            { resource_type: 'video' }
-          );
-          await poi.arLocalization.update({
-            audioFiles: JSON.stringify([audioResult.secure_url])
-          });
-        } catch (error) {
-          console.warn('⚠️ Erreur upload audio arabe:', error.message);
-        }
+    if (req.files?.video?.length > 0) {
+      const uploadResults = await uploadMultiplePoiFiles(req.files.video, 'video');
+      for (const result of uploadResults) {
+        await POIFile.create({
+          poiId: poi.id,
+          fileUrl: result.fileUrl,
+          filePublicId: result.filePublicId,
+          type: 'video'
+        });
       }
     }
 
-    if (frLoc && poi.frLocalization) {
-      await poi.frLocalization.update({
-        name: frLoc.name ? xss(frLoc.name) : poi.frLocalization.name,
-        description: frLoc.description ? xss(frLoc.description) : poi.frLocalization.description,
-        address: frLoc.address ? xss(frLoc.address) : poi.frLocalization.address
-      });
-
-      if (req.files?.fr_audio) {
-        try {
-          const audioResult = await uploadFromBuffer(
-            req.files.fr_audio[0].buffer,
-            'go-fez/audio/french',
-            { resource_type: 'video' }
-          );
-          await poi.frLocalization.update({
-            audioFiles: JSON.stringify([audioResult.secure_url])
-          });
-        } catch (error) {
-          console.warn('⚠️ Erreur upload audio français:', error.message);
-        }
-      }
-    }
-
-    if (enLoc && poi.enLocalization) {
-      await poi.enLocalization.update({
-        name: enLoc.name ? xss(enLoc.name) : poi.enLocalization.name,
-        description: enLoc.description ? xss(enLoc.description) : poi.enLocalization.description,
-        address: enLoc.address ? xss(enLoc.address) : poi.enLocalization.address
-      });
-
-      if (req.files?.en_audio) {
-        try {
-          const audioResult = await uploadFromBuffer(
-            req.files.en_audio[0].buffer,
-            'go-fez/audio/english',
-            { resource_type: 'video' }
-          );
-          await poi.enLocalization.update({
-            audioFiles: JSON.stringify([audioResult.secure_url])
-          });
-        } catch (error) {
-          console.warn('⚠️ Erreur upload audio anglais:', error.message);
-        }
-      }
-    }
-
-    // Mettre à jour les fichiers POI (nouvelle structure - plusieurs fichiers en une fois)
-    if (req.files?.image && req.files.image.length > 0) {
-      try {
-        const uploadResults = await uploadMultiplePoiFiles(req.files.image, 'image');
-        for (const result of uploadResults) {
-          await POIFile.create({
-            poiId: poi.id,
-            fileUrl: result.fileUrl,
-            filePublicId: result.filePublicId,
-            type: 'image'
-          });
-        }
-      } catch (error) {
-      }
-    }
-
-    if (req.files?.video && req.files.video.length > 0) {
-      try {
-        const uploadResults = await uploadMultiplePoiFiles(req.files.video, 'video');
-        for (const result of uploadResults) {
-          await POIFile.create({
-            poiId: poi.id,
-            fileUrl: result.fileUrl,
-            filePublicId: result.filePublicId,
-            type: 'video'
-          });
-        }
-      } catch (error) {
-      }
-    }
-
-    // Mettre à jour le lien de visite virtuelle
+    // --- Update virtual tour ---
     const { virtualTourUrl } = req.body;
     if (virtualTourUrl) {
-      // Supprimer l'ancien lien s'il existe
       const existingVirtualTour = await POIFile.findOne({
         where: { poiId: poi.id, type: 'virtualtour' }
       });
@@ -449,7 +598,6 @@ const updatePOI = async (req, res) => {
       if (existingVirtualTour) {
         await existingVirtualTour.update({ fileUrl: virtualTourUrl });
       } else {
-        // Créer un nouveau lien
         await POIFile.create({
           poiId: poi.id,
           fileUrl: virtualTourUrl,
@@ -459,33 +607,45 @@ const updatePOI = async (req, res) => {
       }
     }
 
-    // Mettre à jour les données principales du POI
+    // --- Delete marked files ---
+    for (const fileId of filesToRemove) {
+      try {
+        const fileToDestroy = await POIFile.findOne({ where: { id: fileId } });
+        if (fileToDestroy) {
+          if (fileToDestroy.filePublicId) {
+            await deleteFile(fileToDestroy.filePublicId);
+            console.log('🗑️ Fichier supprimé de Cloudinary:', fileToDestroy.filePublicId);
+          }
+          await fileToDestroy.destroy();
+          console.log('🗑️ Enregistrement fichier supprimé de la DB:', fileId);
+        } else {
+          console.warn('⚠️ Fichier à supprimer non trouvé (ID):', fileId);
+        }
+      } catch (err) {
+        console.warn(`⚠️ Erreur suppression fichier (ID: ${fileId}):`, err.message);
+      }
+    }
+
+    // --- Update POI core fields ---
     const updateData = {};
     if (poiData.coordinates) {
       updateData.coordinates = typeof poiData.coordinates === 'string'
-        ? JSON.parse(poiData.coordinates)
+        ? safeParse(poiData.coordinates, 'coordinates')
         : poiData.coordinates;
     }
     if (poiData.category) updateData.category = poiData.category;
     if (poiData.practicalInfo) {
       updateData.practicalInfo = typeof poiData.practicalInfo === 'string'
-        ? JSON.parse(poiData.practicalInfo)
+        ? safeParse(poiData.practicalInfo, 'practicalInfo')
         : poiData.practicalInfo;
     }
     if (poiData.cityId) updateData.cityId = poiData.cityId;
-    if (poiData.isActive !== undefined) {
-      updateData.isActive = poiData.isActive === 'true' || poiData.isActive === true;
-    }
-    if (poiData.isVerified !== undefined) {
-      updateData.isVerified = poiData.isVerified === 'true' || poiData.isVerified === true;
-    }
-    if (poiData.isPremium !== undefined) {
-      updateData.isPremium = poiData.isPremium === 'true' || poiData.isPremium === true;
-    }
+    if (poiData.isActive !== undefined) updateData.isActive = poiData.isActive === 'true' || poiData.isActive === true;
+    if (poiData.isVerified !== undefined) updateData.isVerified = poiData.isVerified === 'true' || poiData.isVerified === true;
+    if (poiData.isPremium !== undefined) updateData.isPremium = poiData.isPremium === 'true' || poiData.isPremium === true;
 
     await poi.update(updateData);
 
-    // Récupérer le POI mis à jour
     const updatedPOI = await POI.findByPk(id, {
       include: [
         { model: POILocalization, as: 'frLocalization' },
@@ -511,6 +671,7 @@ const updatePOI = async (req, res) => {
     });
   }
 };
+
 
 // Méthode pour supprimer un POI (suppression logique)
 const deletePOI = async (req, res) => {
@@ -700,220 +861,6 @@ const getPOIsForParcoursLibre = async (req, res) => {
   }
 };
 
-// methode (getPOIsByCity) fetch pois zone = radius of city 
-/**
- * Récupère tous les POI situés dans le rayon de la ville spécifiée.
- * @param {string} cityId - UUID de la ville.
- * @returns {Promise<Array<POI>>} Liste des POI dans le rayon.
- */
-async function getPOIsByCity(req, res) {
-  const cityId = req.params.cityId;
-  if (typeof cityId !== 'string' || cityId.length === 0) {
-        return res.status(400).json({ message: "L'ID de la ville est manquant ou invalide." });
-    }
-  
-    try {
-
-        const city = await City.findByPk(cityId, {
-            attributes: ['coordinates', 'radius']
-        });
-        
-
-        if (!city) {
-            console.warn(`Ville avec l'ID ${cityId} non trouvée.`);
-            return  res.status(404).json({ message: "la ville non trouve" });;
-        }
-        let cityCoords = city.coordinates;
-    if (typeof cityCoords === 'string') {
-    try {
-        cityCoords = JSON.parse(cityCoords);
-    } catch (e) {
-        console.error("Erreur de parsing JSON pour les coordonnées de la ville :", e);
-        return [];
-    }
-}
-
-        const cityLat = cityCoords.latitude;
-        const cityLng = cityCoords.longitude;
-        const cityRadius = city.radius;
-
-        const POI_LAT = 'JSON_EXTRACT(POI.coordinates, "$.latitude")';
-        const POI_LON = 'JSON_EXTRACT(POI.coordinates, "$.longitude")';
-        
-        const haversineDistance = literal(`
-            (
-        ${EARTH_RADIUS_KM} * acos(
-            cos(radians(${cityLat})) * cos(radians(${POI_LAT})) 
-            * cos(radians(${POI_LON}) - radians(${cityLng}))
-            + sin(radians(${cityLat})) * sin(radians(${POI_LAT}))
-        )
-            )
-        `);
-        
-
-        const pois = await POI.findAll({
-            attributes: {
-                include: [
-                    [haversineDistance, 'distance_km']
-                ]
-            },
-            where: {
-                cityId: cityId,
-                [Op.and]: [
-                    literal('POI.coordinates IS NOT NULL'),
-                    sequelize.where(haversineDistance, {
-                        [Op.lte]: cityRadius
-                    })
-                ]
-            },
-            order: [[literal('distance_km'), 'ASC']]
-        });
-
-        return res.status(200).json(pois);
-;
-        
-    } catch (error) {
-        console.error("Erreur lors de la récupération des POI par ville (JSON) :", error);
-        throw new Error("Erreur de base de données.");
-    }
-}
-
-
-// methode . search poi with searchTerm in name or description, filter with category, city, isVerified, isPremium, isActive, theme
-/**
- * 
- * @body {
- *  conditions : {
- *   searchTerm: string,
- *   categoryIds: [uuid],
- *   cityIds: [int],
- *   isVerified: boolean,
- *   isPremium: boolean,
- *  isActive: boolean,
- *  themeIds: [uuid]
- * }
- * @returns pois matching the conditions
- */
-
-
-
-const searchPOIs = async (req, res) => {
-    try {
-      console.log("LOG 1: Entrée dans le contrôleur.");
-        const conditions = req.body?.conditions || {};
-        console.log("LOG 2: Conditions reçues:", conditions);
-        const { searchTerm, categoryIds, cityIds, isVerified, isPremium, isActive } = conditions;
-console.log("LOG 3: Terme de recherche (searchTerm):", searchTerm);
-        // Le filtre de base est toujours isDeleted
-        const poiWhere = { isDeleted: false };
-        let idsToFilter = null; // Contiendra les IDs des POI trouvés si searchTerm est présent
-
-        if (searchTerm) {
-            const pattern = `%${searchTerm}%`;
-
-            // A. Trouver les IDs des POILocalization qui correspondent au terme
-            const matchingLocalizationIds = await POILocalization.findAll({
-                attributes: ['id'],
-                where: {
-                    [Op.or]: [
-                        { name: { [Op.like]: pattern } },
-                        { description: { [Op.like]: pattern } }
-                    ]
-                },
-                raw: true,
-                logging: console.log
-            });
-
-            const localizationIds = matchingLocalizationIds.map(loc => loc.id);
-            console.log("IDs de POI trouvés (searchTerm:", searchTerm, "):", idsToFilter);
-
-            // B. Si aucun ID de localisation ne correspond :
-            if (localizationIds.length === 0) {
-                // Le filtre sera une liste vide, ce qui garantit 0 résultat
-                idsToFilter = []; 
-            } else {
-                // C. Sinon, trouver les IDs des POI qui possèdent ces localisations (OR sur les FKs)
-                const matchingPOIs = await POI.findAll({
-                    attributes: ['id'],
-                    where: {
-                        [Op.or]: [
-                            { ar: { [Op.in]: localizationIds } },
-                            { fr: { [Op.in]: localizationIds } },
-                            { en: { [Op.in]: localizationIds } }
-                        ],
-                        isDeleted: false 
-                    },
-                    raw: true
-                });
-                
-                idsToFilter = matchingPOIs.map(poi => poi.id);
-                console.log("LOG 4: IDs de POI trouvés:", idsToFilter);
-            }
-            
-            // D. APPLIQUER LE FILTRE DE RECHERCHE TEXTUELLE SUR LE WHERE PRINCIPAL
-            // Tous les POI doivent être dans la liste idsToFilter (AND logique)
-            poiWhere.id = { [Op.in]: idsToFilter };
-        }
-        
-        // --- 2. APPLICATION DES FILTRES STATUTS, CATÉGORIES ET VILLES (AND Logique) ---
-        // Ces filtres s'ajoutent à poiWhere, incluant le filtre d'IDs (poiWhere.id) si searchTerm est présent.
-
-        if (conditions.isActive !== undefined) poiWhere.isActive = conditions.isActive;
-        if (conditions.isVerified !== undefined) poiWhere.isVerified = conditions.isVerified;
-        if (conditions.isPremium !== undefined) poiWhere.isPremium = conditions.isPremium;
-        
-        if (Array.isArray(categoryIds) && categoryIds.length > 0) {
-            poiWhere.category = { [Op.in]: categoryIds };
-        }
-        if (Array.isArray(cityIds) && cityIds.length > 0) {
-            poiWhere.cityId = { [Op.in]: cityIds };
-        }
-
-        const includes = [
-            // Inclure les localisations (LEFT JOIN) pour le retour des données
-            { model: POILocalization, as: 'frLocalization', required: false },
-            { model: POILocalization, as: 'arLocalization', required: false },
-            { model: POILocalization, as: 'enLocalization', required: false },
-            { model: City, as: 'city', attributes: ['id', 'name', 'nameAr'], required: false },
-            { model: Category, as: 'categoryPOI', attributes: ['id', 'fr', 'ar'], required: false }
-        ];
-
-        
-        const pois = await POI.findAll({
-            where: poiWhere,
-            include: includes,
-            order: [['rating', 'DESC']],
-        });
-
-        
-        if (pois.length === 0) {
-            return res.status(200).json({
-                success: true,
-                message: "Aucun résultat trouvé correspondant aux critères de recherche.",
-                count: 0,
-                pois: []
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: "Recherche de POI réussie.",
-            count: pois.length,
-            pois
-        });
-
-    } catch (error) {
-      console.error("❌ LOG 5: ERREUR NON CATCHÉE DANS LA FONCTION:", error.message);
-        return res.status(500).json({
-            success: false,
-            message: "Erreur interne du serveur lors de la recherche des POI.",
-            error: error.message
-        });
-    }
-};
-
-
-
 const getTravelTime = async (req, res) => {
 
   const { distanceKm, mode } = req.query;
@@ -977,7 +924,5 @@ module.exports = {
   updatePOI,
   deletePOI,
   getPOIsForParcoursLibre,
-  getTravelTime,
-  getPOIsByCity,
-  searchPOIs
+  getTravelTime
 };
