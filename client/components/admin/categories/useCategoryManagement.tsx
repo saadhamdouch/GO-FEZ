@@ -47,6 +47,8 @@ export function useCategoryManagement() {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<CategoryFormData>(initialFormData);
+  const [iconFile, setIconFile] = useState<File | null>(null);
+  const [iconPreview, setIconPreview] = useState<string>('');
 
   // Update search filter with debounce effect
   useEffect(() => {
@@ -112,10 +114,14 @@ const parseLoc = (loc: string | any): { name: string; desc: string } => {
     }
 
     try {
-      const payload = {
-        localizations: formData.localizations,
-        isActive: formData.isActive,
-      };
+      const formPayload = new FormData();
+      formPayload.append('localizations[fr]', JSON.stringify(formData.localizations.fr));
+      formPayload.append('localizations[ar]', JSON.stringify(formData.localizations.ar));
+      formPayload.append('localizations[en]', JSON.stringify(formData.localizations.en));
+      formPayload.append('isActive', String(formData.isActive));
+      if (iconFile) {
+        formPayload.append('icon', iconFile);
+      }
 
       if (selectedCategory) {
         await updateCategory({ id: selectedCategory.id, formData: formPayload }).unwrap();
