@@ -126,6 +126,20 @@ export default function POIManagement() {
           <option value="true">Premium</option>
           <option value="false">Standard</option>
         </select>
+
+        <select
+          value={filters.sortBy || 'newest'}
+          onChange={(e) => setFilters((prev) => ({ 
+            ...prev, 
+            sortBy: e.target.value as 'newest' | 'oldest' | 'name',
+            page: 1 
+          }))}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="newest">Plus récents</option>
+          <option value="oldest">Plus anciens</option>
+          <option value="name">Par nom</option>
+        </select>
       </div>
 
       {pois.length === 0 ? (

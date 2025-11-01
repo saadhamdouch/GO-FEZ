@@ -201,8 +201,8 @@ exports.rateCircuit = async (req, res) => {
 exports.getAllCircuits = async (req, res) => {
     try {
         const {
-            page = 1,
-            limit = 12,
+            page,
+            limit,
             search = '',
             themeId,
             cityId,
@@ -287,8 +287,78 @@ exports.getAllCircuits = async (req, res) => {
             };
         }
 
-        // Calculate pagination
-        const offset = (parseInt(page) - 1) * parseInt(limit);
+        // Smart endpoint: if no pagination params, return simple array (backward compatibility)
+        if (!page && !limit) {
+            const circuits = await Circuit.findAll({
+                where: { ...whereClause, ...searchCondition },
+                include: includes,
+                order: orderClause,
+                subQuery: false,
+                distinct: true
+            });
+
+            // Process circuits (parse JSON localizations)
+            const processedCircuits = circuits.map(circuitInstance => {
+                const circuit = circuitInstance.toJSON();
+
+                // Parse circuit localizations
+                try {
+                    if (circuit.ar) circuit.ar = JSON.parse(circuit.ar);
+                    if (circuit.fr) circuit.fr = JSON.parse(circuit.fr);
+                    if (circuit.en) circuit.en = JSON.parse(circuit.en);
+                } catch (e) {
+                    console.warn('Erreur parsing circuit localization:', e.message);
+                }
+
+                // Parse theme localizations
+                if (circuit.themes && Array.isArray(circuit.themes)) {
+                    circuit.themes = circuit.themes.map(theme => {
+                        try {
+                            if (theme.ar) theme.ar = JSON.parse(theme.ar);
+                            if (theme.fr) theme.fr = JSON.parse(theme.fr);
+                            if (theme.en) theme.en = JSON.parse(theme.en);
+                        } catch (e) {
+                            console.warn('Erreur parsing theme localization:', e.message);
+                        }
+                        return theme;
+                    });
+                }
+
+                // Parse POI coordinates
+                if (circuit.pois && Array.isArray(circuit.pois)) {
+                    circuit.pois = circuit.pois.map(poi => {
+                        if (typeof poi.coordinates === 'string') {
+                            try {
+                                poi.coordinates = JSON.parse(poi.coordinates);
+                            } catch (e) {
+                                console.warn('Erreur parsing POI coordinates:', e.message);
+                            }
+                        }
+                        if (typeof poi.practicalInfo === 'string') {
+                            try {
+                                poi.practicalInfo = JSON.parse(poi.practicalInfo);
+                            } catch (e) {
+                                console.warn('Erreur parsing POI practicalInfo:', e.message);
+                            }
+                        }
+                        return poi;
+                    });
+                }
+
+                return circuit;
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: 'Circuits récupérés avec succès',
+                data: processedCircuits
+            });
+        }
+
+        // Otherwise, return paginated response
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 12;
+        const offset = (pageNum - 1) * limitNum;
 
         // Get total count
         const totalCount = await Circuit.count({
@@ -301,7 +371,7 @@ exports.getAllCircuits = async (req, res) => {
         const circuits = await Circuit.findAll({
             where: { ...whereClause, ...searchCondition },
             include: includes,
-            limit: parseInt(limit),
+            limit: limitNum,
             offset: offset,
             order: orderClause,
             subQuery: false,
@@ -335,10 +405,31 @@ exports.getAllCircuits = async (req, res) => {
                 });
             }
 
+            // Parse POI coordinates
+            if (circuit.pois && Array.isArray(circuit.pois)) {
+                circuit.pois = circuit.pois.map(poi => {
+                    if (typeof poi.coordinates === 'string') {
+                        try {
+                            poi.coordinates = JSON.parse(poi.coordinates);
+                        } catch (e) {
+                            console.warn('Erreur parsing POI coordinates:', e.message);
+                        }
+                    }
+                    if (typeof poi.practicalInfo === 'string') {
+                        try {
+                            poi.practicalInfo = JSON.parse(poi.practicalInfo);
+                        } catch (e) {
+                            console.warn('Erreur parsing POI practicalInfo:', e.message);
+                        }
+                    }
+                    return poi;
+                });
+            }
+
             return circuit;
         });
 
-        const totalPages = Math.ceil(totalCount / parseInt(limit));
+        const totalPages = Math.ceil(totalCount / limitNum);
 
         return res.status(200).json({
             success: true,
@@ -346,10 +437,10 @@ exports.getAllCircuits = async (req, res) => {
             data: {
                 circuits: processedCircuits,
                 totalCount,
-                currentPage: parseInt(page),
+                currentPage: pageNum,
                 totalPages,
-                hasNextPage: parseInt(page) < totalPages,
-                hasPreviousPage: parseInt(page) > 1
+                hasNextPage: pageNum < totalPages,
+                hasPreviousPage: pageNum > 1
             }
         });
 

@@ -6,6 +6,12 @@ export interface ThemeLocalization {
   desc: string;
 }
 
+export interface ThemeLocalizations {
+  ar: ThemeLocalization;
+  fr: ThemeLocalization;
+  en: ThemeLocalization;
+}
+
 export interface Theme {
   id: string;
   ar: ThemeLocalization | string;
@@ -24,6 +30,33 @@ export interface Theme {
   updated_at: string;
 }
 
+export interface GetThemesParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  isActive?: boolean;
+  sortBy?: 'newest' | 'oldest' | 'name';
+}
+
+export interface GetThemesResponse {
+  status: string;
+  data: Theme[];
+  pagination?: {
+    totalCount: number;
+    currentPage: number;
+    totalPages: number;
+    limit: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
+export interface CreateThemeData {
+  localizations: ThemeLocalizations;
+  color: string;
+  isActive: boolean;
+}
+
 export const themeApi = createApi({
   reducerPath: "themeApi",
   baseQuery: baseQuery,
@@ -33,6 +66,15 @@ export const themeApi = createApi({
       query: () => ({
         url: "/api/themes/",
         method: "GET",
+      }),
+      providesTags: ['Themes'],
+    }),
+
+    getFilteredThemes: builder.query<GetThemesResponse, GetThemesParams>({
+      query: (params) => ({
+        url: "/api/themes/",
+        method: "GET",
+        params,
       }),
       providesTags: ['Themes'],
     }),
@@ -78,6 +120,7 @@ export const themeApi = createApi({
 
 export const {
   useGetAllThemesQuery,
+  useGetFilteredThemesQuery,
   useGetThemeByIdQuery,
   useCreateThemeMutation,
   useUpdateThemeMutation,

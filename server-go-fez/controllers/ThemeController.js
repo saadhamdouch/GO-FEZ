@@ -1,6 +1,7 @@
 const { Theme, Circuit } = require('../models');
 const xss = require('xss');
-const { uploadImage, uploadThemeFiles, deleteFile } = require("../config/cloudinary");
+const { uploadImage, uploadThemeFiles, deleteFile } = require("../Config/cloudinary");
+const { Op } = require('sequelize');
 
 
 const sanitizeThemeLocalizations = (localizations) => {
@@ -108,8 +109,78 @@ exports.createTheme = async (req, res) => {
 
 exports.getAllThemes = async (req, res) => {
   try {
-    const themes = await Theme.findAll({
-      where: { isDeleted: false },
+    const { page, limit, search, isActive, sortBy } = req.query;
+
+    // Smart endpoint: if no pagination params, return simple array (backward compatibility)
+    if (!page && !limit) {
+      const themes = await Theme.findAll({
+        where: { isDeleted: false },
+        include: [
+          {
+            model: Circuit,
+            as: 'circuitsFromThemes',
+            through: { attributes: [] },
+            attributes: ['id']
+          }
+        ],
+        order: [['id', 'ASC']]
+      });
+
+      const data = themes.map(theme => ({
+        ...theme.toJSON(),
+        circuitsCount: theme.circuitsFromThemes?.length || 0
+      }));
+
+      return res.status(200).json({ status: 'success', data });
+    }
+
+    // Otherwise, return paginated response
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+    const offset = (pageNum - 1) * limitNum;
+
+    const whereClause = { isDeleted: false };
+    const searchConditions = [];
+
+    // Search in JSON localization fields
+    if (search) {
+      const searchPattern = `%${search}%`;
+      searchConditions.push(
+        Theme.sequelize.where(
+          Theme.sequelize.cast(Theme.sequelize.col('Theme.fr'), 'CHAR'),
+          { [Op.like]: searchPattern }
+        ),
+        Theme.sequelize.where(
+          Theme.sequelize.cast(Theme.sequelize.col('Theme.ar'), 'CHAR'),
+          { [Op.like]: searchPattern }
+        ),
+        Theme.sequelize.where(
+          Theme.sequelize.cast(Theme.sequelize.col('Theme.en'), 'CHAR'),
+          { [Op.like]: searchPattern }
+        )
+      );
+    }
+
+    // Filter by active status
+    if (isActive !== undefined) {
+      whereClause.isActive = isActive === 'true';
+    }
+
+    // Combine where clause with search
+    const finalWhere = searchConditions.length > 0
+      ? { ...whereClause, [Op.or]: searchConditions }
+      : whereClause;
+
+    // Sorting
+    let orderClause = [['id', 'ASC']];
+    if (sortBy === 'newest') orderClause = [['created_at', 'DESC']];
+    else if (sortBy === 'oldest') orderClause = [['created_at', 'ASC']];
+    else if (sortBy === 'name') orderClause = [['fr', 'ASC']];
+
+    const { count, rows } = await Theme.findAndCountAll({
+      where: finalWhere,
+      limit: limitNum,
+      offset: offset,
       include: [
         {
           model: Circuit,
@@ -117,17 +188,32 @@ exports.getAllThemes = async (req, res) => {
           through: { attributes: [] },
           attributes: ['id']
         }
-      ]
+      ],
+      order: orderClause,
+      distinct: true
     });
 
-    const data = themes.map(theme => ({
+    const themesWithCount = rows.map(theme => ({
       ...theme.toJSON(),
       circuitsCount: theme.circuitsFromThemes?.length || 0
     }));
 
-    res.status(200).json({ status: 'success', data });
+    const totalPages = Math.ceil(count / limitNum);
+
+    res.status(200).json({
+      status: 'success',
+      data: themesWithCount,
+      pagination: {
+        totalCount: count,
+        currentPage: pageNum,
+        totalPages: totalPages,
+        limit: limitNum,
+        hasNextPage: pageNum < totalPages,
+        hasPreviousPage: pageNum > 1
+      }
+    });
   } catch (error) {
-    console.error('Erreur récupération thèmes :', error);
+    console.error('❌ Erreur getAllThemes:', error);
     res.status(500).json({ status: 'error', message: 'Erreur serveur', error: error.message });
   }
 };

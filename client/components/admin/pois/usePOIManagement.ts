@@ -71,6 +71,7 @@ export function usePOIManagement() {
   const [filters, setFilters] = useState<GetPOIsParams>({
     page: 1,
     limit: 100, // Show more items in admin
+    sortBy: 'newest',
   });
 
   const { data: poisData, isLoading, error, refetch } = useGetFilteredPOIsQuery(filters);
@@ -343,16 +344,32 @@ if (formData.audioToRemove) {
     const virtualTourFile = poi.files?.find((f: any) => f.type === 'virtualtour');
     const virtualTourUrl = virtualTourFile?.fileUrl || '';
 
+    // Parse coordinates if it's a string (backward compatibility)
+    let coordinates = poi.coordinates;
+    if (typeof coordinates === 'string') {
+      try {
+        coordinates = JSON.parse(coordinates);
+      } catch (e) {
+        console.error('Error parsing coordinates:', e);
+        coordinates = { latitude: 0, longitude: 0, address: '' };
+      }
+    }
+
     // Handle both coordinate formats
     let latitude: string, longitude: string, address: string;
-    if ('latitude' in poi.coordinates) {
-      latitude = String(poi.coordinates.latitude);
-      longitude = String(poi.coordinates.longitude);
-      address = poi.coordinates.address || '';
-    } else {
+    if (coordinates && typeof coordinates === 'object' && 'latitude' in coordinates) {
+      latitude = String(coordinates.latitude);
+      longitude = String(coordinates.longitude);
+      address = coordinates.address || '';
+    } else if (coordinates && typeof coordinates === 'object' && 'coordinates' in coordinates) {
       // GeoJSON format
-      longitude = String(poi.coordinates.coordinates[0]);
-      latitude = String(poi.coordinates.coordinates[1]);
+      longitude = String(coordinates.coordinates[0]);
+      latitude = String(coordinates.coordinates[1]);
+      address = '';
+    } else {
+      // Fallback
+      latitude = '0';
+      longitude = '0';
       address = '';
     }
 

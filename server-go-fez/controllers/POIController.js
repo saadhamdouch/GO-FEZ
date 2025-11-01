@@ -237,14 +237,64 @@ if (enLoc && enLoc.name) {
 const findAllPOIs = async (req, res) => {
   try {
     const { 
-      page = 1, 
-      limit = 12, 
+      page, 
+      limit, 
       search = '', 
       category = '', 
       cityId = '', 
       isPremium, 
-      isActive 
+      isActive,
+      sortBy
     } = req.query;
+
+    // Smart endpoint: if no pagination params, return simple array (backward compatibility)
+    if (!page && !limit) {
+      const pois = await POI.findAll({
+        where: { isDeleted: false },
+        include: [
+          { model: POILocalization, as: 'frLocalization', required: false },
+          { model: POILocalization, as: 'arLocalization', required: false },
+          { model: POILocalization, as: 'enLocalization', required: false },
+          { model: Category, as: 'categoryPOI', attributes: ['id', 'fr', 'ar', 'en'], required: false },
+          { model: POIFile, as: 'files', required: false },
+          { model: City, as: 'city', attributes: ['id', 'name', 'nameAr', 'nameEn'], required: false }
+        ],
+        order: [['createdAt', 'DESC']]
+      });
+
+      // Parse JSON fields
+      const processedPOIs = pois.map(poi => {
+        const poiData = poi.toJSON();
+        // Parse coordinates if it's a string
+        if (typeof poiData.coordinates === 'string') {
+          try {
+            poiData.coordinates = JSON.parse(poiData.coordinates);
+          } catch (e) {
+            console.warn('Error parsing coordinates:', e.message);
+          }
+        }
+        // Parse practicalInfo if it's a string
+        if (typeof poiData.practicalInfo === 'string') {
+          try {
+            poiData.practicalInfo = JSON.parse(poiData.practicalInfo);
+          } catch (e) {
+            console.warn('Error parsing practicalInfo:', e.message);
+          }
+        }
+        return poiData;
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "POI récupérés avec succès",
+        pois: processedPOIs
+      });
+    }
+
+    // Otherwise, return paginated response
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 12;
+    const offset = (pageNum - 1) * limitNum;
 
     // Build where clause
     const where = { isDeleted: false };
@@ -275,9 +325,12 @@ const findAllPOIs = async (req, res) => {
       ];
     }
 
-    // Calculate pagination
-    const offset = (parseInt(page) - 1) * parseInt(limit);
-    
+    // Sorting
+    let orderClause = [['createdAt', 'DESC']];
+    if (sortBy === 'newest') orderClause = [['createdAt', 'DESC']];
+    else if (sortBy === 'oldest') orderClause = [['createdAt', 'ASC']];
+    else if (sortBy === 'name') orderClause = [[{ model: POILocalization, as: 'frLocalization' }, 'name', 'ASC']];
+
     // Get total count for pagination
     const totalCount = await POI.count({
       where: whereClause,
@@ -290,25 +343,47 @@ const findAllPOIs = async (req, res) => {
     const pois = await POI.findAll({
       where: whereClause,
       include,
-      limit: parseInt(limit),
+      limit: limitNum,
       offset: offset,
-      order: [['createdAt', 'DESC']],
+      order: orderClause,
       distinct: true,
       subQuery: false
     });
 
-    const totalPages = Math.ceil(totalCount / parseInt(limit));
+    // Parse JSON fields
+    const processedPOIs = pois.map(poi => {
+      const poiData = poi.toJSON();
+      // Parse coordinates if it's a string
+      if (typeof poiData.coordinates === 'string') {
+        try {
+          poiData.coordinates = JSON.parse(poiData.coordinates);
+        } catch (e) {
+          console.warn('Error parsing coordinates:', e.message);
+        }
+      }
+      // Parse practicalInfo if it's a string
+      if (typeof poiData.practicalInfo === 'string') {
+        try {
+          poiData.practicalInfo = JSON.parse(poiData.practicalInfo);
+        } catch (e) {
+          console.warn('Error parsing practicalInfo:', e.message);
+        }
+      }
+      return poiData;
+    });
+
+    const totalPages = Math.ceil(totalCount / limitNum);
 
     res.status(200).json({
       success: true,
       message: "POI récupérés avec succès",
       data: {
-        pois: pois,
+        pois: processedPOIs,
         totalCount,
-        currentPage: parseInt(page),
+        currentPage: pageNum,
         totalPages,
-        hasNextPage: parseInt(page) < totalPages,
-        hasPreviousPage: parseInt(page) > 1
+        hasNextPage: pageNum < totalPages,
+        hasPreviousPage: pageNum > 1
       }
     });
   } catch (error) {
@@ -344,9 +419,26 @@ const findOnePOI = async (req, res) => {
       });
     }
 
+    // Parse JSON fields
+    const poiData = poi.toJSON();
+    if (typeof poiData.coordinates === 'string') {
+      try {
+        poiData.coordinates = JSON.parse(poiData.coordinates);
+      } catch (e) {
+        console.warn('Error parsing coordinates:', e.message);
+      }
+    }
+    if (typeof poiData.practicalInfo === 'string') {
+      try {
+        poiData.practicalInfo = JSON.parse(poiData.practicalInfo);
+      } catch (e) {
+        console.warn('Error parsing practicalInfo:', e.message);
+      }
+    }
+
     res.status(200).json({
       success: true,
-      poi: poi,
+      poi: poiData,
     });
   } catch (error) {
     console.error("Erreur lors de la récupération du POI:", error);

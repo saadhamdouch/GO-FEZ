@@ -28,6 +28,7 @@ export interface GetPOIsParams {
   cityId?: string;
   isPremium?: boolean;
   isActive?: boolean;
+  sortBy?: 'newest' | 'oldest' | 'name';
 }
 
 // Response type for filtered POIs
@@ -91,11 +92,18 @@ export const poiApi = createApi({
   baseQuery,
   tagTypes: ["POI", "POIs"],
   endpoints: (builder) => ({
-    getAllPOIs: builder.query<{ success: boolean; pois: POI[] }, void>({
-      query: () => ({
-        url: "/api/pois/",
-        method: "GET"
-      }),
+    getAllPOIs: builder.query<{ success: boolean; pois: POI[] }, { search?: string; isActive?: boolean } | void>({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params?.search) queryParams.append('search', params.search);
+        if (params?.isActive !== undefined) queryParams.append('isActive', params.isActive.toString());
+        
+        const queryString = queryParams.toString();
+        return {
+          url: `/api/pois/${queryString ? `?${queryString}` : ''}`,
+          method: "GET"
+        };
+      },
       providesTags: ["POIs"],
     }),
 
@@ -111,6 +119,7 @@ export const poiApi = createApi({
         if (params.cityId) queryParams.append('cityId', params.cityId);
         if (params.isPremium !== undefined) queryParams.append('isPremium', params.isPremium.toString());
         if (params.isActive !== undefined) queryParams.append('isActive', params.isActive.toString());
+        if (params.sortBy) queryParams.append('sortBy', params.sortBy);
         
         return {
           url: `/api/pois?${queryParams.toString()}`,
