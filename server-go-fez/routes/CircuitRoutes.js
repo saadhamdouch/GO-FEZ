@@ -6,6 +6,7 @@ const { uploadCircuitImage } = require("../Config/cloudinary");
 // Routes principales des circuits
 router.post('/create-with-image', uploadCircuitImage.single('image'), circuitController.createCircuitWithImage);
 router.get('/', circuitController.getAllCircuits);
+router.get('/by-theme', circuitController.getCircuitsByTheme); // Route pour circuits par thème (mobile app)
 router.get('/:id', circuitController.getCircuitById);
 router.put('/:id/update-with-image', uploadCircuitImage.single('image'), circuitController.updateCircuit);
 router.delete('/:id', circuitController.deleteCircuit);

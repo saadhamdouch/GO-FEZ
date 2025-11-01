@@ -1,6 +1,8 @@
 const { Circuit, Theme, POI, ThemeCircuit, CircuitPOI, City, POILocalization } = require('../models');
+const { Op, literal } = require('sequelize');
+const sequelize = require('sequelize');
 const xss = require('xss');
-const { deleteFile } = require("../config/cloudinary");
+const { deleteFile } = require("../Config/cloudinary");
 
 // Créer un circuit avec upload d'image
 exports.createCircuitWithImage = async (req, res) => {
@@ -193,67 +195,317 @@ exports.rateCircuit = async (req, res) => {
     return res.status(500).json({ status: 'error', message: 'Erreur serveur', error });
   }
 };
-// Récupérer tous les circuits
-exports.getAllCircuits = async (req, res) => {
-  try {
-    const circuits = await Circuit.findAll({
-      where: { isDeleted: false },
-      include: [
-        {
-          model: City,
-          as: 'city',
-          attributes: ['id', 'name', 'nameAr', 'nameEn']
-        },
-        {
-          model: Theme,
-          as: 'themes',
-          through: { attributes: [] },
-          where: { isDeleted: false },
-          required: false
-        },
-        {
-          model: POI,
-          as: 'pois',
-          through: {
-            attributes: ['order', 'estimatedTime']
-          },
-          where: { isDeleted: false },
-          required: false,
-          include: [
-            {
-              model: POILocalization,
-              as: 'frLocalization',
-              attributes: ['name', 'address']
-            },
-            {
-              model: POILocalization,
-              as: 'arLocalization',
-              attributes: ['name', 'address']
-            },
-            {
-              model: POILocalization,
-              as: 'enLocalization',
-              attributes: ['name', 'address']
-            }
-          ]
-        }
-      ],
-      order: [['createdAt', 'DESC']]
-    });
 
-    return res.status(200).json({
-      status: 'success',
-      data: circuits
-    });
-  } catch (error) {
-    console.error('❌ Erreur récupération circuits:', error);
-    return res.status(500).json({
-      status: 'error',
-      message: 'Erreur serveur',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
+
+// Récupérer tous les circuits (filtrés et triés avec pagination)
+exports.getAllCircuits = async (req, res) => {
+    try {
+        const {
+            page = 1,
+            limit = 12,
+            search = '',
+            themeId,
+            cityId,
+            isPremium,
+            isActive,
+            sortBy = 'newest',
+            latitude,
+            longitude
+        } = req.query;
+
+        // Build where clause
+        const whereClause = { isDeleted: false };
+
+        // Add filters
+        if (cityId) whereClause.cityId = cityId;
+        if (isPremium !== undefined) whereClause.isPremium = isPremium === 'true';
+        if (isActive !== undefined) whereClause.isActive = isActive === 'true';
+
+        // Build order clause
+        let orderClause = [];
+        switch (sortBy) {
+            case 'popular':
+                orderClause.push(['reviewCount', 'DESC']);
+                break;
+            case 'rating':
+                orderClause.push(['rating', 'DESC']);
+                break;
+            case 'newest':
+            default:
+                orderClause.push(['createdAt', 'DESC']);
+                break;
+        }
+
+        // Build includes
+        const includes = [
+            {
+                model: City,
+                as: 'city',
+                attributes: ['id', 'name', 'nameAr', 'nameEn']
+            },
+            {
+                model: Theme,
+                as: 'themes',
+                through: { attributes: [] },
+                where: themeId ? { id: themeId, isDeleted: false } : { isDeleted: false },
+                required: !!themeId,
+                attributes: ['id', 'fr', 'ar', 'en']
+            },
+            {
+                model: POI,
+                as: 'pois',
+                through: { attributes: ['order', 'estimatedTime'] },
+                where: { isDeleted: false },
+                required: false,
+                include: [
+                    { model: POILocalization, as: 'frLocalization', attributes: ['name'] },
+                    { model: POILocalization, as: 'arLocalization', attributes: ['name'] },
+                    { model: POILocalization, as: 'enLocalization', attributes: ['name'] }
+                ]
+            }
+        ];
+
+        // Add search filter
+        let searchCondition = {};
+        if (search) {
+            // Search in JSON fields using Sequelize's JSON path syntax
+            searchCondition = {
+                [Op.or]: [
+                    sequelize.where(
+                        sequelize.cast(sequelize.col('Circuit.fr'), 'CHAR'),
+                        { [Op.like]: `%${search}%` }
+                    ),
+                    sequelize.where(
+                        sequelize.cast(sequelize.col('Circuit.ar'), 'CHAR'),
+                        { [Op.like]: `%${search}%` }
+                    ),
+                    sequelize.where(
+                        sequelize.cast(sequelize.col('Circuit.en'), 'CHAR'),
+                        { [Op.like]: `%${search}%` }
+                    )
+                ]
+            };
+        }
+
+        // Calculate pagination
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+
+        // Get total count
+        const totalCount = await Circuit.count({
+            where: { ...whereClause, ...searchCondition },
+            include: includes,
+            distinct: true
+        });
+
+        // Get circuits with pagination
+        const circuits = await Circuit.findAll({
+            where: { ...whereClause, ...searchCondition },
+            include: includes,
+            limit: parseInt(limit),
+            offset: offset,
+            order: orderClause,
+            subQuery: false,
+            distinct: true
+        });
+
+        // Process circuits (parse JSON localizations)
+        const processedCircuits = circuits.map(circuitInstance => {
+            const circuit = circuitInstance.toJSON();
+
+            // Parse circuit localizations
+            try {
+                if (circuit.ar) circuit.ar = JSON.parse(circuit.ar);
+                if (circuit.fr) circuit.fr = JSON.parse(circuit.fr);
+                if (circuit.en) circuit.en = JSON.parse(circuit.en);
+            } catch (e) {
+                console.warn('Erreur parsing circuit localization:', e.message);
+            }
+
+            // Parse theme localizations
+            if (circuit.themes && Array.isArray(circuit.themes)) {
+                circuit.themes = circuit.themes.map(theme => {
+                    try {
+                        if (theme.ar) theme.ar = JSON.parse(theme.ar);
+                        if (theme.fr) theme.fr = JSON.parse(theme.fr);
+                        if (theme.en) theme.en = JSON.parse(theme.en);
+                    } catch (e) {
+                        console.warn('Erreur parsing theme localization:', e.message);
+                    }
+                    return theme;
+                });
+            }
+
+            return circuit;
+        });
+
+        const totalPages = Math.ceil(totalCount / parseInt(limit));
+
+        return res.status(200).json({
+            success: true,
+            message: 'Circuits récupérés avec succès',
+            data: {
+                circuits: processedCircuits,
+                totalCount,
+                currentPage: parseInt(page),
+                totalPages,
+                hasNextPage: parseInt(page) < totalPages,
+                hasPreviousPage: parseInt(page) > 1
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Erreur récupération circuits filtrés:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Erreur serveur',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
 };
+
+// Récupérer les circuits par thème (pour l'app mobile - comportement original)
+exports.getCircuitsByTheme = async (req, res) => {
+    const {
+        themeId, 
+        cityId, 
+        latitude, 
+        longitude, 
+        sortBy = 'newest' 
+    } = req.query;
+
+    const limitPerTheme = 10; 
+    let whereClause = { isDeleted: false };
+    let orderClause = [];
+    let includePoisForNearest = false; 
+    let havingClause = null;
+
+    try {
+        if (!themeId) {
+            return res.status(400).json({ 
+                status: 'fail', 
+                message: 'Le paramètre themeId est requis pour cette recherche.' 
+            });
+        }
+        
+        if (cityId) {
+            whereClause.cityId = cityId;
+        }
+
+        // Logique de tri
+        switch (sortBy) {
+            case 'popular':
+                orderClause.push(['reviewCount', 'DESC']);
+                break;
+            case 'rating':
+                orderClause.push(['rating', 'DESC']);
+                break;
+            case 'nearest':
+                if (latitude && longitude) {
+                    includePoisForNearest = true; 
+                    const poiLatitude = `CAST(JSON_UNQUOTE(JSON_EXTRACT(startPoi.coordinates, '$.latitude')) AS DECIMAL(10, 7))`;
+                    const poiLongitude = `CAST(JSON_UNQUOTE(JSON_EXTRACT(startPoi.coordinates, '$.longitude')) AS DECIMAL(10, 7))`;
+                    
+                    const distanceFormula = literal(
+                        `ST_Distance_Sphere(POINT(${poiLongitude}, ${poiLatitude}), POINT(${parseFloat(longitude)}, ${parseFloat(latitude)}))`
+                    );
+                    
+                    orderClause.push([distanceFormula, 'ASC']);
+                    havingClause = Circuit.sequelize.where(distanceFormula, { [Op.lte]: 2000 });
+                }
+                break;
+            case 'newest':
+            default:
+                orderClause.push(['createdAt', 'DESC']);
+                break;
+        }
+
+        const themeIds = themeId.split(',').slice(0, 3);
+        let allCircuits = [];
+
+        for (const tid of themeIds) {
+            const themeWhereClause = {
+                ...whereClause,
+                '$themes.id$': tid
+            };
+            
+            let includes = [
+                { model: City, as: 'city', attributes: ['id', 'name', 'nameAr', 'nameEn'] },
+                { model: Theme, as: 'themes', through: { attributes: [] }, where: { isDeleted: false }, required: true, attributes: ['id', 'fr', 'ar', 'en'] },
+                { 
+                    model: POI, as: 'pois', through: { attributes: ['order', 'estimatedTime'] },
+                    where: { isDeleted: false }, required: false, 
+                    include: [
+                        { model: POILocalization, as: 'frLocalization', attributes: ['name'] },
+                        { model: POILocalization, as: 'arLocalization', attributes: ['name'] },
+                        { model: POILocalization, as: 'enLocalization', attributes: ['name'] }
+                    ]
+                }
+            ];
+            
+            if (includePoisForNearest) {
+                includes.push({
+                    model: POI, 
+                    as: 'startPoi', 
+                    attributes: ['coordinates'],
+                    required: true
+                });
+            }
+
+            const circuits = await Circuit.findAll({
+                where: themeWhereClause,
+                limit: limitPerTheme, 
+                subQuery: false, 
+                include: includes, 
+                order: orderClause,
+                having: havingClause 
+            });
+
+            allCircuits = allCircuits.concat(circuits);
+        }
+
+        const processedCircuits = allCircuits.map(circuitInstance => {
+            const circuit = circuitInstance.toJSON();
+            
+            try {
+                if (circuit.ar) circuit.ar = JSON.parse(circuit.ar);
+                if (circuit.fr) circuit.fr = JSON.parse(circuit.fr);
+                if (circuit.en) circuit.en = JSON.parse(circuit.en);
+            } catch (e) { 
+                console.warn('Erreur parsing circuit localization:', e.message); 
+            }
+
+            if (circuit.themes && Array.isArray(circuit.themes)) {
+                circuit.themes = circuit.themes.map(theme => {
+                    try {
+                        if (theme.ar) theme.ar = JSON.parse(theme.ar);
+                        if (theme.fr) theme.fr = JSON.parse(theme.fr);
+                        if (theme.en) theme.en = JSON.parse(theme.en);
+                    } catch (e) { 
+                        console.warn('Erreur parsing theme localization:', e.message); 
+                    }
+                    return theme;
+                });
+            }
+
+            return circuit;
+        });
+
+        return res.status(200).json({
+            status: 'success',
+            data: processedCircuits
+        });
+
+    } catch (error) {
+        console.error('❌ Erreur récupération circuits par thème:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Erreur serveur',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+
 
 // Récupérer un circuit par ID
 exports.getCircuitById = async (req, res) => {

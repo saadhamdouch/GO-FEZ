@@ -257,24 +257,22 @@ const findAllPOIs = async (req, res) => {
 
     // Include models for associations
     const include = [
-      { model: POILocalization, as: 'frLocalization' },
-      { model: POILocalization, as: 'arLocalization' },
-      { model: POILocalization, as: 'enLocalization' },
-      { model: Category, as: 'categoryPOI', attributes: ['id', 'fr', 'ar', 'en'] },
-      { model: POIFile, as: 'files' },
-      { model: City, as: 'city', attributes: ['id', 'name', 'nameAr', 'nameEn'] }
+      { model: POILocalization, as: 'frLocalization', required: false },
+      { model: POILocalization, as: 'arLocalization', required: false },
+      { model: POILocalization, as: 'enLocalization', required: false },
+      { model: Category, as: 'categoryPOI', attributes: ['id', 'fr', 'ar', 'en'], required: false },
+      { model: POIFile, as: 'files', required: false },
+      { model: City, as: 'city', attributes: ['id', 'name', 'nameAr', 'nameEn'], required: false }
     ];
 
-    // Add search filter (searches in localization names)
-    let searchCondition = {};
+    // Build where clause with search
+    const whereClause = { ...where };
     if (search) {
-      searchCondition = {
-        [Op.or]: [
-          { '$frLocalization.name$': { [Op.iLike]: `%${search}%` } },
-          { '$arLocalization.name$': { [Op.iLike]: `%${search}%` } },
-          { '$enLocalization.name$': { [Op.iLike]: `%${search}%` } }
-        ]
-      };
+      whereClause[Op.or] = [
+        { '$frLocalization.name$': { [Op.like]: `%${search}%` } },
+        { '$arLocalization.name$': { [Op.like]: `%${search}%` } },
+        { '$enLocalization.name$': { [Op.like]: `%${search}%` } }
+      ];
     }
 
     // Calculate pagination
@@ -282,19 +280,21 @@ const findAllPOIs = async (req, res) => {
     
     // Get total count for pagination
     const totalCount = await POI.count({
-      where: { ...where, ...searchCondition },
+      where: whereClause,
       include,
-      distinct: true
+      distinct: true,
+      subQuery: false
     });
 
     // Get POIs with pagination
     const pois = await POI.findAll({
-      where: { ...where, ...searchCondition },
+      where: whereClause,
       include,
       limit: parseInt(limit),
       offset: offset,
       order: [['createdAt', 'DESC']],
-      distinct: true
+      distinct: true,
+      subQuery: false
     });
 
     const totalPages = Math.ceil(totalCount / parseInt(limit));
