@@ -3,9 +3,9 @@ import baseQuery from "../BaseQuery";
 
 export interface Category {
   id: string;
-  ar: string | { name?: string };
-  fr: string | { name?: string };
-  en: string | { name?: string };
+  ar: string | CategoryLocalization;
+  fr: string | CategoryLocalization;
+  en: string | CategoryLocalization;
   isActive: boolean;
   isDeleted: boolean;
   nbPois?: number;
@@ -13,18 +13,46 @@ export interface Category {
   updated_at: string;
 }
 
+export interface CategoryLocalization {
+  name: string;
+  desc: string;
+}
+
+export interface CategoryLocalizations {
+  ar: { name: string; desc: string };
+  fr: { name: string; desc: string };
+  en: { name: string; desc: string };
+}
+
 export interface CreateCategoryData {
-  ar: string;
-  fr: string;
-  en: string;
+  localizations: CategoryLocalizations;
   isActive?: boolean;
 }
 
 export interface UpdateCategoryData {
-  ar?: string;
-  fr?: string;
-  en?: string;
+  localizations: CategoryLocalizations;
   isActive?: boolean;
+}
+
+export interface GetCategoriesParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  isActive?: boolean;
+  sortBy?: 'id' | 'name' | 'newest' | 'oldest';
+}
+
+export interface GetCategoriesResponse {
+  status: string;
+  message: string;
+  data: {
+    categories: Category[];
+    totalCount: number;
+    currentPage: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
 }
 
 export const categoryApi = createApi({
@@ -37,6 +65,23 @@ export const categoryApi = createApi({
         url: "/api/categorys/",
         method: "GET",
       }),
+      providesTags: ['Categories'],
+    }),
+
+    getFilteredCategories: builder.query<GetCategoriesResponse, GetCategoriesParams>({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params.page) queryParams.append('page', params.page.toString());
+        if (params.limit) queryParams.append('limit', params.limit.toString());
+        if (params.search) queryParams.append('search', params.search);
+        if (params.isActive !== undefined) queryParams.append('isActive', params.isActive.toString());
+        if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+
+        return {
+          url: `/api/categorys/?${queryParams.toString()}`,
+          method: "GET",
+        };
+      },
       providesTags: ['Categories'],
     }),
 
@@ -81,6 +126,7 @@ export const categoryApi = createApi({
 
 export const {
   useGetAllCategoriesQuery,
+  useGetFilteredCategoriesQuery,
   useGetCategoryByIdQuery,
   useCreateCategoryMutation,
   useUpdateCategoryMutation,
