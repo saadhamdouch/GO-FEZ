@@ -17,7 +17,7 @@ const CircuitProgress = sequelize.define(
 			type: DataTypes.INTEGER,
 			allowNull: false,
 			references: {
-				model: "Users", // Nom de la table des utilisateurs
+				model: "users",
 				key: "id",
 			},
 		},

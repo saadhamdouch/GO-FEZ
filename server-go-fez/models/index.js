@@ -266,29 +266,7 @@ UserSpace.belongsTo(POI, { foreignKey: 'poi_id', onDelete: 'CASCADE', onUpdate: 
 UserSpace.belongsTo(User, { foreignKey: 'user_id', as: 'spaceOwner', onDelete: 'CASCADE', onUpdate: 'CASCADE' }); 
 User.hasMany(UserSpace, { foreignKey: 'user_id', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 
-// CircuitProgress Associations
-// Note: CircuitProgress supports both regular circuits and custom circuits
-// We don't define a belongsTo relationship with Circuit to avoid foreign key constraints
-CircuitProgress.belongsTo(User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-User.hasMany(CircuitProgress, { foreignKey: 'userId', as: 'circuitProgress', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-
-// CustomCircuit Associations
-CustomCircuit.belongsTo(User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-User.hasMany(CustomCircuit, { foreignKey: 'userId', as: 'customCircuits', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-
-// Share ↔ User associations
-Share.belongsTo(User, {
-    foreignKey: 'userId',
-    as: 'user',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
-});
-User.hasMany(Share, {
-    foreignKey: 'userId',
-    as: 'shares',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
-});
+// (doublons supprimés)
 
 // CircuitProgress Associations
 // Note: CircuitProgress supports both regular circuits and custom circuits
@@ -314,39 +292,7 @@ User.hasMany(Share, {
     onUpdate: 'CASCADE'
 });
 
-// Associations User ↔ POI via FavoritePOI (sauvegardes)
-User.belongsToMany(POI, {
-	through: FavoritePOI,
-	foreignKey: "userId",
-	otherKey: "poiId",
-	as: "savedPois",
-	onDelete: 'CASCADE',
-	onUpdate: 'CASCADE'
-});
-
-POI.belongsToMany(User, {
-	through: FavoritePOI,
-	foreignKey: "poiId",
-	otherKey: "userId",
-	as: "savedByUsers",
-	onDelete: 'CASCADE',
-	onUpdate: 'CASCADE'
-});
-
-// Associations directes pour FavoritePOI
-FavoritePOI.belongsTo(POI, {
-	foreignKey: "poiId",
-	as: "poi",
-	onDelete: 'CASCADE',
-	onUpdate: 'CASCADE'
-});
-
-FavoritePOI.belongsTo(User, {
-	foreignKey: "userId",
-	as: "user",
-	onDelete: 'CASCADE',
-	onUpdate: 'CASCADE'
-});
+// (doublons supprimés)
 
 // Associations User ↔ POI via FavoritePOI (sauvegardes)
 User.belongsToMany(POI, {
