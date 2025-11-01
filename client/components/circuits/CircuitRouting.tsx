@@ -21,7 +21,7 @@ const CircuitRouting: React.FC<CircuitRoutingProps> = ({ waypoints }) => {
 			return;
 		}
 
-		console.log('� CircuitRouting: Création du circuit complet avec', waypoints.length, 'POIs');
+		console.log('🗺️ CircuitRouting: Création du circuit complet avec', waypoints.length, 'POIs');
 
 		// Supprimer l'ancien contrôle s'il existe
 		if (routingControlRef.current) {
@@ -57,10 +57,14 @@ const CircuitRouting: React.FC<CircuitRoutingProps> = ({ waypoints }) => {
 			createMarker: function () {
 				return null; // Ne pas créer de marqueurs
 			},
-			// Router OSRM en mode PIÉTON (walking/foot)
+			// Router OSRM
 			router: L.Routing.osrmv1({
 				serviceUrl: 'https://router.project-osrm.org/route/v1',
-				profile: 'foot', // Mode piéton pour chemins optimaux
+				
+				// --- DÉBUT DE LA CORRECTION ---
+				// Revenir à 'foot' car 'walking' n'est pas supporté par le serveur public
+				profile: 'foot',
+				// --- FIN DE LA CORRECTION ---
 			}),
 		} as any).addTo(map);
 
@@ -71,7 +75,7 @@ const CircuitRouting: React.FC<CircuitRoutingProps> = ({ waypoints }) => {
 			const routes = e.routes;
 			if (routes && routes.length > 0) {
 				const route = routes[0];
-				console.log('� Circuit complet tracé avec succès:', {
+				console.log('✅ Circuit complet tracé avec succès (OSRM foot):', {
 					distance: `${(route.summary.totalDistance / 1000).toFixed(2)} km`,
 					durée: `${Math.round(route.summary.totalTime / 60)} min`,
 					étapes: waypoints.length,
@@ -81,7 +85,7 @@ const CircuitRouting: React.FC<CircuitRoutingProps> = ({ waypoints }) => {
 
 		// Logger les erreurs de routage
 		routingControl.on('routingerror', function(e) {
-			console.error('❌ Erreur lors du tracé du circuit complet:', e);
+			console.error('❌ Erreur lors du tracé du circuit complet (OSRM foot):', e);
 		});
 
 		// Nettoyage lors du démontage

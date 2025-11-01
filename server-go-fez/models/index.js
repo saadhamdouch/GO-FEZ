@@ -2,6 +2,7 @@ const { Circuit } = require("./Circuit");
 const  Review  = require("./Review");
 const { CircuitPOI } = require("./CircuitPOI");
 const { CircuitProgress } = require("./CircuitProgress");
+const { CustomCircuit } = require("./CustomCircuit");
 const { Theme } = require("./Theme");
 const { ThemeCircuit } = require("./ThemeCircuit");
 const { City } = require("./City");
@@ -24,6 +25,7 @@ const models = {
 	Circuit,
 	CircuitPOI,
 	CircuitProgress,
+	CustomCircuit,
 	Theme,
 	ThemeCircuit,
 	City,
@@ -236,9 +238,13 @@ UserSpace.belongsTo(User, { foreignKey: 'user_id', as: 'spaceOwner', onDelete: '
 User.hasMany(UserSpace, { foreignKey: 'user_id', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 
 // CircuitProgress Associations
+// Note: CircuitProgress supports both regular circuits and custom circuits
+// We don't define a belongsTo relationship with Circuit to avoid foreign key constraints
 CircuitProgress.belongsTo(User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-CircuitProgress.belongsTo(Circuit, { foreignKey: 'circuitId', as: 'circuit', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 User.hasMany(CircuitProgress, { foreignKey: 'userId', as: 'circuitProgress', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-Circuit.hasMany(CircuitProgress, { foreignKey: 'circuitId', as: 'progress', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+
+// CustomCircuit Associations
+CustomCircuit.belongsTo(User, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+User.hasMany(CustomCircuit, { foreignKey: 'userId', as: 'customCircuits', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 
 module.exports = models;

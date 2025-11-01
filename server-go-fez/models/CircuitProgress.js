@@ -24,10 +24,12 @@ const CircuitProgress = sequelize.define(
 		circuitId: {
 			type: DataTypes.UUID,
 			allowNull: false,
-			references: {
-				model: "Circuits", // Nom de la table des circuits
-				key: "id",
-			},
+			// Removed foreign key reference to support both regular and custom circuits
+		},
+		circuitType: {
+			type: DataTypes.ENUM("REGULAR", "CUSTOM"),
+			allowNull: false,
+			defaultValue: "REGULAR",
 		},
 		currentPOIIndex: {
 			type: DataTypes.INTEGER,

@@ -10,6 +10,7 @@ import { useGPSTracker } from '@/hooks/useGPSTracker';
 
 // Importer les services API
 import { useGetCircuitByIdQuery } from '@/services/api/CircuitApi';
+import { useGetCustomCircuitByIdQuery } from '@/services/api/CustomCircuitApi';
 import {
 	useGetCircuitProgressQuery,
 	useUpdateCircuitProgressMutation,
@@ -52,12 +53,26 @@ export default function NavigationPage({ params }: NavigationPageProps) {
 	// Suivi GPS - APPEL DIRECT DU HOOK (pas dans useEffect)
 	const { position, error: gpsError, startTracking, stopTracking } = useGPSTracker(true);
 
-	// Récupération des données
+	// Récupération des données - Try regular circuit first, then custom
 	const {
-		data: circuitData,
-		isLoading: isLoadingCircuit,
+		data: regularCircuitData,
+		isLoading: isLoadingRegular,
 		isError: isCircuitError,
 	} = useGetCircuitByIdQuery(circuitId);
+
+	// If regular circuit fails, try custom circuit
+	const {
+		data: customCircuitData,
+		isLoading: isLoadingCustom,
+		isError: isErrorCustom,
+	} = useGetCustomCircuitByIdQuery(circuitId, {
+		skip: !isCircuitError, // Only fetch if regular circuit fails
+	});
+
+	// Determine which data to use
+	const isCustomCircuit = isCircuitError && !isErrorCustom;
+	const circuitData = isCustomCircuit ? customCircuitData : regularCircuitData;
+	const isLoadingCircuit = isLoadingRegular || (isCircuitError && isLoadingCustom);
 
 	const {
 		data: progressData,
@@ -157,8 +172,11 @@ export default function NavigationPage({ params }: NavigationPageProps) {
 		return <LoadingState message={t('loading')} />;
 	}
 
-	if (isCircuitError || isProgressError || sortedPois.length === 0) {
-		return <ErrorState error={isCircuitError ? 'Circuit error' : 'Progress error'} onRetry={() => {}} />;
+	// Check if BOTH circuit fetches failed (not just the regular one)
+	const isBothCircuitError = isCircuitError && isErrorCustom;
+	
+	if (isBothCircuitError || isProgressError || sortedPois.length === 0) {
+		return <ErrorState error={isBothCircuitError ? 'Circuit error' : 'Progress error'} onRetry={() => {}} />;
 	}
 
 	const currentPoi = sortedPois[currentStep];

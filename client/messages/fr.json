@@ -226,7 +226,9 @@
     "premium": "Circuit Premium",
     "starting": "Démarrage...",
     "startButton": "Démarrer ce circuit",
-    "circuitImageAlt": "Image de couverture du circuit"
+    "circuitImageAlt": "Image de couverture du circuit",
+    "customCircuit": "Circuit personnalisé",
+    "customCircuitInfo": "Ceci est votre circuit personnalisé"
   },
 
   "Circuits": {
@@ -277,6 +279,46 @@
     "title": "Avis",
     "loading": "Chargement des avis...",
     "noReviews": "Aucun avis pour le moment."
+  },
+  "CircuitsPage": {
+    "title": "Découvrez nos Circuits",
+    "subtitle": "Explorez Fès à travers des parcours thématiques et personnalisés.",
+    "loading": "Chargement des circuits...",
+    "error": "Impossible de charger les circuits.",
+    "noCircuits": "Aucun circuit trouvé pour le moment.",
+    "createButton": "Créer un circuit",
+    "allCircuits": "Tous les circuits",
+    "officialCircuits": "Circuits officiels",
+    "customCircuits": "Mes circuits personnalisés",
+    "noOfficialCircuits": "Aucun circuit officiel disponible pour le moment.",
+    "noCustomCircuits": "Aucun circuit personnalisé. Créez-en un maintenant !"
+  },
+  "CircuitCard": {
+    "km": "km",
+    "min": "min",
+    "customCircuit": "Circuit personnalisé"
+  },
+  "CustomCircuitCreate": {
+    "title": "Créer un circuit personnalisé",
+    "step1Title": "Étape 1: Décrivez votre circuit",
+    "circuitName": "Nom du circuit",
+    "circuitNamePlaceholder": "Ex: Ma balade gourmande à Fès",
+    "circuitDescription": "Description (optionnel)",
+    "circuitDescriptionPlaceholder": "Décrivez ce qui rend ce circuit spécial...",
+    "step2Title": "Étape 2: Ajoutez et organisez vos étapes",
+    "availablePois": "POIs disponibles",
+    "selectedPois": "POIs sélectionnés",
+    "searchPois": "Rechercher un POI...",
+    "noPoisFound": "Aucun POI trouvé.",
+    "dragPoisHere": "Glissez-déposez les POIs ici depuis la gauche.",
+    "reorderHint": "Glissez-déposez pour réorganiser les étapes.",
+    "cancel": "Annuler",
+    "createButton": "Créer le circuit",
+    "creating": "Création...",
+    "createSuccess": "Circuit personnalisé créé avec succès !",
+    "createError": "Échec de la création du circuit.",
+    "errorNameRequired": "Le nom du circuit est obligatoire.",
+    "errorMinPois": "Vous devez sélectionner au moins 2 POIs."
   }
 
 }

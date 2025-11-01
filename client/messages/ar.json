@@ -144,7 +144,9 @@
     "premium": "مسار مميز",
     "starting": "جاري البدء...",
     "startButton": "ابدأ هذا المسار",
-    "circuitImageAlt": "صورة غلاف المسار"
+    "circuitImageAlt": "صورة غلاف المسار",
+    "customCircuit": "مسار مخصص",
+    "customCircuitInfo": "هذا مسارك المخصص"
   },
 
   "Circuits": {
@@ -203,5 +205,23 @@
     "loading": "???? ????? ???? ????????...",
     "error": "??? ?? ????? ???? ????????. ???? ???????? ??? ????.",
     "noResults": "?? ??? ?????? ??? ???? ??????."
+  },
+  "CircuitsPage": {
+    "title": "اكتشف مساراتنا",
+    "subtitle": "استكشف فاس من خلال مسارات موضوعية ومخصصة.",
+    "loading": "جاري تحميل المسارات...",
+    "error": "تعذر تحميل المسارات.",
+    "noCircuits": "لم يتم العثور على مسارات في الوقت الحالي.",
+    "createButton": "إنشاء مسار",
+    "allCircuits": "جميع المسارات",
+    "officialCircuits": "المسارات الرسمية",
+    "customCircuits": "مساراتي المخصصة",
+    "noOfficialCircuits": "لا توجد مسارات رسمية متاحة في الوقت الحالي.",
+    "noCustomCircuits": "لا توجد مسارات مخصصة بعد. أنشئ أول مسار لك!"
+  },
+  "CircuitCard": {
+    "km": "كم",
+    "min": "دقيقة",
+    "customCircuit": "مسار مخصص"
   }
 }

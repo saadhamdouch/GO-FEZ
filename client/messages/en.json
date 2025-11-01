@@ -134,9 +134,9 @@
     "loading": "Loading circuit...",
     "error": "Unable to load circuit details.",
     "startSuccess": "Circuit started successfully!",
-    "startError": "Error starting circuit.",
+    "startError": "Error starting the circuit.",
     "aboutTitle": "About this circuit",
-    "stopsTitle": "Circuit steps",
+    "stopsTitle": "Circuit stops",
     "infoTitle": "Key information",
     "km": "km",
     "min": "min",
@@ -144,7 +144,9 @@
     "premium": "Premium Circuit",
     "starting": "Starting...",
     "startButton": "Start this circuit",
-    "circuitImageAlt": "Circuit cover image"
+    "circuitImageAlt": "Circuit cover image",
+    "customCircuit": "Custom Circuit",
+    "customCircuitInfo": "This is your custom circuit"
   },
 
   "Circuits": {
@@ -207,6 +209,24 @@
     "lockedBadges": "Locked Badges",
     "rank": "Rank",
     "user": "User"
+  },
+  "CircuitsPage": {
+    "title": "Discover Our Circuits",
+    "subtitle": "Explore Fez through thematic and personalized routes.",
+    "loading": "Loading circuits...",
+    "error": "Unable to load circuits.",
+    "noCircuits": "No circuits found at the moment.",
+    "createButton": "Create a Circuit",
+    "allCircuits": "All Circuits",
+    "officialCircuits": "Official Circuits",
+    "customCircuits": "My Custom Circuits",
+    "noOfficialCircuits": "No official circuits available at the moment.",
+    "noCustomCircuits": "No custom circuits yet. Create your first one!"
+  },
+  "CircuitCard": {
+    "km": "km",
+    "min": "min",
+    "customCircuit": "Custom Circuit"
   }
 
 }

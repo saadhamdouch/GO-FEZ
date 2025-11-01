@@ -3,11 +3,11 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-	DragDropContext,
-	Droppable,
-	Draggable,
-	DropResult,
-} from 'react-beautiful-dnd';
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from '@hello-pangea/dnd';
 import { useGetFilteredPOIsQuery, GetPOIsParams } from '@/services/api/PoiApi';
 import { POI } from '@/lib/types';
 import { useDebounce } from '@/hooks/useDebounce';

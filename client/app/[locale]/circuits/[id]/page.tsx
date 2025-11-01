@@ -5,6 +5,7 @@ import React, { use } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useGetCircuitByIdQuery } from '@/services/api/CircuitApi';
+import { useGetCustomCircuitByIdQuery } from '@/services/api/CustomCircuitApi';
 import { useStartCircuitMutation } from '@/services/api/CircuitProgressApi';
 import { useRouter } from '@/i18n/navigation'; // FIX: Utiliser la navigation i18n
 
@@ -32,8 +33,30 @@ export default function CircuitDetailPage({
 	const t = useTranslations('CircuitDetailPage');
 	const router = useRouter();
 
-	// Récupérer les données du circuit
-	const { data, isLoading, isError, error } = useGetCircuitByIdQuery(id);
+	// Try to fetch as regular circuit first
+	const { 
+		data: regularCircuitData, 
+		isLoading: isLoadingRegular, 
+		isError: isErrorRegular 
+	} = useGetCircuitByIdQuery(id);
+	
+	// If regular circuit fails, try custom circuit
+	const { 
+		data: customCircuitData, 
+		isLoading: isLoadingCustom, 
+		isError: isErrorCustom,
+		error: customError 
+	} = useGetCustomCircuitByIdQuery(id, {
+		skip: !isErrorRegular, // Only fetch if regular circuit fails
+	});
+
+	// Determine which data to use
+	const isCustomCircuit = isErrorRegular && !isErrorCustom;
+	const data = isCustomCircuit ? customCircuitData : regularCircuitData;
+	const isLoading = isLoadingRegular || (isErrorRegular && isLoadingCustom);
+	const isError = isErrorRegular && isErrorCustom;
+	const error = isErrorRegular ? customError : undefined;
+
 	// Mutation pour démarrer le circuit
 	const [startCircuit, { isLoading: isStarting }] = useStartCircuitMutation();
 
@@ -44,8 +67,11 @@ export default function CircuitDetailPage({
 		if (!circuit) return;
 
 		try {
+			// Determine circuit type based on whether it's a custom circuit
+			const circuitType = isCustomCircuit ? 'CUSTOM' : 'REGULAR';
+			
 			// L'appel est correct et correspond à votre CircuitProgressApi
-			await startCircuit({ circuitId: circuit.id }).unwrap();
+			await startCircuit({ circuitId: circuit.id, circuitType }).unwrap();
 			toast.success(t('startSuccess'));
 			// Rediriger vers la page de navigation
 			router.push(`/circuits/${circuit.id}/navigation`);
@@ -64,22 +90,38 @@ export default function CircuitDetailPage({
 		return <ErrorState error={error} onRetry={() => {}} />;
 	}
 
-	// Logique de localisation
-	const localeData = circuit[locale as 'fr' | 'en' | 'ar'];
-	const frData = circuit.fr;
+	// Handle both regular circuits and custom circuits
+	// Regular circuits have localized fields (fr, ar, en)
+	// Custom circuits have direct name and description fields
+	const circuitAny = circuit as any;
+	const hasLocalizedFields = circuitAny.fr || circuitAny.ar || circuitAny.en;
 	
-	const name = (typeof localeData === 'object' && localeData?.name)
-		? localeData.name 
-		: (typeof frData === 'object' && frData?.name)
-			? frData.name
-			: 'Circuit';
-			
-	const description = (typeof localeData === 'object' && localeData?.description)
-		? localeData.description 
-		: (typeof frData === 'object' && frData?.description)
-			? frData.description
-			: '';
-	const imageUrl = circuit.image || '/images/hero.jpg';
+	let name: string;
+	let description: string;
+	
+	if (hasLocalizedFields) {
+		// Regular circuit
+		const localeData = circuitAny[locale as 'fr' | 'en' | 'ar'];
+		const frData = circuitAny.fr;
+		
+		name = (typeof localeData === 'object' && localeData?.name)
+			? localeData.name 
+			: (typeof frData === 'object' && frData?.name)
+				? frData.name
+				: 'Circuit';
+				
+		description = (typeof localeData === 'object' && localeData?.description)
+			? localeData.description 
+			: (typeof frData === 'object' && frData?.description)
+				? frData.description
+				: '';
+	} else {
+		// Custom circuit
+		name = circuitAny.name || 'Circuit';
+		description = circuitAny.description || '';
+	}
+	
+	const imageUrl = circuitAny.image || '/images/hero.jpg';
 
 	return (
 		<div className="pb-16">
@@ -97,7 +139,8 @@ export default function CircuitDetailPage({
 				<div className="container absolute inset-0 mx-auto flex max-w-7xl flex-col justify-end px-4 py-8 text-white">
 					<h1 className="text-4xl font-bold">{name}</h1>
 					<div className="mt-4 flex flex-wrap items-center gap-4">
-						{circuit.themes?.map((theme) => {
+						{/* Show themes for regular circuits */}
+						{circuitAny.themes?.map((theme: any) => {
 							const themeLocale = theme[locale as 'fr' | 'en' | 'ar'];
 							const themeName = typeof themeLocale === 'string' 
 								? themeLocale 
@@ -110,6 +153,15 @@ export default function CircuitDetailPage({
 								</Badge>
 							);
 						})}
+						{/* Show custom circuit badge */}
+						{isCustomCircuit && (
+							<Badge 
+								variant="secondary"
+								className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-700"
+							>
+								{t('customCircuit') || 'Circuit personnalisé'}
+							</Badge>
+						)}
 					</div>
 				</div>
 			</header>
@@ -137,25 +189,29 @@ export default function CircuitDetailPage({
 						<div className="sticky top-24 rounded-lg border bg-white p-6 shadow-sm">
 							<h3 className="text-xl font-semibold">{t('infoTitle')}</h3>
 							<ul className="mt-4 space-y-3">
-								<li className="flex items-center gap-3">
-									<Map className="h-5 w-5 text-blue-600" />
-									<span className="font-medium">
-										{circuit.distance} {t('km')}
-									</span>
-								</li>
-								<li className="flex items-center gap-3">
-									<Clock className="h-5 w-5 text-blue-600" />
-									<span className="font-medium">
-										{circuit.duration} {t('min')}
-									</span>
-								</li>
+								{circuitAny.distance && (
+									<li className="flex items-center gap-3">
+										<Map className="h-5 w-5 text-blue-600" />
+										<span className="font-medium">
+											{circuitAny.distance} {t('km')}
+										</span>
+									</li>
+								)}
+								{circuitAny.duration && (
+									<li className="flex items-center gap-3">
+										<Clock className="h-5 w-5 text-blue-600" />
+										<span className="font-medium">
+											{circuitAny.duration} {t('min')}
+										</span>
+									</li>
+								)}
 								<li className="flex items-center gap-3">
 									<Zap className="h-5 w-5 text-blue-600" />
 									<span className="font-medium">
 										{circuit.pois?.length || 0} {t('stops')}
 									</span>
 								</li>
-								{circuit.isPremium && (
+								{circuitAny.isPremium && (
 									<li className="flex items-center gap-3">
 										<Star className="h-5 w-5 text-yellow-500" />
 										<span className="font-medium">{t('premium')}</span>
@@ -170,6 +226,11 @@ export default function CircuitDetailPage({
 							>
 								{isStarting ? t('starting') : t('startButton')}
 							</Button>
+							{isCustomCircuit && (
+								<div className="mt-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-800">
+									{t('customCircuitInfo') || 'Ceci est votre circuit personnalisé'}
+								</div>
+							)}
 						</div>
 					</aside>
 				</div>

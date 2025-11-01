@@ -1,5 +1,4 @@
 // client/components/circuits/MapRouting.tsx
-// Composant pour tracer la route OPTIMALE de l'utilisateur vers le POI actuel
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -56,10 +55,14 @@ const MapRouting: React.FC<MapRoutingProps> = ({ waypoints }) => {
 			createMarker: function () {
 				return null; // Ne pas créer de marqueurs
 			},
-			// Router OSRM en mode PIÉTON (walking/foot)
+			// Router OSRM
 			router: L.Routing.osrmv1({
 				serviceUrl: 'https://router.project-osrm.org/route/v1',
-				profile: 'foot', // Mode piéton pour chemins optimaux
+				
+				// --- DÉBUT DE LA CORRECTION ---
+				// Revenir à 'foot' car 'walking' n'est pas supporté par le serveur public
+				profile: 'foot', 
+				// --- FIN DE LA CORRECTION ---
 			}),
 		} as any).addTo(map);
 
@@ -70,7 +73,7 @@ const MapRouting: React.FC<MapRoutingProps> = ({ waypoints }) => {
 			const routes = e.routes;
 			if (routes && routes.length > 0) {
 				const route = routes[0];
-				console.log('� Route utilisateur → POI trouvée:', {
+				console.log('🗺️ Route utilisateur → POI trouvée (OSRM foot):', {
 					distance: `${(route.summary.totalDistance / 1000).toFixed(2)} km`,
 					durée: `${Math.round(route.summary.totalTime / 60)} min`,
 					étapes: route.coordinates?.length || 0,
@@ -80,7 +83,7 @@ const MapRouting: React.FC<MapRoutingProps> = ({ waypoints }) => {
 
 		// Écouter les erreurs de routage
 		routingControl.on('routingerror', function(e) {
-			console.error('❌ Erreur lors du tracé de la route utilisateur → POI:', e);
+			console.error('❌ Erreur lors du tracé de la route utilisateur → POI (OSRM foot):', e);
 		});
 
 		// Nettoyage lors du démontage du composant

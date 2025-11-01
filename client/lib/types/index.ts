@@ -58,7 +58,14 @@ export interface POICategory {
   ar: string;
   en: string;
 }
-
+export interface CreateCustomCircuitRequest {
+	name: string;
+	description?: string; // <-- AJOUTEZ CETTE LIGNE
+	pois: {
+		poiId: string;
+		order: number;
+	}[];
+}
 // Defines a POI (Point of Interest) type
 export interface POI {
   id: string;
@@ -100,6 +107,7 @@ export interface POI {
   reviewCount?: number;
   created_at?: string;
   updated_at?: string;
+  [key: string]: any;
 }
 
 // Defines the Circuit type (inferred from circuit page)
@@ -164,10 +172,13 @@ export interface User {
 }
 
 // Custom Circuit Types
-export interface CustomCircuit {
+export interface CustomCircuit  {
   id: string;
   userId: string;
   name: string;
+  description?: string;
+  pois: POI[]; // POIs with order
+	status: 'PRIVATE' | 'PUBLIC' | 'PENDING';
   selectedPOIs: string[];
   startDate?: Date | string | null;
   estimatedDuration?: number | null;
